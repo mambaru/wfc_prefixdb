@@ -1,3 +1,4 @@
+
 include(BuildInfo)
 
 include_directories(.)
@@ -16,6 +17,7 @@ add_library(
 )
 
 target_link_libraries(wfc_prefixdb leveldb luajit)
+add_dependencies(wfc_prefixdb luajit20 google-leveldb)
 
 build_info(wfc_prefixdb prefixdb)
 

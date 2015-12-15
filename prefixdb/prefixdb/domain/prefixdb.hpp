@@ -12,8 +12,7 @@ class prefixdb
 {
 public:
   virtual void reconfigure() override;
-private:
-
+  virtual void set( request::set::ptr req, response::set::handler cb) override;
 };
 
 }}

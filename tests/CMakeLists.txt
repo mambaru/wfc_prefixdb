@@ -11,8 +11,10 @@ SET(
 add_executable(
   prefixdb_test
   ${prefixdb_test_source_list}
+  DEPENDS luajit20 google-leveldb
 )
 
+add_dependencies(prefixdb_test luajit20 google-leveldb)
 
 target_link_libraries(prefixdb_test 
   #boost_filesystem-mt 
@@ -21,7 +23,6 @@ target_link_libraries(prefixdb_test
   leveldb
   #leveldb_storage 
 )
-add_dependencies(prefixdb_test luajit20 google-leveldb)
 
 add_test(prefixdb_test prefixdb_test)
 
