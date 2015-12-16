@@ -1,4 +1,4 @@
 PrefixDB
 =========
 
-[PrefixDB API](wikis/home)
+[PrefixDB API](http://github.lan/cpp/wfc_prefixdb/wikis/home)
