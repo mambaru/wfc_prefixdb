@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/domain/prefixdb_config.hpp>
-#include <prefixdb/domain/iprefixdb.hpp>
+#include <prefixdb/iprefixdb.hpp>
 
 #include <wfc/domain_object.hpp>
 
@@ -13,6 +13,7 @@ class prefixdb
 public:
   virtual void reconfigure() override;
   virtual void set( request::set::ptr req, response::set::handler cb) override;
+  virtual void get( request::get::ptr req, response::get::handler cb) override;
 };
 
 }}

@@ -5,10 +5,8 @@
 //
 
 #include <prefixdb/prefixdb_module.hpp>
-//#include "leveldb_domain_multiton.hpp"
-//#include "leveldb_service_multiton.hpp"
-//#include "leveldb_gateway_multiton.hpp"
 #include <prefixdb/domain/prefixdb_multiton.hpp>
+#include <prefixdb/service/prefixdb_service_multiton.hpp>
 
 #include <wfc/module/component_list.hpp>
 #include <wfc/name.hpp>
@@ -19,12 +17,8 @@ WFC_NAME2(prefixdb_module_name, "prefixdb")
 
 class prefixdb_module::impl: public ::wfc::component_list<
   prefixdb_module_name,
-  prefixdb_multiton
-  /*,
-  leveldb_domain_multiton,
-  leveldb_service_multiton,
-  leveldb_gateway_multiton
-  */
+  prefixdb_multiton,
+  prefixdb_service_multiton
 >
 {
 public:
