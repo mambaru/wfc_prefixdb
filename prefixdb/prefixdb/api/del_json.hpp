@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/api/get.hpp>
+#include <prefixdb/api/del.hpp>
 #include <prefixdb/api/aux/basic_field_json.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
@@ -9,15 +9,20 @@ namespace wamba { namespace prefixdb {
 
 namespace request 
 {
-  struct get_json
+  struct del_json
   {
     JSON_NAME(prefix)
     JSON_NAME(fields)
+    JSON_NAME(nores)
+    JSON_NAME(noval)
+
     typedef ::wfc::json::object<
-      get,
+      del,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, get, std::string, &get::prefix>,
-        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, ::wfc::json::array_of_strings>
+        ::wfc::json::member<n_nores,  del, bool, &del::nores>,
+        ::wfc::json::member<n_noval,  del, bool, &del::noval>,
+        ::wfc::json::member<n_prefix, del, std::string, &del::prefix>,
+        ::wfc::json::member<n_fields, del, del::field_list_t, &del::fields, ::wfc::json::array_of_strings>
       >
     > type;
     typedef type::target target;
@@ -29,14 +34,14 @@ namespace request
 
 namespace response
 {
-  struct get_json
+  struct del_json
   {
     JSON_NAME(prefix)
     JSON_NAME(status)
     JSON_NAME(fields)
 
     typedef ::wfc::json::object<
-      get::field,
+      del::field,
       ::wfc::json::member_list<
         ::wfc::json::base< basic_field_json >
       >
@@ -44,11 +49,11 @@ namespace response
     typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
 
     typedef ::wfc::json::object<
-      get,
+      del,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, get, std::string, &get::prefix>,
-        ::wfc::json::member<n_status, get, common_status, &get::status, common_status_json>,
-        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, array_of_fields_json>
+        ::wfc::json::member<n_prefix, del, std::string, &del::prefix>,
+        ::wfc::json::member<n_status, del, common_status, &del::status, common_status_json>,
+        ::wfc::json::member<n_fields, del, del::field_list_t, &del::fields, array_of_fields_json>
       >
     > type;
     typedef type::target target;
