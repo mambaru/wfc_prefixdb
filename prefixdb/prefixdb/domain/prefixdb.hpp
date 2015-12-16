@@ -14,6 +14,7 @@ public:
   virtual void reconfigure() override;
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
+  virtual void has( request::has::ptr req, response::has::handler cb) override;
 };
 
 }}

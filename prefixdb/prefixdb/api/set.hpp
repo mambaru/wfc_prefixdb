@@ -15,8 +15,8 @@ namespace request
     };
     typedef std::vector<field> field_list_t;
     
-    bool nores = true;  // no result пустой результат, prefix="", status=OK
     std::string prefix;
+    bool nores = true;  // no result пустой результат, prefix="", status=OK
     field_list_t fields;
     
     typedef std::unique_ptr<set> ptr;
