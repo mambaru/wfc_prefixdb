@@ -11,10 +11,10 @@ namespace request
   {
     struct field: basic_field
     {
-      bool strong = false; // false - response::list пустой 
+      bool force = true; // true - response::list пустой 
     };
 
-    bool easy = true; // пустой результат, prefix="", status=OK
+    bool nores = true;  // no result пустой результат, prefix="", status=OK
     std::string prefix;
     std::vector<field> fields;
     typedef std::unique_ptr<set> ptr;
@@ -25,11 +25,13 @@ namespace response
 {
   struct set
   {
-    struct field: field_base {};
+    struct field
+      : field_base 
+    {};
 
     common_status status;
     std::string prefix;
-    std::vector<field> list;
+    std::vector<field> fields;
 
     typedef std::unique_ptr<set> ptr;
     typedef std::function< void(ptr) > handler;
