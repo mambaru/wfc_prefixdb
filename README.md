@@ -1,4 +1,4 @@
 PrefixDB
 =========
 
-[PrefixDB API](home)
+[PrefixDB API](wikis/home)
