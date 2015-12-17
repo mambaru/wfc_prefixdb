@@ -30,4 +30,10 @@ void prefixdb::del( request::del::ptr req, response::del::handler cb)
   abort();
 }
 
+void prefixdb::inc( request::inc::ptr req, response::inc::handler cb) 
+{
+  DOMAIN_LOG_FATAL("prefixdb::inc not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
+  abort();
+}
+
 }}

@@ -21,7 +21,8 @@ class prefixdb_gateway_multiton::impl: public ::wfc::jsonrpc::gateway_multiton
   gateway::method_list, 
   gateway::prefixdb_interface 
 > 
-{};
+{
+};
 
 prefixdb_gateway_multiton::prefixdb_gateway_multiton()
   : wfc::component( std::make_shared<impl>() )

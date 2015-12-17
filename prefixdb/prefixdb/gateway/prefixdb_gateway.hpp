@@ -5,6 +5,7 @@
 #include <prefixdb/api/set_json.hpp>
 #include <prefixdb/api/has_json.hpp>
 #include <prefixdb/api/del_json.hpp>
+#include <prefixdb/api/inc_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace gateway{
@@ -13,6 +14,7 @@ JSONRPC_TAG(get)
 JSONRPC_TAG(set)
 JSONRPC_TAG(has)
 JSONRPC_TAG(del)
+JSONRPC_TAG(inc)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -20,7 +22,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _get_, request::get_json, response::get_json>,
   wfc::jsonrpc::call_method< _set_, request::set_json, response::set_json>,
   wfc::jsonrpc::call_method< _has_, request::has_json, response::has_json>,
-  wfc::jsonrpc::call_method< _del_, request::del_json, response::del_json>
+  wfc::jsonrpc::call_method< _del_, request::del_json, response::del_json>,
+  wfc::jsonrpc::call_method< _inc_, request::inc_json, response::inc_json>
 >
 {
 };
@@ -49,6 +52,11 @@ public:
   virtual void del(request::del::ptr req, response::del::handler cb ) override
   {
     this->template call< _del_ >( std::move(req), cb, nullptr);
+  }
+
+  virtual void inc(request::inc::ptr req, response::inc::handler cb ) override
+  {
+    this->template call< _inc_ >( std::move(req), cb, nullptr);
   }
 };
 

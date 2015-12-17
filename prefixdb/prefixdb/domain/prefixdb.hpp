@@ -16,6 +16,7 @@ public:
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
   virtual void del( request::del::ptr req, response::del::handler cb) override;
+  virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
 };
 
 }}

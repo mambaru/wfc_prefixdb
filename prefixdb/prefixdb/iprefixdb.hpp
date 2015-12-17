@@ -5,6 +5,7 @@
 #include <prefixdb/api/get.hpp>
 #include <prefixdb/api/has.hpp>
 #include <prefixdb/api/del.hpp>
+#include <prefixdb/api/inc.hpp>
 
 namespace wamba { namespace prefixdb {
 
@@ -15,6 +16,7 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void get( request::get::ptr req, response::get::handler cb) = 0;
   virtual void has( request::has::ptr req, response::has::handler cb) = 0;
   virtual void del( request::del::ptr req, response::del::handler cb) = 0;
+  virtual void inc( request::inc::ptr req, response::inc::handler cb) = 0;
 };
 
 }}
