@@ -1,4 +1,4 @@
-#pragma once
+  #pragma once
 
 #include <prefixdb/api/aux/basic_field.hpp>
 #include <prefixdb/api/aux/common_status.hpp>

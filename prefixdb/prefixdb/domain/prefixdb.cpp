@@ -36,4 +36,10 @@ void prefixdb::inc( request::inc::ptr req, response::inc::handler cb)
   abort();
 }
 
+void prefixdb::upd( request::upd::ptr req, response::upd::handler cb) 
+{
+  DOMAIN_LOG_FATAL("prefixdb::upd not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
+  abort();
+}
+
 }}

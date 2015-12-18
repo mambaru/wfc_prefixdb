@@ -11,14 +11,18 @@ namespace request
   {
     JSON_NAME(prefix)
     JSON_NAME(def)
+    JSON_NAME(inc)
+    JSON_NAME(force)
     JSON_NAME(nores)
     JSON_NAME(fields)
 
     typedef ::wfc::json::object<
       inc::field,
       ::wfc::json::member_list<
-        ::wfc::json::base< basic_field_json >,
-        ::wfc::json::member<n_def, inc::field, std::string, &inc::field::def>
+        ::wfc::json::base< field_base_json >,
+        ::wfc::json::member<n_def, inc::field, int, &inc::field::def>,
+        ::wfc::json::member<n_inc, inc::field, int, &inc::field::inc>,
+        ::wfc::json::member<n_force, inc::field, bool, &inc::field::force>
       >
     > field_json;
     typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;

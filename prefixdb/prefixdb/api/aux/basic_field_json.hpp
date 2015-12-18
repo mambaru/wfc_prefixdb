@@ -14,7 +14,7 @@ struct basic_field_json
     basic_field,
     ::wfc::json::member_list<
       ::wfc::json::base<field_base_json>,
-      ::wfc::json::member<n_val, basic_field, std::string, &basic_field::val>
+      ::wfc::json::member<n_val, basic_field, std::string, &basic_field::val, wfc::json::raw_value<std::string> >
     >
   > type;
   

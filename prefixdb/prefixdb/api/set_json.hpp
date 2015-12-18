@@ -12,6 +12,7 @@ namespace request
     JSON_NAME(prefix)
     JSON_NAME(force)
     JSON_NAME(nores)
+    JSON_NAME(noval)
     JSON_NAME(fields)
 
     typedef ::wfc::json::object<
@@ -28,6 +29,7 @@ namespace request
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, set, std::string, &set::prefix>,
         ::wfc::json::member<n_nores,  set, bool, &set::nores>,
+        ::wfc::json::member<n_noval,  set, bool, &set::noval>,
         ::wfc::json::member<n_fields, set, set::field_list_t, &set::fields, array_of_fields_json>
       >
     > type;

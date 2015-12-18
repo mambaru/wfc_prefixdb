@@ -7,7 +7,8 @@ enum class field_type
   none,         // без типа, поля нет
   string,
   number,
-  package,
+  object,
+  array,
   any          // любой тип
 };
 

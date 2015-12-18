@@ -9,14 +9,16 @@ namespace request
 {
   struct inc
   {
-    struct field: basic_field
+    struct field: field_base
     {
-      std::string def;
+      bool force = true;
+      int inc = 0;
+      int def = 0;
     };
     typedef std::vector<field> field_list_t;
     
     std::string prefix;
-    bool nores = true;  // no result пустой результат, prefix="", status=OK
+    bool nores = false;  // no result пустой результат, prefix="", status=OK
     field_list_t fields;
     
     typedef std::unique_ptr<inc> ptr;
@@ -40,7 +42,6 @@ namespace response
     typedef std::unique_ptr<inc> ptr;
     typedef std::function< void(ptr) > handler;
   };
-
 }
 
 }}
