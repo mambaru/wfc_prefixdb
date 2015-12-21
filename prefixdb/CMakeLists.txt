@@ -8,6 +8,7 @@ SET(
   prefixdb_package.cpp
   prefixdb/prefixdb_module.cpp
   prefixdb/domain/prefixdb.cpp
+  prefixdb/domain/impl/multidb.cpp
   prefixdb/domain/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp
