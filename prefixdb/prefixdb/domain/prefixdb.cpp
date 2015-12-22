@@ -11,6 +11,7 @@ void prefixdb::reconfigure()
 {
   if ( _impl == nullptr )
     _impl = std::make_shared<impl>();
+  _impl->reconfigure( this->options() );
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)
