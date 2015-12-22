@@ -50,7 +50,7 @@ namespace response
     typedef ::wfc::json::object<
       set::field,
       ::wfc::json::member_list<
-        ::wfc::json::base< field_base_json >
+        ::wfc::json::base< basic_field_json >
       >
     > field_json;
     typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;

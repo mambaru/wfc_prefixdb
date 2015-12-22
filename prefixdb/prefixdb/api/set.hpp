@@ -29,7 +29,7 @@ namespace response
   struct set
   {
     struct field
-      : field_base 
+      : basic_field 
     {
     };
     typedef std::vector<field> field_list_t;

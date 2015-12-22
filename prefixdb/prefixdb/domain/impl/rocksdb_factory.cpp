@@ -45,7 +45,7 @@ void rocksdb_factory::initialize(std::string db_path, std::string ini_path)
   _context->path = db_path;
   
   auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
-  if ( status != status.OK() )
+  if ( !status.ok() )
   {
     DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
     abort();
@@ -61,7 +61,7 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_i
   ::rocksdb::DB* db;
   
   auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
-  if ( status == status.OK() )
+  if ( status.ok() )
   {
     return std::make_shared<rocksdb>(db);
   }
