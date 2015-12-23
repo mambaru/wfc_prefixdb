@@ -9,7 +9,7 @@ namespace request
 {
   struct has
   {
-    typedef std::vector<std::string> field_list_t;
+    typedef std::vector<key_field> field_list_t;
     std::string prefix;
     field_list_t fields;
     typedef std::unique_ptr<has> ptr;

@@ -22,7 +22,7 @@ namespace request
         ::wfc::json::member<n_nores,  del, bool, &del::nores>,
         ::wfc::json::member<n_noval,  del, bool, &del::noval>,
         ::wfc::json::member<n_prefix, del, std::string, &del::prefix>,
-        ::wfc::json::member<n_fields, del, del::field_list_t, &del::fields, ::wfc::json::array_of_strings>
+        ::wfc::json::member<n_fields, del, del::field_list_t, &del::fields, ::wfc::json::array< std::vector<key_field_json> > >
       >
     > type;
     typedef type::target target;

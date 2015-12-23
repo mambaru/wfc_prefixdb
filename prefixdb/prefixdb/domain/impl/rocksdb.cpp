@@ -3,16 +3,15 @@
 
 namespace wamba{ namespace prefixdb {
   
-rocksdb::rocksdb( db_type* db)
+rocksdb::rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli)
   : _db(db)
+  , _repli(repli)
 {}
 
+// Гарантированно req!=nullptr, may be cb==nullptr
 void rocksdb::set( request::set::ptr req, response::set::handler cb)
 {
   typedef response::set::field field_type;
-  response::set::ptr res;
-  if ( cb != nullptr ) res = std::make_unique<response::set>();
-
   ::rocksdb::WriteBatch batch;
   for ( const auto& field : req->fields)
   {
@@ -20,8 +19,16 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
   }
 
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
+  
+  if ( cb == nullptr )
+    return;
 
-  if ( status.ok() && res!=nullptr )
+  // **********************************************************
+  // формируем ответ
+  auto res = std::make_unique<response::set>();
+  res->prefix = std::move(req->prefix);
+
+  if ( status.ok() )
   {
     // Если нужен статус по каждому полю
     if ( !req->nores )
@@ -45,21 +52,27 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
   {
     res->status = common_status::WriteError;
   }
-
-  if ( res!=nullptr )
-    cb(std::move(res));
-  
+  cb(std::move(res));
 }
 
-void rocksdb::get( request::get::ptr req, response::get::handler cb)
+namespace {
+
+inline void get_mov_val(response::has::field&,     std::string&    ) { /* рекламное место здается */ }
+inline void get_mov_val(response::get::field& fld, std::string& val) {    fld.val = std::move(val);  }
+inline void get_mov_val(response::del::field& fld, std::string& val) {    fld.val = std::move(val);  }
+inline void get_mov_val(response::inc::field& fld, std::string& val) {    fld.val = std::move(val);  }
+
+}
+
+template<typename Res, typename ReqPtr, typename Callback>
+void rocksdb::get_(ReqPtr req, Callback cb)
 {
+  typedef Res response_type;
   typedef ::rocksdb::Slice slice_type;
+  
   std::vector<slice_type> keys;
-  keys.reserve( req->fields.size() );
-  for ( const auto& field : req->fields)
-  {
-    keys.push_back(field);
-  }
+  keys.reserve(req->fields.size() );
+  for ( const auto& fld: req->fields ) keys.push_back(fld.key);
 
   std::vector<std::string> resvals;
   resvals.reserve(keys.size());
@@ -72,43 +85,89 @@ void rocksdb::get( request::get::ptr req, response::get::handler cb)
     abort();
   }
 
-  auto res = std::make_unique<response::get>();
+  // **********************************************************
+  // формируем ответ
+  
+  bool ok = true;
+  auto res = std::make_unique<response_type>();
+  res->prefix = std::move(req->prefix);
   res->status = common_status::OK;
+  res->fields.reserve(resvals.size());
   for ( size_t i = 0; i!=resvals.size(); ++i)
   {
-    if ( status[i] == ::rocksdb::Status::OK() )
-    {
-      // TODO
-    }
-    else if ( res->status != common_status::OK)
-    {
-      res->status = common_status::SomeFieldFail;
-    }
-    else
-    {
-      // задать статус
-    }
+    typename response_type::field fld;
+    fld.key = std::move( req->fields[i].key );
+    get_mov_val(fld, resvals[i]);
+
+    fld.type = status[i].ok()
+               ? field_type::any
+               : field_type::none;
+    res->fields.push_back( std::move(fld) );
+    if ( ok ) ok = status[i].ok();
   }
+  if (!ok) res->status = common_status::SomeFieldFail;
+  cb( std::move(res) );
+}
+
+
+void rocksdb::get( request::get::ptr req, response::get::handler cb)
+{
+  this->get_<response::get>( std::move(req), std::move(cb) );
 }
 
 void rocksdb::has( request::has::ptr req, response::has::handler cb)
 {
-  DOMAIN_LOG_FATAL("rocksdb::has not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
-  abort();
+  this->get_<response::has>( std::move(req), std::move(cb) );
 }
-
 
 void rocksdb::del( request::del::ptr req, response::del::handler cb) 
 {
+  ::rocksdb::WriteBatch batch;
+  for ( const auto& field : req->fields)
+  {
+    batch.Delete(field.key);
+  }
 
-  DOMAIN_LOG_FATAL("rocksdb::del not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
-  abort();
+  if ( req->nores || cb==nullptr)
+  {
+    ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
+    if ( cb!=nullptr )
+    {
+      auto res = std::make_unique<response::del>();
+      res->prefix = std::move(req->prefix);
+      res->status = status.ok() ? common_status::OK : common_status::WriteError;
+      cb( std::move(res) );
+    }
+  }
+  else
+  {
+    bool noval = req->noval;
+    this->get_<response::del>( std::move(req), [this, &batch, &cb, noval](response::del::ptr res)
+    {
+      ::rocksdb::Status status = this->_db->Write( ::rocksdb::WriteOptions(), &batch);
+      res->status = status.ok() ? common_status::OK : common_status::WriteError;
+      
+      // Очищаем, если значения не нужны. Один хрен они были запрошены и перемещены. 
+      // Имеет смысл только на больших строчках.
+      if ( noval ) for (auto& fld : res->fields) fld.val.clear();
+
+      cb( std::move(res) );
+    });
+  }
 }
 
 void rocksdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-  DOMAIN_LOG_FATAL("rocksdb::inc not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
-  abort();
+  // TODO: использовать Merge
+  
+  // _db->Merge();
+  
+  this->get_<response::inc>( std::move(req), [this, &cb]( response::inc::ptr res)
+  {
+    //for ( auto& fld: )
+    cb( std::move(res) );
+  } );
+  
 }
 
 void rocksdb::upd( request::upd::ptr req, response::upd::handler cb) 

@@ -9,9 +9,8 @@ namespace request
 {
   struct upd
   {
-    struct params
+    struct params: key_field
     {
-      std::string key;
       int inc = 0;
       int def = 0;
     };
@@ -38,8 +37,8 @@ namespace response
   {
     struct field
       : basic_field
-    {
-    };
+    {};
+    
     typedef std::vector<field> field_list_t;
     
     common_status status =  common_status::OK;

@@ -5,51 +5,57 @@
 
 namespace wamba{ namespace prefixdb {
   
-namespace{
+namespace
+{
   
-template<typename R, typename Callback>
-inline void prefix_not_found(Callback cb)
-{
-  if ( cb!=nullptr )
-  {
-    std::unique_ptr<R> res;
-    res->status = common_status::PrefixNotFound;
-    cb( std::move(res) );
-  }
-}
-
-template<typename Req, typename Callback>
-inline bool req_null(const Req& req, const Callback& cb)
-{
-  if ( req==nullptr )
-  {
-    if ( cb!=nullptr )
+    template<typename R, typename Callback>
+    inline void prefix_not_found(Callback cb)
     {
-      cb(nullptr);
+      if ( cb!=nullptr )
+      {
+        std::unique_ptr<R> res;
+        res->status = common_status::PrefixNotFound;
+        cb( std::move(res) );
+      }
     }
-    return true;
-  }
-  return false;
-}
 
-template<typename Res, typename ReqPtr, typename Callback>
-inline bool empty_fields(const ReqPtr& req, const Callback& cb)
-{
-  if ( req_null(req, cb) ) return true; 
-
-  if ( req->fields.empty() )
-  {
-    if ( cb != nullptr )
+    template<typename Req, typename Callback>
+    inline bool req_null(const Req& req, const Callback& cb)
     {
-      auto res = std::make_unique<Res>();
-      res->status = common_status::OK;
-      cb( std::move(res) );
+      if ( req==nullptr )
+      {
+        if ( cb!=nullptr )
+        {
+          cb(nullptr);
+        }
+        return true;
+      }
+      return false;
     }
-    return true;
-  }
-  return false;
-}
 
+    template<typename Req, typename Callback>
+    inline bool notify_ban(const Req& req, const Callback& cb)
+    {
+      return cb==nullptr || req_null(req, cb);
+    }
+
+    template<typename Res, typename ReqPtr, typename Callback>
+    inline bool empty_fields(const ReqPtr& req, const Callback& cb)
+    {
+      if ( req_null(req, cb) ) return true; 
+
+      if ( req->fields.empty() )
+      {
+        if ( cb != nullptr )
+        {
+          auto res = std::make_unique<Res>();
+          res->status = common_status::OK;
+          cb( std::move(res) );
+        }
+        return true;
+      }
+      return false;
+    }
 }
   
 void multidb::stop()
@@ -96,7 +102,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
 
 void multidb::set( request::set::ptr req, response::set::handler cb)
 {
-  if ( req_null(req, cb) ) return;
+  if ( empty_fields<response::set>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -106,7 +112,7 @@ void multidb::set( request::set::ptr req, response::set::handler cb)
 
 void multidb::get( request::get::ptr req, response::get::handler cb)
 {
-  if ( req_null(req, cb) ) return;
+  if ( notify_ban(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, false) )
   {
@@ -120,7 +126,7 @@ void multidb::get( request::get::ptr req, response::get::handler cb)
 
 void multidb::has( request::has::ptr req, response::has::handler cb)
 {
-  if ( req_null(req, cb) ) return;
+  if ( notify_ban(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, false) )
   {
@@ -135,7 +141,7 @@ void multidb::has( request::has::ptr req, response::has::handler cb)
 
 void multidb::del( request::del::ptr req, response::del::handler cb) 
 {
-  if ( req_null(req, cb) ) return;
+  if ( empty_fields<response::del>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, false) )
   {
@@ -149,7 +155,7 @@ void multidb::del( request::del::ptr req, response::del::handler cb)
 
 void multidb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-  if ( req_null(req, cb) ) return;
+  if ( empty_fields<response::inc>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -159,7 +165,7 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void multidb::upd( request::upd::ptr req, response::upd::handler cb) 
 {
-  if ( req_null(req, cb) ) return;
+  if ( empty_fields<response::upd>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {

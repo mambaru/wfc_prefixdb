@@ -9,7 +9,7 @@ namespace request
 {
   struct del
   {
-    typedef std::vector<std::string> field_list_t;
+    typedef std::vector<key_field> field_list_t;
     bool nores = true; // < [true] не нужен результат, noval игнорируется
     bool noval = true; // < [true] если false - вернуть значения удаленных полей
     std::string prefix;

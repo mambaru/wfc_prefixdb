@@ -57,13 +57,16 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_i
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
+  //_context->options.OptimizeForPointLookup();
+  _context->options.OptimizeLevelStyleCompaction();
+  _context->options.OptimizeUniversalStyleCompaction();
   std::string path = _context->path + "/" + prefix;
   ::rocksdb::DB* db;
   
   auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
   if ( status.ok() )
   {
-    return std::make_shared<rocksdb>(db);
+    return std::make_shared<rocksdb>(db, nullptr);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

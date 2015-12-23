@@ -17,7 +17,7 @@ namespace request
       get,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, get, std::string, &get::prefix>,
-        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, ::wfc::json::array_of_strings>
+        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, ::wfc::json::array< std::vector<key_field_json> > >
       >
     > type;
     typedef type::target target;

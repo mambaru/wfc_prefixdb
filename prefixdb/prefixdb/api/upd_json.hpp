@@ -1,6 +1,7 @@
 #pragma once
 
 #include <prefixdb/api/upd.hpp>
+#include <prefixdb/api/aux/key_field_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {
@@ -21,7 +22,7 @@ namespace request
     typedef ::wfc::json::object<
       upd::params,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_key, upd::params, std::string, &upd::params::key>,
+        ::wfc::json::base<key_field_json>,
         ::wfc::json::member<n_inc, upd::params, int, &upd::params::inc>,
         ::wfc::json::member<n_def, upd::params, int, &upd::params::def>
       >
