@@ -4,7 +4,7 @@
 #include <rocksdb/write_batch.h>
 
 namespace wamba{ namespace prefixdb {
-  
+
 rocksdb::rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli)
   : _db(db)
   , _repli(repli)
@@ -15,14 +15,14 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
 {
   typedef response::set::field field_type;
   ::rocksdb::WriteBatch batch;
-  
+
   for ( const auto& field : req->fields)
   {
     batch.Put(field.key, field.val);
   }
 
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
-  
+
   if ( cb == nullptr )
     return;
 
@@ -56,16 +56,15 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
     res->status = common_status::WriteError;
     COMMON_LOG_ERROR("rocksdb::set WriteError: " << status.ToString() )
   }
+
   cb(std::move(res));
 }
 
 namespace {
-
-inline void get_mov_val(response::has::field&,     std::string&    ) { /* рекламное место здается */ }
-inline void get_mov_val(response::get::field& fld, std::string& val) {    fld.val = std::move(val);  }
-inline void get_mov_val(response::del::field& fld, std::string& val) {    fld.val = std::move(val);  }
-inline void get_mov_val(response::inc::field& fld, std::string& val) {    fld.val = std::move(val);  }
-
+  inline void get_mov_val(response::has::field&,     std::string&    ) { /* рекламное место здается */ }
+  inline void get_mov_val(response::get::field& fld, std::string& val) {    fld.val = std::move(val);  }
+  inline void get_mov_val(response::del::field& fld, std::string& val) {    fld.val = std::move(val);  }
+  inline void get_mov_val(response::inc::field& fld, std::string& val) {    fld.val = std::move(val);  }
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
@@ -73,7 +72,7 @@ void rocksdb::get_(ReqPtr req, Callback cb)
 {
   typedef Res response_type;
   typedef ::rocksdb::Slice slice_type;
-  
+
   std::vector<slice_type> keys;
   keys.reserve(req->fields.size() );
   for ( const auto& fld: req->fields ) keys.push_back(fld.key);
@@ -91,7 +90,7 @@ void rocksdb::get_(ReqPtr req, Callback cb)
 
   // **********************************************************
   // формируем ответ
-  
+
   bool ok = true;
   auto res = std::make_unique<response_type>();
   res->prefix = std::move(req->prefix);
@@ -109,9 +108,9 @@ void rocksdb::get_(ReqPtr req, Callback cb)
     res->fields.push_back( std::move(fld) );
     if ( ok ) ok = status[i].ok();
   }
+
   if (!ok) res->status = common_status::SomeFieldFail;
   cb( std::move(res) );
-  
 }
 
 
