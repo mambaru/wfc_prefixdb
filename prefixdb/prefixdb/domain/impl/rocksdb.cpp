@@ -1,5 +1,7 @@
 #include "rocksdb.hpp"
 #include <wfc/logger.hpp>
+#include <rocksdb/db.h>
+#include <rocksdb/write_batch.h>
 
 namespace wamba{ namespace prefixdb {
   
@@ -13,6 +15,7 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
 {
   typedef response::set::field field_type;
   ::rocksdb::WriteBatch batch;
+  
   for ( const auto& field : req->fields)
   {
     batch.Put(field.key, field.val);
@@ -51,6 +54,7 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
   else if (res!=nullptr)
   {
     res->status = common_status::WriteError;
+    COMMON_LOG_ERROR("rocksdb::set WriteError: " << status.ToString() )
   }
   cb(std::move(res));
 }
@@ -107,6 +111,7 @@ void rocksdb::get_(ReqPtr req, Callback cb)
   }
   if (!ok) res->status = common_status::SomeFieldFail;
   cb( std::move(res) );
+  
 }
 
 

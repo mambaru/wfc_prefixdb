@@ -7,16 +7,30 @@ namespace wamba{ namespace prefixdb {
   
 namespace
 {
-  
-    template<typename R, typename Callback>
-    inline void prefix_not_found(Callback cb)
+
+    template<common_status Status, typename Res, typename ReqPtr, typename Callback>
+    inline void send_error(const ReqPtr& req, const Callback& cb)
     {
       if ( cb!=nullptr )
       {
-        std::unique_ptr<R> res;
-        res->status = common_status::PrefixNotFound;
+        auto res = std::make_unique<Res>();
+        res->prefix = std::move(req->prefix);
+        res->status = Status;
         cb( std::move(res) );
       }
+    }
+
+  
+    template<typename Res, typename ReqPtr, typename Callback>
+    inline void prefix_not_found(const ReqPtr& req, const Callback& cb)
+    {
+      send_error<common_status::PrefixNotFound, Res>(std::move(req), std::move(cb) );
+    }
+
+    template<typename Res, typename ReqPtr, typename Callback>
+    inline void create_prefix_fail(const ReqPtr& req, const Callback& cb)
+    {
+      send_error<common_status::CreatePrefixFail, Res>(std::move(req), std::move(cb) );
     }
 
     template<typename Req, typename Callback>
@@ -49,6 +63,7 @@ namespace
         if ( cb != nullptr )
         {
           auto res = std::make_unique<Res>();
+          res->prefix = std::move(req->prefix);
           res->status = common_status::OK;
           cb( std::move(res) );
         }
@@ -57,6 +72,8 @@ namespace
       return false;
     }
 }
+
+
   
 void multidb::stop()
 {
@@ -107,6 +124,10 @@ void multidb::set( request::set::ptr req, response::set::handler cb)
   if ( auto db = this->prefix_(req->prefix, true) )
   {
     db->set( std::move(req), std::move(cb) );
+  } 
+  else 
+  {
+    create_prefix_fail<response::set>( std::move(req), std::move(cb) );
   }
 }
 
@@ -120,7 +141,7 @@ void multidb::get( request::get::ptr req, response::get::handler cb)
   }
   else
   {
-    prefix_not_found<response::get>( std::move(cb) );
+    prefix_not_found<response::get>( std::move(req), std::move(cb) );
   }
 }
 
@@ -134,7 +155,7 @@ void multidb::has( request::has::ptr req, response::has::handler cb)
   }
   else
   {
-    prefix_not_found<response::has>( std::move(cb) );
+    prefix_not_found<response::has>( std::move(req), std::move(cb) );
   }
 }
 
@@ -149,7 +170,7 @@ void multidb::del( request::del::ptr req, response::del::handler cb)
   }
   else
   {
-    prefix_not_found<response::del>( std::move(cb) );
+    prefix_not_found<response::del>( std::move(req), std::move(cb) );
   }
 }
 
@@ -161,6 +182,10 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
   {
     db->inc( std::move(req), std::move(cb) );
   }
+  else 
+  {
+    create_prefix_fail<response::inc>( std::move(req), std::move(cb) );
+  }
 }
 
 void multidb::upd( request::upd::ptr req, response::upd::handler cb) 
@@ -170,6 +195,10 @@ void multidb::upd( request::upd::ptr req, response::upd::handler cb)
   if ( auto db = this->prefix_(req->prefix, true) )
   {
     db->upd( std::move(req), std::move(cb) );
+  }
+  else 
+  {
+    create_prefix_fail<response::upd>( std::move(req), std::move(cb) );
   }
 }
 

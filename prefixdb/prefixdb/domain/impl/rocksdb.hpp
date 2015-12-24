@@ -4,6 +4,8 @@
 #include <rocksdb/db.h>
 #include <memory>
 
+namespace rocksdb{ class DB;}
+
 namespace wamba{ namespace prefixdb{
  
 class rocksdb

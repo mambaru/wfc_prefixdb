@@ -22,7 +22,7 @@ namespace request
         ::wfc::json::member<n_force, set::field, bool, &set::field::force>
       >
     > field_json;
-    typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
+    typedef ::wfc::json::array< std::vector< field_json >, 10 > array_of_fields_json;
 
     typedef ::wfc::json::object<
       set,

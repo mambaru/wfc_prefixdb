@@ -27,6 +27,7 @@ public:
   virtual void upd( request::upd::ptr req, response::upd::handler cb) override;
 private:
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
+  
 private:
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;
