@@ -10,7 +10,9 @@ SET(
   prefixdb/domain/prefixdb.cpp
   prefixdb/domain/impl/multidb.cpp
   prefixdb/domain/impl/rocksdb_factory.cpp
-  prefixdb/domain/impl/rocksdb.cpp
+  prefixdb/domain/impl/rocksdb1_factory.cpp
+  #prefixdb/domain/impl/rocksdb.cpp
+  prefixdb/domain/impl/rocksdb1.cpp
   prefixdb/domain/impl/god.cpp
   prefixdb/domain/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp

@@ -7,7 +7,6 @@ namespace wamba{ namespace prefixdb {
   
 namespace
 {
-
     template<common_status Status, typename Res, typename ReqPtr, typename Callback>
     inline void send_error(const ReqPtr& req, const Callback& cb)
     {
@@ -83,6 +82,7 @@ void multidb::stop()
 void multidb::reconfigure(const multidb_options opt)
 {
   std::lock_guard<std::mutex> lk(_mutex);
+  COMMON_LOG_MESSAGE("CREATE FACTORY...")
   _factory = god::create(opt.type);
   _factory->initialize(opt.path, opt.ini);
 }
