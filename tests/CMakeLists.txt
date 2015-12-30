@@ -13,7 +13,7 @@ add_executable(
   ${prefixdb_test_source_list}
 )
 
-add_dependencies(prefixdb_test luajit20 google-leveldb)
+add_dependencies(prefixdb_test luajit20 google-leveldb facebook-rocksdb)
 
 target_link_libraries(prefixdb_test 
   #boost_filesystem-mt 
