@@ -4,7 +4,12 @@
 #include <wfc/logger.hpp>
 
 namespace wamba{ namespace prefixdb {
-  
+ 
+/*
+ * ЖШЖ
+ * iii
+ * ...
+ */
 namespace
 {
     template<common_status Status, typename Res, typename ReqPtr, typename Callback>
@@ -19,7 +24,6 @@ namespace
       }
     }
 
-  
     template<typename Res, typename ReqPtr, typename Callback>
     inline void prefix_not_found(const ReqPtr& req, const Callback& cb)
     {
