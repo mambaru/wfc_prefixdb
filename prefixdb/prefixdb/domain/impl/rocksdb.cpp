@@ -115,13 +115,7 @@ void rocksdb::get_(ReqPtr req, Callback cb)
     if ( status[i].ok() )
     {
       const std::string& str = resvals[i];
-      std::cout << "A>>> [" << str << "] len=" << str.size() << std::endl;
-      std::cout << "X>>> [" << str.data() + 24 << "] len=" << str.size() << std::endl;
-      std::cout << "Done1" << std::endl;
-      value val = value::deserialize( str.data(), str.data() + str.size() );
-      std::cout << "Done2: " << val.data.size() << std::endl;
-      std::cout << "B>>> [" << val.data << "] len=" << val.data.size() << std::endl;
-      std::cout << "Done3" << std::endl;
+      value val = value::deserialize( str.data(), str.data() + str.size(), req->noval );
       fld.key = std::move( req->fields[i].key );
       get_mov_val(fld, val.data);
       fld.type = val.type;
@@ -185,15 +179,17 @@ void rocksdb::del( request::del::ptr req, response::del::handler cb)
   }
   else
   {
-    bool noval = req->noval;
-    this->get_<response::del>( std::move(req), [this, &batch, &cb, noval](response::del::ptr res)
+#warning сначала удалить, потом взять 
+    //bool noval = req->noval;
+    this->get_<response::del>( std::move(req), [this, &batch, &cb/*, noval*/](response::del::ptr res)
     {
       ::rocksdb::Status status = this->_db->Write( ::rocksdb::WriteOptions(), &batch);
       res->status = status.ok() ? common_status::OK : common_status::WriteError;
       
       // Очищаем, если значения не нужны. Один хрен они были запрошены и перемещены. 
       // Имеет смысл только на больших строчках.
-      if ( noval ) for (auto& fld : res->fields) fld.val.clear();
+      // TODO: не надо 
+      //if ( noval ) for (auto& fld : res->fields) fld.val.clear();
 
       cb( std::move(res) );
     });
@@ -209,6 +205,12 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
   operation_inc::buffer_type buff;
   buff.reserve(reserve);
   
+  // auto callback = nullptr;
+  if ( !req->nores )
+  {
+    // callback = ...
+  }
+  
   for ( const auto& field : req->fields)
   {
     operation_inc op;
@@ -217,9 +219,11 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
     op.def   = field.def;
     op.type  = field.type;
     op.ttl   = field.ttl;
+    //op.callback = callback;
     
     auto slice = operation_inc::serialize<slice_type>(buff, op );
-    batch.Merge(field.key, slice );
+#warning Callback на каждую операцию
+    batch.Merge(field.key, slice);
   }
 
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
@@ -227,6 +231,16 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
   if ( cb == nullptr )
     return;
   
+  if ( req->nores )
+  {
+    auto res = std::make_unique<response::inc>();
+    res->status = status.ok() ? common_status::OK : common_status::WriteError;
+    cb( std::move(res) );
+  }
+  else
+  {
+    this->get_<response::inc>( std::move(req), std::move(cb) );
+  }
 }
 
 void rocksdb::upd( request::upd::ptr req, response::upd::handler cb) 

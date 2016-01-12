@@ -10,6 +10,7 @@ namespace request
   struct get
   {
     typedef std::vector<key_field> field_list_t;
+    bool noval = false; // не сериализуеться 
     std::string prefix;
     field_list_t fields;
     typedef std::unique_ptr<get> ptr;

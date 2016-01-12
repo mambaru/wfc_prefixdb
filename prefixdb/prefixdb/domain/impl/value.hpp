@@ -53,7 +53,7 @@ struct value : value_head
     return SliceType(buff.data() + old_size, value_size);
   }
   
-  inline static value deserialize(const char* beg, const char* end)
+  inline static value deserialize(const char* beg, const char* end, bool noval)
   {
     value result = value();
     size_t size = *reinterpret_cast<const size_t*>( beg );
@@ -72,17 +72,16 @@ struct value : value_head
     {
       std::cout << sizeof(field_type) << " > " <<  (size_t)std::distance(cur, end) << std::endl;
     }
+ 
+    if (!noval) result.data.assign(beg + size, end );
     
-    std::cout << "DIST: " << std::distance(beg, end) << std::endl;
-    std::cout << "DIST: [" << std::string(beg, end) << "] size=" << size << ":" << std::string(beg+24, end) << std::endl;
-    result.data.assign(beg + size, end );
     return std::move(result);
   }
   
   template<typename SliceType>
-  inline static value deserialize(const SliceType& slice)
+  inline static value deserialize(const SliceType& slice, bool noval)
   {
-    return std::move(value::deserialize(slice.data(), slice.data() + slice.size()));
+    return std::move(value::deserialize(slice.data(), slice.data() + slice.size(), noval));
   }
 
 };

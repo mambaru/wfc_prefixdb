@@ -41,7 +41,7 @@ bool merge_operator::inc_(const slice_type& /*key*/,
   int64_t ival = op.def;
   if ( existing_slice )
   {
-    value val = value::deserialize<slice_type>( *existing_slice );
+    value val = value::deserialize<slice_type>( *existing_slice, false );
     if ( !op.force && op.type != val.type )
     {
       return false;

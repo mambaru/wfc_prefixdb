@@ -10,6 +10,7 @@
 
 #include <wfc/module/multiton.hpp>
 #include <wfc/module/instance.hpp>
+#include <wfc/module/component.hpp>
 #include <wfc/name.hpp>
 
 namespace wamba{ namespace prefixdb{

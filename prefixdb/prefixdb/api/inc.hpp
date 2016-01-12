@@ -19,6 +19,7 @@ namespace request
     
     std::string prefix;
     bool nores = false;  // no result пустой результат, prefix="", status=OK
+    bool noval = true; // не сериализуеться
     field_list_t fields;
     
     typedef std::unique_ptr<inc> ptr;
