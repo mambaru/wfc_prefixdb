@@ -12,8 +12,8 @@ namespace request
     struct field: field_base
     {
       bool force = true;
-      int inc = 0;
-      int def = 0;
+      int64_t inc = 0;
+      int64_t def = 0;
     };
     typedef std::vector<field> field_list_t;
     

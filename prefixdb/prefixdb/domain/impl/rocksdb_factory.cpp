@@ -3,28 +3,51 @@
 #include <rocksdb/db.h>
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
+#include <rocksdb/merge_operator.h>
 
 #include <memory>
 #include <iostream>
 #include <sys/stat.h>
 #include <wfc/logger.hpp>
 #include <list>
-#include "prefixdb_t.hpp"
 
-#include <wdb/ldb/rocksdb/storage.hpp>
+
+/*
+ #include <leveldb/db.h>
+ #include <leveldb/env.h>
+ #include <leveldb/filter_policy.h>
+ #include <leveldb/cache.h>
+ #include <leveldb/write_batch.h>
+*/
+
+
+#include "rocksdb.hpp"
+#include "merge_operator.hpp"
+#include "aux/rocksdb_comparator.hpp"
+
+
+
+namespace rocksdb
+{
+
+Status LoadOptionsFromFile(const std::string& options_file_name, Env* env,
+                           DBOptions* db_options,
+                           std::vector<ColumnFamilyDescriptor>* cf_descs);
+
+}
+
 
 namespace wamba{ namespace prefixdb{
+  
 
 struct rocksdb_factory::context
 {
-  typedef ::wdb::ldb::rocksdb::storage<std::string, std::string> storage_type;
-  typedef prefixdb_t<storage_type> prefixdb_type;
-  typedef std::shared_ptr<prefixdb_type> prefixdb_ptr;
-  
-  storage_type::env_type* env;
-  storage_type::options_type options;
+  typedef ::rocksdb::ColumnFamilyDescriptor CFD;
+  typedef std::vector<CFD> CFD_list;
+  ::rocksdb::Env* env;
+  ::rocksdb::Options options;
+  CFD_list cdf;
   std::string path;
-  
 };
 
 rocksdb_factory::~rocksdb_factory()
@@ -35,16 +58,16 @@ rocksdb_factory::~rocksdb_factory()
 void rocksdb_factory::initialize(std::string db_path, std::string ini_path) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  typedef rocksdb_factory::context::storage_type storage_type;
-  typedef storage_type::options_type options_type;
+  
   _context = std::make_shared<rocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->path = db_path;
-  //_context->storage = std::make_shared< storage_type >();
+  // Не нужно, ключи всегда строки
+  // _context->options.comparator = new rocksdb_comparator;
+  _context->options.merge_operator = std::make_shared<merge_operator>();
   
-  auto status = options_type::load(ini_path, _context->env, _context->options  );
-  //auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
   
+  auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
   if ( !status.ok() )
   {
     DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
@@ -56,17 +79,29 @@ void rocksdb_factory::initialize(std::string db_path, std::string ini_path)
 ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_if_missing) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  typedef rocksdb_factory::context::prefixdb_type prefixdb_type;
-  typedef rocksdb_factory::context::storage_type storage_type;
-  auto stg = std::make_shared<storage_type>();
-  auto prf = std::make_shared<prefixdb_type>(stg, nullptr);
+  _context->options.env = _context->env;
+  _context->options.create_if_missing = create_if_missing;
+  
+  //_context->options.OptimizeForPointLookup();
+  //_context->options.OptimizeLevelStyleCompaction();
+  //_context->options.OptimizeUniversalStyleCompaction();
+  //_context->options.max_open_files = 1024 * 100;
+  //_context->options.filter_policy = ::rocksdb::NewBloomFilterPolicy(20);
+  //_context->options.write_buffer_size = 512 * 1024 * 1024;
+  //_context->options.block_cache = ::rocksdb::NewLRUCache( conf.cache_size * 1024 * 1024);
+
+  
   std::string path = _context->path + "/" + prefix;
-  auto opt = _context->options;
-  opt.path = _context->path + "/" + prefix;
-  opt.create_if_missing = create_if_missing;
-  opt.env = _context->env;
-  stg->open(opt);
-  return prf;
+  ::rocksdb::DB* db;
+  
+  auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
+  if ( status.ok() )
+  {
+    return std::make_shared<rocksdb>(db, nullptr);
+  }
+
+  DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());
+  return nullptr;
 }
 
 }}

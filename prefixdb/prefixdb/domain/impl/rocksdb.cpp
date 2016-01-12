@@ -1,4 +1,6 @@
 #include "rocksdb.hpp"
+#include "value.hpp"
+
 #include <wfc/logger.hpp>
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
@@ -14,11 +16,22 @@ rocksdb::rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli)
 void rocksdb::set( request::set::ptr req, response::set::handler cb)
 {
   typedef response::set::field field_type;
+  typedef ::rocksdb::Slice slice_type;
   ::rocksdb::WriteBatch batch;
 
+  size_t reserve = 0;
   for ( const auto& field : req->fields)
   {
-    batch.Put(field.key, field.val);
+    reserve += field.val.size() + sizeof(value_head);
+  }
+  
+  value::buffer_type buff;
+  buff.reserve(reserve);
+  
+  for ( const auto& field : req->fields)
+  {
+    auto slice = value::serialize<slice_type>(buff, field.val, field.type, field.ttl);
+    batch.Put(field.key, slice );
   }
 
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
@@ -99,6 +112,32 @@ void rocksdb::get_(ReqPtr req, Callback cb)
   for ( size_t i = 0; i!=resvals.size(); ++i)
   {
     typename response_type::field fld;
+    if ( status[i].ok() )
+    {
+      const std::string& str = resvals[i];
+      std::cout << "A>>> [" << str << "] len=" << str.size() << std::endl;
+      std::cout << "X>>> [" << str.data() + 24 << "] len=" << str.size() << std::endl;
+      std::cout << "Done1" << std::endl;
+      value val = value::deserialize( str.data(), str.data() + str.size() );
+      std::cout << "Done2: " << val.data.size() << std::endl;
+      std::cout << "B>>> [" << val.data << "] len=" << val.data.size() << std::endl;
+      std::cout << "Done3" << std::endl;
+      fld.key = std::move( req->fields[i].key );
+      get_mov_val(fld, val.data);
+      fld.type = val.type;
+      fld.ttl = val.ttl;
+    }
+    else
+    {
+      fld.type = field_type::none;
+      std::string tmp = "null";
+      get_mov_val(fld, tmp);
+    }
+    res->fields.push_back( std::move(fld) );
+    if ( ok ) ok = status[i].ok();
+      
+    /*
+    typename response_type::field fld;
     fld.key = std::move( req->fields[i].key );
     get_mov_val(fld, resvals[i]);
 
@@ -107,6 +146,7 @@ void rocksdb::get_(ReqPtr req, Callback cb)
                : field_type::none;
     res->fields.push_back( std::move(fld) );
     if ( ok ) ok = status[i].ok();
+    */
   }
 
   if (!ok) res->status = common_status::SomeFieldFail;
@@ -162,15 +202,30 @@ void rocksdb::del( request::del::ptr req, response::del::handler cb)
 
 void rocksdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-  // TODO: использовать Merge
+  typedef ::rocksdb::Slice slice_type;
+  ::rocksdb::WriteBatch batch;
+
+  size_t reserve = req->fields.size() * sizeof(operation_inc);
+  operation_inc::buffer_type buff;
+  buff.reserve(reserve);
   
-  // _db->Merge();
-  
-  this->get_<response::inc>( std::move(req), [this, &cb]( response::inc::ptr res)
+  for ( const auto& field : req->fields)
   {
-    //for ( auto& fld: )
-    cb( std::move(res) );
-  } );
+    operation_inc op;
+    op.force = field.force;
+    op.inc   = field.inc;
+    op.def   = field.def;
+    op.type  = field.type;
+    op.ttl   = field.ttl;
+    
+    auto slice = operation_inc::serialize<slice_type>(buff, op );
+    batch.Merge(field.key, slice );
+  }
+
+  ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
+
+  if ( cb == nullptr )
+    return;
   
 }
 

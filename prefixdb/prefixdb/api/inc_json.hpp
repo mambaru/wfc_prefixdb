@@ -20,8 +20,8 @@ namespace request
       inc::field,
       ::wfc::json::member_list<
         ::wfc::json::base< field_base_json >,
-        ::wfc::json::member<n_def, inc::field, int, &inc::field::def>,
-        ::wfc::json::member<n_inc, inc::field, int, &inc::field::inc>,
+        ::wfc::json::member<n_def, inc::field, int64_t, &inc::field::def>,
+        ::wfc::json::member<n_inc, inc::field, int64_t, &inc::field::inc>,
         ::wfc::json::member<n_force, inc::field, bool, &inc::field::force>
       >
     > field_json;
