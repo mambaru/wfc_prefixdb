@@ -1,5 +1,6 @@
 #include "prefixdb.hpp"
 #include <wfc/logger.hpp>
+#include <wfc/core/icore.hpp>
 #include "storage/multidb.hpp"
 
 namespace wamba{ namespace prefixdb {
@@ -11,7 +12,11 @@ void prefixdb::reconfigure()
 {
   if ( _impl == nullptr )
     _impl = std::make_shared<impl>();
-  _impl->reconfigure( this->options() );
+  if ( !_impl->reconfigure( this->options() ) )
+  {
+    wfc_abort("prefixdb open DB abort!");
+    //this->global()->registry.get< ::wfc::icore>("core")->core_stop();
+  }
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)

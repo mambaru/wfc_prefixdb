@@ -17,7 +17,7 @@ class multidb
   typedef std::shared_ptr<iprefixdb> prefixdb_ptr;
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
-  void reconfigure(const multidb_options opt);
+  bool reconfigure(const multidb_options opt);
   void stop();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;

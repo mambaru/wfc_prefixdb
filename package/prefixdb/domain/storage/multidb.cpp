@@ -3,6 +3,11 @@
 #include "god.hpp"
 #include <wfc/logger.hpp>
 
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <dirent.h>
+
 namespace wamba{ namespace prefixdb {
  
 /*
@@ -74,6 +79,36 @@ namespace
       }
       return false;
     }
+    
+    inline std::vector<std::string> scan_dir(std::string path, bool& fail)
+    {
+      fail = false;
+      std::vector<std::string> result;
+
+      DIR *dir;
+      struct dirent *entry;
+
+      dir = opendir(path.c_str());
+      if (!dir) 
+      {
+        // perror("diropen");
+        fail = true;
+        return result;
+      };
+
+      while ( (entry = readdir(dir)) != NULL) 
+      {
+        if ( entry->d_type == 4)
+        {
+          std::string file = entry->d_name;
+          if ( file=="." || file==".." ) continue;
+          result.push_back(file);
+        }
+      };
+
+      closedir(dir);
+      return result;
+    }
 }
 
 
@@ -83,12 +118,42 @@ void multidb::stop()
   _factory = nullptr;
 }
 
-void multidb::reconfigure(const multidb_options opt)
+bool multidb::reconfigure(const multidb_options opt)
 {
-  std::lock_guard<std::mutex> lk(_mutex);
-  COMMON_LOG_MESSAGE("CREATE FACTORY...")
-  _factory = god::create(opt.type);
-  _factory->initialize(opt.path, opt.ini);
+  {
+    std::lock_guard<std::mutex> lk(_mutex);
+    CONFIG_LOG_MESSAGE("CREATE FACTORY...")
+    _factory = god::create(opt.type);
+    _factory->initialize(opt.path, opt.ini);
+  }
+  
+  bool fail = false;
+  auto dirs = scan_dir(opt.path, fail);
+  if (fail)
+  {
+    CONFIG_LOG_FATAL("Directory " << opt.path << " is missing");
+    return false;
+  }
+  
+  if ( opt.preopen )
+  {
+    CONFIG_LOG_BEGIN("Pre open prefixes ...")
+    for (auto name: dirs)
+    {
+      CONFIG_LOG_MESSAGE("Pre open prefix " << name << "...")
+      if (auto db = this->prefix_(name, false) )
+      {
+        // CONFIG_LOG_MESSAGE("Pre open prefix OK")
+      }
+      else
+      {
+        CONFIG_LOG_WARNING("Pre open prefix FAIL")
+      }
+      //CONFIG_LOG_END("Pre open prefix DONE")
+    }
+    CONFIG_LOG_END("Pre open prefixes")
+  }
+  return true;
 }
 
 /// Если create_if_missing всегда возвращает объект,
