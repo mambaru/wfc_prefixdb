@@ -9,7 +9,7 @@ namespace wamba { namespace prefixdb {
 struct basic_field_json
 {
   JSON_NAME(val)
-  
+    
   typedef ::wfc::json::object<
     basic_field,
     ::wfc::json::member_list<

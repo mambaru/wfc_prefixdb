@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/domain/impl/multidb_options.hpp>
+#include <prefixdb/domain/storage/multidb_options.hpp>
 
 namespace wamba{ namespace prefixdb{
 

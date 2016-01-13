@@ -1,5 +1,7 @@
 #include "rocksdb.hpp"
-#include "value.hpp"
+#include "persistent_value.hpp"
+#include "updater/operation_inc.hpp"
+#include "updater/operation_set.hpp"
 
 #include <wfc/logger.hpp>
 #include <rocksdb/db.h>
@@ -15,30 +17,60 @@ rocksdb::rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli)
 // Гарантированно req!=nullptr, may be cb==nullptr
 void rocksdb::set( request::set::ptr req, response::set::handler cb)
 {
-  typedef response::set::field field_type;
   typedef ::rocksdb::Slice slice_type;
   ::rocksdb::WriteBatch batch;
 
   size_t reserve = 0;
-  for ( const auto& field : req->fields)
+  for ( const request::set::field& field : req->fields)
   {
     reserve += field.val.size() + sizeof(value_head);
   }
   
-  value::buffer_type buff;
+  persistent_value::buffer_type buff;
   buff.reserve(reserve);
   
-  for ( const auto& field : req->fields)
+  for ( const request::set::field& field : req->fields)
   {
-    auto slice = value::serialize<slice_type>(buff, field.val, field.type, field.ttl);
-    batch.Put(field.key, slice );
+    if ( field.force )
+    {
+      auto slice = persistent_value::serialize<slice_type>(buff, field.val, field.type, field.ttl);
+      batch.Put(field.key, slice );
+    }
+    else
+    {
+      // Требуеться проверка типа, работаем через Merge
+      operation_set op;
+      op.force = field.force; // всегда false
+      op.val   = field.val;
+      op.type  = field.type;
+      op.ttl   = field.ttl;
+      auto slice = operation_set::serialize<slice_type>(buff, op );
+      batch.Merge(field.key, slice);
+    }
   }
 
+  this->write_batch_<response::set>(batch, std::move(req), std::move(cb) );
+  /*
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
 
   if ( cb == nullptr )
     return;
 
+  if ( req->nores )
+  {
+    auto res = std::make_unique<response::inc>();
+    res->prefix = std::move(req->prefix);
+    res->status = status.ok() ? common_status::OK : common_status::WriteError;
+    cb( std::move(res) );
+  }
+  else
+  {
+    std::cout << "GET " << req->fields[0].key << std::endl;
+    this->get_<response::inc>( std::move(req), std::move(cb) );
+  }
+  */
+
+  /*
   // **********************************************************
   // формируем ответ
   auto res = std::make_unique<response::set>();
@@ -71,10 +103,37 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
   }
 
   cb(std::move(res));
+  */
 }
+
+template<typename Res, typename Batch, typename ReqPtr, typename Callback>
+void rocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
+{
+  ::rocksdb::WriteOptions wo;
+  wo.sync = req->sync;
+  
+  ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
+
+  if ( cb == nullptr )
+    return;
+
+  if ( req->nores )
+  {
+    auto res = std::make_unique<Res>();
+    res->prefix = std::move(req->prefix);
+    res->status = status.ok() ? common_status::OK : common_status::WriteError;
+    cb( std::move(res) );
+  }
+  else
+  {
+    this->get_<Res>( std::move(req), std::move(cb) );
+  }
+}
+
 
 namespace {
   inline void get_mov_val(response::has::field&,     std::string&    ) { /* рекламное место здается */ }
+  inline void get_mov_val(response::set::field& fld, std::string& val) {    fld.val = std::move(val);  }
   inline void get_mov_val(response::get::field& fld, std::string& val) {    fld.val = std::move(val);  }
   inline void get_mov_val(response::del::field& fld, std::string& val) {    fld.val = std::move(val);  }
   inline void get_mov_val(response::inc::field& fld, std::string& val) {    fld.val = std::move(val);  }
@@ -112,11 +171,11 @@ void rocksdb::get_(ReqPtr req, Callback cb)
   for ( size_t i = 0; i!=resvals.size(); ++i)
   {
     typename response_type::field fld;
+    fld.key = std::move( req->fields[i].key );
     if ( status[i].ok() )
     {
       const std::string& str = resvals[i];
-      value val = value::deserialize( str.data(), str.data() + str.size(), req->noval );
-      fld.key = std::move( req->fields[i].key );
+      persistent_value val = persistent_value::deserialize( str.data(), str.data() + str.size(), req->noval );
       get_mov_val(fld, val.data);
       fld.type = val.type;
       fld.ttl = val.ttl;
@@ -124,6 +183,7 @@ void rocksdb::get_(ReqPtr req, Callback cb)
     else
     {
       fld.type = field_type::none;
+      fld.ttl = 0;
       std::string tmp = "null";
       get_mov_val(fld, tmp);
     }
@@ -205,11 +265,35 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
   operation_inc::buffer_type buff;
   buff.reserve(reserve);
   
-  // auto callback = nullptr;
-  if ( !req->nores )
+  /*
+  operation_inc::handler_fun handler = nullptr;
+  response::inc::ptr res = nullptr;
+  bool success_all = true;
+  
+  if ( cb!=nullptr )
   {
-    // callback = ...
+    bool detail = !req->nores;
+    res = std::make_unique<response::inc>();
+    if ( detail)
+      res->fields.reserve(req->fields.size());
+    
+    auto pres = res.get();
+    handler = [&success_all, detail, pres](std::string key, std::string val, field_type type, time_t ttl)
+    {
+      if ( type == field_type::none )
+        success_all = false;
+      if ( detail )
+      {
+        response::inc::field field;
+        field.key = std::move(key);
+        field.val = std::move(val);
+        field.type = type;
+        field.ttl = ttl;
+        pres->fields.push_back( std::move(field) );
+      }
+    };
   }
+  */
   
   for ( const auto& field : req->fields)
   {
@@ -217,30 +301,55 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
     op.force = field.force;
     op.inc   = field.inc;
     op.def   = field.def;
-    op.type  = field.type;
+    // op.type  = field_type::number;
     op.ttl   = field.ttl;
-    //op.callback = callback;
+
+    /*
+    if ( handler != nullptr )
+      op.handler = new operation_inc::handler_fun(handler);
+    */
     
     auto slice = operation_inc::serialize<slice_type>(buff, op );
-#warning Callback на каждую операцию
     batch.Merge(field.key, slice);
   }
 
-  ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
-
+  ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch );
+  /*std::cout << "Writed: " << status.ToString() << std::endl;
+  ::rocksdb::CompactRangeOptions co;
+  
+  status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
+  std::cout << "CompactRange: " << status.ToString() << std::endl;
+  */
   if ( cb == nullptr )
     return;
+  
+  /*
+  res->status = status.ok() 
+		? ( success_all ? common_status::OK : common_status::SomeFieldFail )
+		: common_status::WriteError;
+                */
+ 
+  /*
+  res->status = status.ok() 
+                ? common_status::OK : common_status::SomeFieldFail )
+                : common_status::WriteError;
+  res->prefix = std::move(req->prefix);
+  cb( std::move(res) );
+  */
   
   if ( req->nores )
   {
     auto res = std::make_unique<response::inc>();
+    res->prefix = std::move(req->prefix);
     res->status = status.ok() ? common_status::OK : common_status::WriteError;
     cb( std::move(res) );
   }
   else
   {
+    std::cout << "GET " << req->fields[0].key << std::endl;
     this->get_<response::inc>( std::move(req), std::move(cb) );
   }
+  
 }
 
 void rocksdb::upd( request::upd::ptr req, response::upd::handler cb) 

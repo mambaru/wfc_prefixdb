@@ -1,6 +1,6 @@
 #include "prefixdb.hpp"
 #include <wfc/logger.hpp>
-#include "impl/multidb.hpp"
+#include "storage/multidb.hpp"
 
 namespace wamba{ namespace prefixdb {
   

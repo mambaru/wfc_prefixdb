@@ -22,7 +22,7 @@
 
 
 #include "rocksdb.hpp"
-#include "merge_operator.hpp"
+#include "updater/merge_operator.hpp"
 #include "aux/rocksdb_comparator.hpp"
 
 

@@ -11,6 +11,7 @@ namespace request
   {
     struct field: field_base
     {
+      // type игнорируется (всегда number)
       bool force = true;
       int64_t inc = 0;
       int64_t def = 0;
@@ -18,8 +19,9 @@ namespace request
     typedef std::vector<field> field_list_t;
     
     std::string prefix;
-    bool nores = false;  // no result пустой результат, prefix="", status=OK
-    bool noval = true; // не сериализуеться
+    bool sync = false;
+    bool nores = true;  // no result пустой результат, prefix="", status=OK
+    bool noval = false; // не сериализуеться
     field_list_t fields;
     
     typedef std::unique_ptr<inc> ptr;

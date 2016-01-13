@@ -7,47 +7,42 @@ namespace wamba { namespace prefixdb {
 
 namespace request
 {
-  struct upd
+  struct set
   {
-    struct params: key_field
+    struct field: basic_field
     {
-      int inc = 0;
-      int def = 0;
+      bool force = true; // true - response::list пустой 
     };
-    
-    struct field: field_base
-    {
-      typedef std::vector<params> params_list_t;
-      params_list_t val;
-    };
-    
     typedef std::vector<field> field_list_t;
     
     std::string prefix;
-    bool nores = true;                  // no result пустой результат, prefix="", status=OK
-    bool noval = true;
+    bool sync = false;
+    bool nores = true;
+    bool noval = false;
     field_list_t fields;
-    typedef std::unique_ptr<upd> ptr;
+    
+    typedef std::unique_ptr<set> ptr;
   };
 }
 
 namespace response
 {
-  struct upd
+  struct set
   {
     struct field
-      : basic_field
-    {};
-    
+      : basic_field 
+    {
+    };
     typedef std::vector<field> field_list_t;
     
     common_status status =  common_status::OK;
     std::string prefix;
     field_list_t fields;
 
-    typedef std::unique_ptr<upd> ptr;
+    typedef std::unique_ptr<set> ptr;
     typedef std::function< void(ptr) > handler;
   };
+
 }
 
 }}

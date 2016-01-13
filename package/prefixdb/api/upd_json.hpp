@@ -18,6 +18,7 @@ namespace request
     JSON_NAME(nores)
     JSON_NAME(noval)
     JSON_NAME(fields)
+    JSON_NAME(sync)
 
     typedef ::wfc::json::object<
       upd::params,
@@ -44,6 +45,7 @@ namespace request
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, upd, std::string, &upd::prefix>,
         ::wfc::json::member<n_nores,  upd, bool, &upd::nores>,
+        ::wfc::json::member<n_sync,   upd, bool, &upd::sync>,
         ::wfc::json::member<n_fields, upd, upd::field_list_t, &upd::fields, array_of_fields_json>
       >
     > type;

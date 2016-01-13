@@ -8,11 +8,11 @@ SET(
   prefixdb_package.cpp
   prefixdb/prefixdb_module.cpp
   prefixdb/domain/prefixdb.cpp
-  prefixdb/domain/impl/multidb.cpp
-  prefixdb/domain/impl/rocksdb_factory.cpp
-  prefixdb/domain/impl/rocksdb.cpp
-  prefixdb/domain/impl/merge_operator.cpp
-  prefixdb/domain/impl/god.cpp
+  prefixdb/domain/storage/multidb.cpp
+  prefixdb/domain/storage/rocksdb_factory.cpp
+  prefixdb/domain/storage/rocksdb.cpp
+  prefixdb/domain/storage/god.cpp
+  prefixdb/domain/storage/updater/merge_operator.cpp
   prefixdb/domain/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp

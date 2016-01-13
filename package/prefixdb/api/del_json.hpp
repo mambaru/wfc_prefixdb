@@ -15,10 +15,12 @@ namespace request
     JSON_NAME(fields)
     JSON_NAME(nores)
     JSON_NAME(noval)
+    JSON_NAME(sync)
 
     typedef ::wfc::json::object<
       del,
       ::wfc::json::member_list<
+        ::wfc::json::member<n_sync,   del, bool, &del::sync>,
         ::wfc::json::member<n_nores,  del, bool, &del::nores>,
         ::wfc::json::member<n_noval,  del, bool, &del::noval>,
         ::wfc::json::member<n_prefix, del, std::string, &del::prefix>,

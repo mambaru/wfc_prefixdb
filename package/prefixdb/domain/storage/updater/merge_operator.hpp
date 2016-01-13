@@ -2,7 +2,8 @@
 
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/env.h>
-#include "value.hpp"
+#pragma once
+//#include "value.hpp"
 
 namespace wamba{ namespace prefixdb{
   
@@ -29,6 +30,11 @@ private:
             std::string* new_value,
             ::rocksdb::Logger* logger) const;
 
+  bool set_(const slice_type& key,
+            const slice_type* existing_value,
+            const slice_type& value,
+            std::string* new_value,
+            ::rocksdb::Logger* logger) const;
 };
 
 }}
