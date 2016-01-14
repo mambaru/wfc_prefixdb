@@ -11,8 +11,8 @@ namespace request
   {
     struct params: key_field
     {
-      int inc = 0;
-      int def = 0;
+      std::string inc = "null";
+      std::string val = "null";
     };
     
     struct field: field_base

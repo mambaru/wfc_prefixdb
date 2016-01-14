@@ -24,8 +24,8 @@ namespace request
       upd::params,
       ::wfc::json::member_list<
         ::wfc::json::base<key_field_json>,
-        ::wfc::json::member<n_inc, upd::params, int, &upd::params::inc>,
-        ::wfc::json::member<n_def, upd::params, int, &upd::params::def>
+        ::wfc::json::member<n_inc, upd::params, std::string, &upd::params::inc, ::wfc::json::raw_value<> >,
+        ::wfc::json::member<n_def, upd::params, std::string, &upd::params::val, ::wfc::json::raw_value<> >
       >
     > params_json;
     typedef ::wfc::json::array< std::vector< params_json > > array_of_params_json;

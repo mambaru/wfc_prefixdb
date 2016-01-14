@@ -4,6 +4,7 @@
 #include "updater/operation_set.hpp"
 
 #include <wfc/logger.hpp>
+#include <wfc/json.hpp>
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 
@@ -354,8 +355,30 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void rocksdb::upd( request::upd::ptr req, response::upd::handler cb) 
 {
-  DOMAIN_LOG_FATAL("rocksdb::upd not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
+  typedef std::vector< std::pair<std::string, std::string> > object_type;
+  std::string jsob = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
+  std::cout << jsob << std::endl;
+  typedef ::wfc::json::object2array<  
+    ::wfc::json::value<std::string>,
+    ::wfc::json::raw_value<std::string>
+  > object_json;
+  
+  object_type obj;
+  object_json::serializer()(obj, jsob.begin(), jsob.end() );
+  
+  for (auto i : obj )
+  {
+    std::cout << i.first << ":" << i.second << std::endl;
+  }
+  std::string res;
+  object_json::serializer()(obj, std::back_inserter(res) );
+  std::cout << res << std::endl;
+  
+  
+  /*DOMAIN_LOG_FATAL("rocksdb::upd not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
+  
   abort();
+  */
 }
 
 }}
