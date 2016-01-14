@@ -1,18 +1,25 @@
 #pragma once
 
-#include "operation_base.hpp"
+#include "basic_operation.hpp"
 #include <memory>
 #include <iostream>
 
 namespace wamba{ namespace prefixdb{
  
+struct operation_set: basic_operation<operation::set> {};
+  
+//typedef basic_operation<operation::set> operation_set;
+
+  /*
 struct base_op_set: operation_base<operation::set> 
 {
   size_t data_size = 0;
 };
 
+
 struct operation_set: base_op_set
 {
+
   std::string val;
 
   template<typename SliceType>
@@ -38,5 +45,6 @@ struct operation_set: base_op_set
     //return *reinterpret_cast<const operation_inc*>(slice.data());
   }
 };
+*/
 
 }}

@@ -8,7 +8,9 @@ namespace wamba{ namespace prefixdb{
  
 struct value_head
 {
-  const size_t size = sizeof(value_head);
+private:
+  size_t size = sizeof(value_head);
+public:
   time_t       ttl  = 0;
   field_type   type = field_type::any;
 };

@@ -24,13 +24,19 @@ public:
   
 private:
 
+  bool set_(const slice_type& key,
+            const slice_type* existing_value,
+            const slice_type& value,
+            std::string* new_value,
+            ::rocksdb::Logger* logger) const;
+
   bool inc_(const slice_type& key,
             const slice_type* existing_value,
             const slice_type& value,
             std::string* new_value,
             ::rocksdb::Logger* logger) const;
 
-  bool set_(const slice_type& key,
+  bool upd_(const slice_type& key,
             const slice_type* existing_value,
             const slice_type& value,
             std::string* new_value,

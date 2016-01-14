@@ -1,11 +1,22 @@
 #pragma once
 
 #include "operation_base.hpp"
+#include "basic_operation.hpp"
 #include <memory>
 #include <iostream>
 
 namespace wamba{ namespace prefixdb{
  
+template<operation op>
+struct base_inc: operation_base<op>
+{
+  int64_t inc = 0;
+  int64_t def = 0;
+};
+
+struct operation_inc: basic_operation<operation::inc, base_inc> {};
+ 
+/*
 struct operation_inc: operation_base<operation::inc>
 {
   int64_t inc = 0;
@@ -27,10 +38,11 @@ struct operation_inc: operation_base<operation::inc>
   }
   
   template<typename SliceType>
-  inline static operation_inc deserialize( const SliceType& slice )
+  inline static void deserialize( const SliceType& slice, operation_inc& val )
   {
-    return *reinterpret_cast<const operation_inc*>(slice.data());
+    val = *reinterpret_cast<const operation_inc*>(slice.data());
   }
 };
+*/
 
 }}

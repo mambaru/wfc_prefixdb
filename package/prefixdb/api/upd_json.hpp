@@ -2,6 +2,9 @@
 
 #include <prefixdb/api/upd.hpp>
 #include <prefixdb/api/aux/key_field_json.hpp>
+#include <prefixdb/api/aux/field_base_json.hpp>
+#include <prefixdb/api/aux/basic_field_json.hpp>
+#include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {
@@ -28,7 +31,7 @@ namespace request
         ::wfc::json::member<n_def, upd::params, std::string, &upd::params::val, ::wfc::json::raw_value<> >
       >
     > params_json;
-    typedef ::wfc::json::array< std::vector< params_json > > array_of_params_json;
+    typedef ::wfc::json::array< std::vector< params_json >, 10 > array_of_params_json;
 
     
     typedef ::wfc::json::object<
@@ -38,7 +41,7 @@ namespace request
         ::wfc::json::member<n_val, upd::field, upd::field::params_list_t, &upd::field::val, array_of_params_json>
       >
     > field_json;
-    typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
+    typedef ::wfc::json::array< std::vector< field_json >, 5 > array_of_fields_json;
 
     typedef ::wfc::json::object<
       upd,
@@ -70,7 +73,7 @@ namespace response
         ::wfc::json::base< basic_field_json >
       >
     > field_json;
-    typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
+    typedef ::wfc::json::array< std::vector< field_json >, 10 > array_of_fields_json;
 
     typedef ::wfc::json::object<
       upd,
