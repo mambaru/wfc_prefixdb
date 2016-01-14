@@ -190,7 +190,7 @@ bool merge_operator::upd_(const slice_type& key,
     std::string& pval = itr->second;
     
     using parser = ::wfc::json::parser;
-    ::wfc::json::value<int64_t> ser;
+    ::wfc::json::value<int64_t>::serializer ser;
     if ( parser::is_number( m.inc.begin(), m.inc.end() ) )
     {
       int64_t val = 0;
