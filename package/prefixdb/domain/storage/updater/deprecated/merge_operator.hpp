@@ -24,10 +24,6 @@ public:
   
 private:
 
-  void inc_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
-  void packed_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
-  
-  /*
   bool set_(const slice_type& key,
             const slice_type* existing_value,
             const slice_type& value,
@@ -45,7 +41,6 @@ private:
             const slice_type& value,
             std::string* new_value,
             ::rocksdb::Logger* logger) const;
-  */
 };
 
 }}

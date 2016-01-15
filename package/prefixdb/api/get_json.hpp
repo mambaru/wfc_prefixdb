@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/api/get.hpp>
-#include <prefixdb/api/aux/basic_field_json.hpp>
+#include <prefixdb/api/set_json.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
@@ -17,7 +17,7 @@ namespace request
       get,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, get, std::string, &get::prefix>,
-        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, ::wfc::json::array< std::vector<key_field_json> > >
+        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, key_list_json >
       >
     > type;
     typedef type::target target;
@@ -35,6 +35,7 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
 
+    /*
     typedef ::wfc::json::object<
       get::field,
       ::wfc::json::member_list<
@@ -42,13 +43,14 @@ namespace response
       >
     > field_json;
     typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
+    */
 
     typedef ::wfc::json::object<
       get,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, get, std::string, &get::prefix>,
         ::wfc::json::member<n_status, get, common_status, &get::status, common_status_json>,
-        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, array_of_fields_json>
+        ::wfc::json::member<n_fields, get, get::field_list_t, &get::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;

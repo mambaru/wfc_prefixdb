@@ -17,7 +17,7 @@ namespace request
       has,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, has, std::string, &has::prefix>,
-        ::wfc::json::member<n_fields, has, has::field_list_t, &has::fields, ::wfc::json::array< std::vector<key_field_json> > >
+        ::wfc::json::member<n_fields, has, has::field_list_t, &has::fields, key_list_json >
       >
     > type;
     typedef type::target target;
@@ -35,6 +35,7 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
 
+    /*
     typedef ::wfc::json::object<
       has::field,
       ::wfc::json::member_list<
@@ -42,13 +43,14 @@ namespace response
       >
     > field_json;
     typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
+    */
 
     typedef ::wfc::json::object<
       has,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, has, std::string, &has::prefix>,
         ::wfc::json::member<n_status, has, common_status, &has::status, common_status_json>,
-        ::wfc::json::member<n_fields, has, has::field_list_t, &has::fields, array_of_fields_json>
+        ::wfc::json::member<n_fields, has, has::field_list_t, &has::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;

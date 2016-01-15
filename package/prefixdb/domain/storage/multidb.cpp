@@ -72,7 +72,7 @@ namespace
         {
           auto res = std::make_unique<Res>();
           res->prefix = std::move(req->prefix);
-          res->status = common_status::OK;
+          res->status = common_status::EmptyFields;
           cb( std::move(res) );
         }
         return true;
@@ -268,6 +268,20 @@ void multidb::upd( request::upd::ptr req, response::upd::handler cb)
   else 
   {
     create_prefix_fail<response::upd>( std::move(req), std::move(cb) );
+  }
+}
+
+void multidb::packed( request::packed::ptr req, response::packed::handler cb)
+{
+  if ( empty_fields<response::packed>(req, cb) ) return;
+
+  if ( auto db = this->prefix_(req->prefix, true) )
+  {
+    db->packed( std::move(req), std::move(cb) );
+  }
+  else 
+  {
+    create_prefix_fail<response::packed>( std::move(req), std::move(cb) );
   }
 }
 

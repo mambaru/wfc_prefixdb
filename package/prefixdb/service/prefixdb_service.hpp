@@ -7,6 +7,7 @@
 #include <prefixdb/api/del_json.hpp>
 #include <prefixdb/api/inc_json.hpp>
 #include <prefixdb/api/upd_json.hpp>
+#include <prefixdb/api/packed_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace service{
@@ -17,6 +18,7 @@ JSONRPC_TAG(has)
 JSONRPC_TAG(del)
 JSONRPC_TAG(inc)
 JSONRPC_TAG(upd)
+JSONRPC_TAG(packed)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -26,7 +28,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _has_, request::has_json,  response::has_json, iprefixdb, &iprefixdb::has>,
   wfc::jsonrpc::invoke_method< _del_, request::del_json,  response::del_json, iprefixdb, &iprefixdb::del>,
   wfc::jsonrpc::invoke_method< _inc_, request::inc_json,  response::inc_json, iprefixdb, &iprefixdb::inc>,
-  wfc::jsonrpc::invoke_method< _upd_, request::upd_json,  response::upd_json, iprefixdb, &iprefixdb::upd>
+  wfc::jsonrpc::invoke_method< _upd_, request::upd_json,  response::upd_json, iprefixdb, &iprefixdb::upd>,
+  wfc::jsonrpc::invoke_method< _packed_, request::packed_json,  response::packed_json, iprefixdb, &iprefixdb::packed>
 >
 {
 };

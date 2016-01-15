@@ -7,6 +7,7 @@
 #include <prefixdb/api/del.hpp>
 #include <prefixdb/api/inc.hpp>
 #include <prefixdb/api/upd.hpp>
+#include <prefixdb/api/packed.hpp>
 
 namespace wamba { namespace prefixdb {
 
@@ -19,6 +20,7 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void del( request::del::ptr req, response::del::handler cb) = 0;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) = 0;
   virtual void upd( request::upd::ptr req, response::upd::handler cb) = 0;
+  virtual void packed( request::packed::ptr req, response::packed::handler cb) = 0;
 };
 
 }}

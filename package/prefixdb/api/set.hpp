@@ -5,22 +5,21 @@
 
 namespace wamba { namespace prefixdb {
 
+typedef std::pair<std::string, std::string> field_pair;
+typedef std::vector< field_pair > raw_field_list_t;
+typedef std::vector< std::string > key_list_t;
+
 namespace request
 {
   struct set
   {
-    struct field: basic_field
-    {
-      bool force = true; // true - response::list пустой 
-    };
-    typedef std::vector<field> field_list_t;
+    typedef raw_field_list_t field_list_t;
     
-    std::string prefix;
     bool sync = false;
     bool nores = true;
     bool noval = false;
+    std::string prefix;
     field_list_t fields;
-    
     typedef std::unique_ptr<set> ptr;
   };
 }
@@ -29,12 +28,7 @@ namespace response
 {
   struct set
   {
-    struct field
-      : basic_field 
-    {
-    };
-    typedef std::vector<field> field_list_t;
-    
+    typedef raw_field_list_t field_list_t;
     common_status status =  common_status::OK;
     std::string prefix;
     field_list_t fields;

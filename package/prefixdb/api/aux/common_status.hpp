@@ -5,6 +5,7 @@ namespace wamba { namespace prefixdb {
 enum class common_status
 {
   OK,
+  EmptyFields,
   CreatePrefixFail,
   PrefixNotFound,
   WriteError,

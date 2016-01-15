@@ -1,7 +1,8 @@
 #include "rocksdb.hpp"
 #include "persistent_value.hpp"
-#include "updater/operation_inc.hpp"
-#include "updater/operation_set.hpp"
+//#include "updater/operation_inc.hpp"
+//#include "updater/operation_set.hpp"
+#include "updater/update.hpp"
 
 #include <wfc/logger.hpp>
 #include <wfc/json.hpp>
@@ -18,9 +19,16 @@ rocksdb::rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli)
 // Гарантированно req!=nullptr, may be cb==nullptr
 void rocksdb::set( request::set::ptr req, response::set::handler cb)
 {
-  typedef ::rocksdb::Slice slice_type;
   ::rocksdb::WriteBatch batch;
 
+  for ( const auto& field : req->fields)
+  {
+    batch.Put( field.first, field.second );
+  }
+  
+  this->write_batch_<response::set>(batch, std::move(req), std::move(cb) );
+  
+  /*
   size_t reserve = 0;
   for ( const request::set::field& field : req->fields)
   {
@@ -40,17 +48,22 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
     else
     {
       // Требуеться проверка типа, работаем через Merge
+      
       operation_set op;
       op.force = field.force; // всегда false
       op.val   = field.val;
       op.type  = field.type;
       op.ttl   = field.ttl;
       auto slice = operation_set::serialize<slice_type>(buff, op );
+      
       batch.Merge(field.key, slice);
     }
   }
 
   this->write_batch_<response::set>(batch, std::move(req), std::move(cb) );
+  */
+
+
   /*
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
 
@@ -133,11 +146,16 @@ void rocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
 
 
 namespace {
-  inline void get_mov_val(response::has::field&,     std::string&    ) { /* рекламное место здается */ }
+  /*
+  inline void get_mov_val(response::has::field&,     std::string&    ) {  }
   inline void get_mov_val(response::set::field& fld, std::string& val) {    fld.val = std::move(val);  }
   inline void get_mov_val(response::get::field& fld, std::string& val) {    fld.val = std::move(val);  }
   inline void get_mov_val(response::del::field& fld, std::string& val) {    fld.val = std::move(val);  }
   inline void get_mov_val(response::inc::field& fld, std::string& val) {    fld.val = std::move(val);  }
+  */
+  
+inline std::string& get_key(std::string& key) {return key;}
+inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
@@ -148,13 +166,45 @@ void rocksdb::get_(ReqPtr req, Callback cb)
 
   std::vector<slice_type> keys;
   keys.reserve(req->fields.size() );
-  for ( const auto& fld: req->fields ) keys.push_back(fld.key);
+  for ( auto& fld: req->fields ) keys.push_back( get_key(fld) );
 
   std::vector<std::string> resvals;
   resvals.reserve(keys.size());
   std::vector< ::rocksdb::Status> status
     = _db->MultiGet( ::rocksdb::ReadOptions(), keys, &resvals);
 
+  bool ok = true;
+  auto res = std::make_unique<response_type>();
+  res->prefix = std::move(req->prefix);
+  res->status = common_status::OK;
+  res->fields.reserve(resvals.size());
+  field_pair field;
+  for ( size_t i = 0; i!=resvals.size(); ++i)
+  {
+    field.first = std::move( get_key(req->fields[i]) );
+    field.second = std::move(resvals[i]);
+    res->fields.push_back( std::move(field) );
+    if ( !status[i].ok() )
+    {
+      ok = false;
+      res->fields.back().second = "null";
+    }
+    /*
+    field_pair field(std::move(keys[i]), std::move(resvals[i]));
+    if ( !status[i].ok() )
+    {
+      ok = false;
+      field.second = "null";
+    }
+    res->fields.push_back( std::move(field) );
+    */
+  }
+  
+  if (!ok) res->status = common_status::SomeFieldFail;
+  cb( std::move(res) );
+
+
+    /*
   if ( keys.size() != resvals.size() )
   {
     DOMAIN_LOG_FATAL("rocksdb::get keys.size() != resvals.size() " << keys.size() << "!=" << resvals.size())
@@ -190,22 +240,11 @@ void rocksdb::get_(ReqPtr req, Callback cb)
     }
     res->fields.push_back( std::move(fld) );
     if ( ok ) ok = status[i].ok();
-      
-    /*
-    typename response_type::field fld;
-    fld.key = std::move( req->fields[i].key );
-    get_mov_val(fld, resvals[i]);
-
-    fld.type = status[i].ok()
-               ? field_type::any
-               : field_type::none;
-    res->fields.push_back( std::move(fld) );
-    if ( ok ) ok = status[i].ok();
-    */
   }
 
   if (!ok) res->status = common_status::SomeFieldFail;
   cb( std::move(res) );
+  */
 }
 
 
@@ -222,9 +261,9 @@ void rocksdb::has( request::has::ptr req, response::has::handler cb)
 void rocksdb::del( request::del::ptr req, response::del::handler cb) 
 {
   ::rocksdb::WriteBatch batch;
-  for ( const auto& field : req->fields)
+  for ( auto& field : req->fields)
   {
-    batch.Delete(field.key);
+    batch.Delete( get_key(field) );
   }
 
   if ( req->nores || cb==nullptr)
@@ -259,6 +298,33 @@ void rocksdb::del( request::del::ptr req, response::del::handler cb)
 
 void rocksdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
+  ::rocksdb::WriteOptions wopt;
+  wopt.sync = req->sync;
+  ::rocksdb::WriteBatch batch;
+  std::string json;
+  json.reserve(64);
+  update_json::serializer ser;
+  for (auto& f: req->fields)
+  {
+    update upd;
+    upd.mode = update_mode::inc;
+    upd.value = std::move(f.second);
+    json.clear();
+    ser( upd, std::inserter(json, json.end()));
+    batch.Merge(f.first, json);
+  }
+  
+  this->write_batch_<response::inc>(batch, std::move(req), std::move(cb) );
+  /*
+  update upd;
+  upd.mode = update_mode::si;
+  upd.force = req->force;
+  upd.value = req->
+  */
+  
+  
+  
+  /*
   typedef ::rocksdb::Slice slice_type;
   ::rocksdb::WriteBatch batch;
 
@@ -266,77 +332,22 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
   operation_inc::buffer_type buff;
   buff.reserve(reserve);
   
-  /*
-  operation_inc::handler_fun handler = nullptr;
-  response::inc::ptr res = nullptr;
-  bool success_all = true;
-  
-  if ( cb!=nullptr )
-  {
-    bool detail = !req->nores;
-    res = std::make_unique<response::inc>();
-    if ( detail)
-      res->fields.reserve(req->fields.size());
-    
-    auto pres = res.get();
-    handler = [&success_all, detail, pres](std::string key, std::string val, field_type type, time_t ttl)
-    {
-      if ( type == field_type::none )
-        success_all = false;
-      if ( detail )
-      {
-        response::inc::field field;
-        field.key = std::move(key);
-        field.val = std::move(val);
-        field.type = type;
-        field.ttl = ttl;
-        pres->fields.push_back( std::move(field) );
-      }
-    };
-  }
-  */
-  
   for ( const auto& field : req->fields)
   {
     operation_inc op;
     op.force = field.force;
     op.inc   = field.inc;
     op.def   = field.def;
-    // op.type  = field_type::number;
     op.ttl   = field.ttl;
 
-    /*
-    if ( handler != nullptr )
-      op.handler = new operation_inc::handler_fun(handler);
-    */
     
     auto slice = operation_inc::serialize<slice_type>(buff, op );
     batch.Merge(field.key, slice);
   }
 
   ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch );
-  /*std::cout << "Writed: " << status.ToString() << std::endl;
-  ::rocksdb::CompactRangeOptions co;
-  
-  status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
-  std::cout << "CompactRange: " << status.ToString() << std::endl;
-  */
   if ( cb == nullptr )
     return;
-  
-  /*
-  res->status = status.ok() 
-		? ( success_all ? common_status::OK : common_status::SomeFieldFail )
-		: common_status::WriteError;
-                */
- 
-  /*
-  res->status = status.ok() 
-                ? common_status::OK : common_status::SomeFieldFail )
-                : common_status::WriteError;
-  res->prefix = std::move(req->prefix);
-  cb( std::move(res) );
-  */
   
   if ( req->nores )
   {
@@ -350,11 +361,38 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
     std::cout << "GET " << req->fields[0].key << std::endl;
     this->get_<response::inc>( std::move(req), std::move(cb) );
   }
+  */
+}
+
+
+void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
+{
+  ::rocksdb::WriteOptions wopt;
+  wopt.sync = req->sync;
   
+  ::rocksdb::WriteBatch batch;
+  std::string json;
+  json.reserve(64);
+  
+  update_json::serializer ser;
+  for (auto& f: req->fields)
+  {
+    update upd;
+    upd.mode = update_mode::packed;
+    upd.value = std::move(f.second);
+    json.clear();
+    ser( upd, std::inserter(json, json.end()));
+    
+    std::cout << "rocksdb::packed Merge.... : " << json << std::endl;
+    batch.Merge(f.first, json);
+  }
+
+  this->write_batch_<response::packed>(batch, std::move(req), std::move(cb) );
 }
 
 void rocksdb::upd( request::upd::ptr req, response::upd::handler cb) 
 {
+  /*
   typedef std::vector< std::pair<std::string, std::string> > object_type;
   std::string jsob = "{\"key1\":\"value1\", \"key2\":\"value2\"}";
   std::cout << jsob << std::endl;
@@ -373,7 +411,7 @@ void rocksdb::upd( request::upd::ptr req, response::upd::handler cb)
   std::string res;
   object_json::serializer()(obj, std::back_inserter(res) );
   std::cout << res << std::endl;
-  
+  */
   
   /*DOMAIN_LOG_FATAL("rocksdb::upd not IMPL " << (req!=nullptr) << " " << (cb!=nullptr))
   

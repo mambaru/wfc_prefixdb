@@ -20,6 +20,7 @@ public:
   virtual void del( request::del::ptr req, response::del::handler cb) override;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
   virtual void upd( request::upd::ptr req, response::upd::handler cb) override;
+  virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
 public:
   
   // void del_( request::del::ptr req, response::del::handler cb);

@@ -49,4 +49,9 @@ void prefixdb::upd( request::upd::ptr req, response::upd::handler cb)
   _impl->upd( std::move(req), std::move(cb) );
 }
 
+void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)
+{
+  _impl->packed( std::move(req), std::move(cb) );
+}
+
 }}
