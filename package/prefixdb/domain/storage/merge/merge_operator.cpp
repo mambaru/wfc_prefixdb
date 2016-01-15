@@ -3,7 +3,7 @@
 #include <rocksdb/env.h>
 
 #include "merge_operator.hpp"
-#include "update.hpp"
+#include "merge.hpp"
 
 #include <wfc/logger.hpp>
 #include <wfc/json.hpp>
@@ -12,7 +12,8 @@
 
 namespace wamba{ namespace prefixdb{
 
-namespace{
+namespace
+{
   using parser = ::wfc::json::parser;
   
   inline const char* begin(const merge_operator::slice_type* existing_value)
@@ -28,6 +29,7 @@ namespace{
       return nullptr;
     return existing_value->data() + existing_value->size();
   }
+
 }
   
 bool merge_operator::Merge(const slice_type& key,
@@ -39,28 +41,20 @@ try
 {
   DEBUG_LOG_MESSAGE("merge_operator::Merge: " << key.ToString()  )
   
-  std::cout << value.ToString() << std::endl;
-  update upd;
-  update_json::serializer()( upd, value.data(), value.data() + value.size() );
+  merge upd;
+  merge_json::serializer()( upd, value.data(), value.data() + value.size() );
   switch( upd.mode )
   {
-    case update_mode::inc:
+    case merge_mode::inc:
       this->inc_(*new_value, std::move(upd.value), begin(existing_value), end(existing_value) ); 
       break;
-    case update_mode::packed:
+    case merge_mode::packed:
       this->packed_(*new_value, std::move(upd.value), begin(existing_value), end(existing_value) ); 
       break;
-    default: return false;
+    default: 
+      return false;
   }
   return true;
-  /*
-  if ( upd.mode == update_mode::inc)
-  {
-    this->inc_(*new_value, std::move(upd.value), begin(existing_value), end(existing_value) );
-    return true;
-  }
-  return false;
-  */
 }
 catch(std::exception e)
 {

@@ -15,7 +15,6 @@ void prefixdb::reconfigure()
   if ( !_impl->reconfigure( this->options() ) )
   {
     wfc_abort("prefixdb open DB abort!");
-    //this->global()->registry.get< ::wfc::icore>("core")->core_stop();
   }
 }
 
@@ -42,11 +41,6 @@ void prefixdb::del( request::del::ptr req, response::del::handler cb)
 void prefixdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
   _impl->inc( std::move(req), std::move(cb) );
-}
-
-void prefixdb::upd( request::upd::ptr req, response::upd::handler cb) 
-{
-  _impl->upd( std::move(req), std::move(cb) );
 }
 
 void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)

@@ -19,7 +19,6 @@ public:
   virtual void has( request::has::ptr req, response::has::handler cb) override;
   virtual void del( request::del::ptr req, response::del::handler cb) override;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
-  virtual void upd( request::upd::ptr req, response::upd::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
 private:
   std::shared_ptr<impl> _impl;

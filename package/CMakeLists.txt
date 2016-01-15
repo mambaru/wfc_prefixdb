@@ -12,7 +12,7 @@ SET(
   prefixdb/domain/storage/rocksdb_factory.cpp
   prefixdb/domain/storage/rocksdb.cpp
   prefixdb/domain/storage/god.cpp
-  prefixdb/domain/storage/updater/merge_operator.cpp
+  prefixdb/domain/storage/merge/merge_operator.cpp
   prefixdb/domain/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp

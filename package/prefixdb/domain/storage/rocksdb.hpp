@@ -1,6 +1,7 @@
 #pragma once
 
 #include <prefixdb/iprefixdb.hpp>
+#include <prefixdb/domain/storage/merge/merge.hpp>
 #include <rocksdb/db.h>
 #include <memory>
 
@@ -19,11 +20,14 @@ public:
   virtual void has( request::has::ptr req, response::has::handler cb) override;
   virtual void del( request::del::ptr req, response::del::handler cb) override;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
-  virtual void upd( request::upd::ptr req, response::upd::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
 public:
   
   // void del_( request::del::ptr req, response::del::handler cb);
+
+  template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
+  void merge_(ReqPtr req, Callback cb);
+
   
   template<typename Res, typename ReqPtr, typename Callback>
   void get_(ReqPtr req, Callback cb);

@@ -257,20 +257,6 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
   }
 }
 
-void multidb::upd( request::upd::ptr req, response::upd::handler cb) 
-{
-  if ( empty_fields<response::upd>(req, cb) ) return;
-
-  if ( auto db = this->prefix_(req->prefix, true) )
-  {
-    db->upd( std::move(req), std::move(cb) );
-  }
-  else 
-  {
-    create_prefix_fail<response::upd>( std::move(req), std::move(cb) );
-  }
-}
-
 void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 {
   if ( empty_fields<response::packed>(req, cb) ) return;

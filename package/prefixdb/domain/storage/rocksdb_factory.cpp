@@ -22,8 +22,8 @@
 
 
 #include "rocksdb.hpp"
-#include "updater/merge_operator.hpp"
-#include "aux/rocksdb_comparator.hpp"
+#include "merge/merge_operator.hpp"
+//#include "aux/rocksdb_comparator.hpp"
 
 
 

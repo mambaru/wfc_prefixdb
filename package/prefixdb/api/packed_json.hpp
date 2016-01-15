@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/api/packed.hpp>
-#include <prefixdb/domain/storage/updater/update.hpp>
+#include <prefixdb/domain/storage/merge/merge.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {
@@ -41,22 +41,12 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
 
-    /*
-    typedef ::wfc::json::object<
-      packed::field,
-      ::wfc::json::member_list<
-        ::wfc::json::base< basic_field_json >
-      >
-    > field_json;
-    typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
-    */
-
     typedef ::wfc::json::object<
       packed,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, packed, std::string, &packed::prefix>,
-        ::wfc::json::member<n_status, packed, common_status, &packed::status, common_status_json>,
-        ::wfc::json::member<n_fields, packed, packed::field_list_t, &packed::fields, raw_fields_list_json>
+        ::wfc::json::member<n_fields, packed, packed::field_list_t, &packed::fields, raw_fields_list_json>,
+        ::wfc::json::member<n_status, packed, common_status, &packed::status, common_status_json>
       >
     > type;
     typedef type::target target;
