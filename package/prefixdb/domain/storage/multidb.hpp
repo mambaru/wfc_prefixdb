@@ -25,6 +25,7 @@ public:
   virtual void del( request::del::ptr req, response::del::handler cb) override;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
+  virtual void range( request::range::ptr req, response::range::handler cb) override;
 private:
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   

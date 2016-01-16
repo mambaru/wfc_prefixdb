@@ -1,11 +1,13 @@
 #include "rocksdb.hpp"
 #include "persistent_value.hpp"
 #include "merge/merge.hpp"
+#include "merge/merge_json.hpp"
 
 #include <wfc/logger.hpp>
 #include <wfc/json.hpp>
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
+#include <rocksdb/iterator.h>
 
 namespace wamba{ namespace prefixdb {
 
@@ -30,9 +32,10 @@ void rocksdb::merge_(ReqPtr req, Callback cb)
   {
     merge upd;
     upd.mode = Mode;
-    upd.value = std::move(f.second);
+    upd.raw = std::move(f.second);
     json.clear();
     ser( upd, std::inserter(json, json.end()));
+    std::cout << "rocksdb::merge_ " << json << std::endl;
     batch.Merge(f.first, json);
   }
   
@@ -174,5 +177,49 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
   this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );
 }
 
+void rocksdb::range( request::range::ptr req, response::range::handler cb)
+{
+  typedef ::rocksdb::Iterator iterator_type;
+  typedef std::shared_ptr<iterator_type> iterator_ptr;
+  auto res=std::make_unique<response::range>();
+  res->status = common_status::OK;
+  res->prefix = std::move(req->prefix);
+  res->fin = false;
+  
+  ::rocksdb::ReadOptions opt;
+  iterator_ptr itr(_db->NewIterator(opt));
+  if ( itr != nullptr )
+  {
+    field_pair field;
+    itr->Seek( req->from );
+    while ( req->offset && itr->Valid() ) { req->offset--; itr->Next(); }
+    while ( req->limit && itr->Valid() )
+    {
+      auto key = itr->key();
+      field.first.assign(key.data(), key.data() + key.size() );
+      
+      if ( field.first == req->to )
+        break;
+      
+      if ( !req->noval )
+      {
+        auto val = itr->value();
+        field.second.assign(val.data(), val.data() + val.size() );
+      }
+      res->fields.push_back(std::move(field));
+      itr->Next();
+      req->limit--;
+    }
+    
+    res->fin |= req->limit!=0;
+    res->fin |= !itr->Valid();
+    if ( !res->fin )
+    {
+      itr->Next();
+      res->fin = !itr->Valid() || itr->value()==req->to;
+    }
+  }
+  cb( std::move(res) );
+}
 
 }}

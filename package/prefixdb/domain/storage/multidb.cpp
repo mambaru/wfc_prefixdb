@@ -271,4 +271,19 @@ void multidb::packed( request::packed::ptr req, response::packed::handler cb)
   }
 }
 
+void multidb::range( request::range::ptr req, response::range::handler cb)
+{
+  if ( notify_ban(req, cb) ) return;
+
+  if ( auto db = this->prefix_(req->prefix, false) )
+  {
+    db->range( std::move(req), std::move(cb) );
+  }
+  else
+  {
+    prefix_not_found<response::range>( std::move(req), std::move(cb) );
+  }
+}
+
+
 }}

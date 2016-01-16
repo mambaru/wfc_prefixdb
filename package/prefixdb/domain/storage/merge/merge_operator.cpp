@@ -1,20 +1,24 @@
-
-#include <rocksdb/merge_operator.h>
-#include <rocksdb/env.h>
-
 #include "merge_operator.hpp"
 #include "merge.hpp"
+#include "merge_json.hpp"
+
+#include "inc_params.hpp"
+#include "inc_params_json.hpp"
+
+#include "packed_params.hpp"
+#include "packed_params_json.hpp"
+
+#include "packed.hpp"
+#include "packed_json.hpp"
 
 #include <wfc/logger.hpp>
 #include <wfc/json.hpp>
-
 #include <algorithm>
 
 namespace wamba{ namespace prefixdb{
 
-namespace
-{
-  using parser = ::wfc::json::parser;
+using parser = ::wfc::json::parser;
+namespace helper{
   
   inline const char* begin(const merge_operator::slice_type* existing_value)
   {
@@ -29,7 +33,44 @@ namespace
       return nullptr;
     return existing_value->data() + existing_value->size();
   }
+  
+  template<typename J, typename Obj, typename I>
+  inline bool unserialize(Obj& obj, I beg, I end)
+  try
+  {
+    if ( beg==end )
+      return false;
+    typedef typename J::serializer ser;
+    ser()(obj, beg, end);
+    return true;
+  }
+  catch( const ::wfc::json::json_error& e)
+  {
+    e.message(beg, end);
+    return false;
+  }
 
+  template<typename J, typename Obj>
+  inline bool unserialize(Obj& obj, const std::string& str)
+  {
+    return unserialize<J>(obj, str.begin(), str.end() );
+  }
+
+  template<typename J, typename Obj>
+  inline bool unserialize(Obj& obj, const merge_operator::slice_type& slice)
+  {
+    return unserialize<J>(obj, slice.data(), slice.data() + slice.size() );
+  }
+
+  template<typename J, typename Obj>
+  inline bool unserialize(Obj& obj, const merge_operator::slice_type* slice)
+  {
+    if (slice==nullptr) return false;
+    return unserialize<J>(obj, *slice);
+  }
+
+  
+  
 }
   
 bool merge_operator::Merge(const slice_type& key,
@@ -39,19 +80,23 @@ bool merge_operator::Merge(const slice_type& key,
                      ::rocksdb::Logger* /*logger*/) const 
 try
 {
-  DEBUG_LOG_MESSAGE("merge_operator::Merge: " << key.ToString()  )
+  DEBUG_LOG_MESSAGE("merge_operator::Merge: " << value.ToString()  )
   
   merge upd;
-  merge_json::serializer()( upd, value.data(), value.data() + value.size() );
+  helper::unserialize<merge_json>(upd, value);
+  std::cout << int(upd.mode) << std::endl;
   switch( upd.mode )
   {
     case merge_mode::inc:
-      this->inc_(*new_value, std::move(upd.value), begin(existing_value), end(existing_value) ); 
+      std::cout << "M1" << std::endl;
+      this->inc_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
       break;
     case merge_mode::packed:
-      this->packed_(*new_value, std::move(upd.value), begin(existing_value), end(existing_value) ); 
+      std::cout << "M2" << std::endl;
+      this->packed_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
       break;
     default: 
+      std::cout << "M3" << std::endl;
       return false;
   }
   return true;
@@ -124,10 +169,13 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   packed_params_t upd;
   if ( parser::is_object(in.begin(), in.end()) )
   {
+    std::cout << in << std::endl;
     packed_params_json::serializer()( upd, in.begin(), in.end() );
+    //std::cout << "upd[0].key=" << upd[0].key << std::endl;
   }
   else
   {
+    std::cout << "-3-" << std::endl;
     // LOG!!!
     out = std::move(in);
     return;
@@ -137,6 +185,7 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   
   if ( beg!=end && parser::is_object(beg, end) )
   {
+    std::cout << "-4-" << std::endl;
     try{
       packed_json::serializer()(pck, beg, end);
     } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
@@ -152,10 +201,12 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   }
 
   packed_field field;
-  for (auto& u : upd )
+  for (auto& p : upd )
   {
+    packed_field_params& u = p.second;
+    //std::cout << ">>> " << u.key << " " << u.inc << std::endl;
     //inc_params& u = p.second;
-    field.first = std::move(u.key);
+    field.first = std::move(p.first);
     auto itr = std::lower_bound(pck.begin(), pck.end(), field, less);
 
     if ( parser::is_null( u.inc.begin(), u.inc.end() ) 

@@ -48,4 +48,9 @@ void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)
   _impl->packed( std::move(req), std::move(cb) );
 }
 
+void prefixdb::range( request::range::ptr req, response::range::handler cb)
+{
+  _impl->range( std::move(req), std::move(cb) );
+}
+
 }}

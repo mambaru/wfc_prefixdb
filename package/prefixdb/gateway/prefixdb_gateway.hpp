@@ -6,8 +6,8 @@
 #include <prefixdb/api/has_json.hpp>
 #include <prefixdb/api/del_json.hpp>
 #include <prefixdb/api/inc_json.hpp>
-#include <prefixdb/api/upd_json.hpp>
 #include <prefixdb/api/packed_json.hpp>
+#include <prefixdb/api/range_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace gateway{
@@ -18,6 +18,7 @@ JSONRPC_TAG(has)
 JSONRPC_TAG(del)
 JSONRPC_TAG(inc)
 JSONRPC_TAG(packed)
+JSONRPC_TAG(range)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -27,7 +28,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _has_, request::has_json, response::has_json>,
   wfc::jsonrpc::call_method< _del_, request::del_json, response::del_json>,
   wfc::jsonrpc::call_method< _inc_, request::inc_json, response::inc_json>,
-  wfc::jsonrpc::call_method< _packed_, request::packed_json, response::packed_json>
+  wfc::jsonrpc::call_method< _packed_, request::packed_json, response::packed_json>,
+  wfc::jsonrpc::call_method< _range_, request::range_json, response::range_json>
 >
 {
 };
@@ -66,6 +68,11 @@ public:
   virtual void packed(request::packed::ptr req, response::packed::handler cb ) override
   {
     this->template call< _packed_ >( std::move(req), cb, nullptr);
+  }
+
+  virtual void range(request::range::ptr req, response::range::handler cb ) override
+  {
+    this->template call< _range_ >( std::move(req), cb, nullptr);
   }
 
 };
