@@ -1,7 +1,9 @@
-  #pragma once
+#pragma once
 
-#include <prefixdb/api/set.hpp>
 #include <prefixdb/api/aux/common_status.hpp>
+#include <prefixdb/api/aux/fields.hpp>
+#include <memory>
+#include <string>
 
 namespace wamba { namespace prefixdb {
 
@@ -9,7 +11,6 @@ namespace request
 {
   struct has
   {
-    //typedef std::vector<key_field> field_list_t;
     typedef key_list_t field_list_t;
     bool noval = true; // не сериализуеться
     std::string prefix;
@@ -22,12 +23,6 @@ namespace response
 {
   struct has
   {
-    /*
-    struct field
-      : field_base
-    {};
-    typedef std::vector<field> field_list_t;
-    */
     typedef raw_field_list_t field_list_t;
     
     common_status status = common_status::OK;

@@ -1,13 +1,11 @@
 #pragma once
 
-#include <prefixdb/api/aux/basic_field.hpp>
 #include <prefixdb/api/aux/common_status.hpp>
+#include <prefixdb/api/aux/fields.hpp>
+#include <memory>
+#include <string>
 
 namespace wamba { namespace prefixdb {
-
-typedef std::pair<std::string, std::string> field_pair;
-typedef std::vector< field_pair > raw_field_list_t;
-typedef std::vector< std::string > key_list_t;
 
 namespace request
 {

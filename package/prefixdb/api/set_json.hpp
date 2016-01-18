@@ -1,41 +1,21 @@
 #pragma once
 
 #include <prefixdb/api/set.hpp>
+#include <prefixdb/api/aux/fields_json.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {
-
-typedef ::wfc::json::object2array<
-  ::wfc::json::value<std::string>,
-  ::wfc::json::raw_value<std::string>,
-  10
-> raw_fields_list_json;
-
-typedef ::wfc::json::array< std::vector< ::wfc::json::value<std::string> >, 10 > key_list_json;
-
 
 namespace request 
 {
   struct set_json
   {
     JSON_NAME(prefix)
-    //JSON_NAME(force)
     JSON_NAME(nores)
     JSON_NAME(noval)
     JSON_NAME(fields)
     JSON_NAME(sync)
-
-    /*
-    typedef ::wfc::json::object<
-      set::field,
-      ::wfc::json::member_list<
-        ::wfc::json::base< basic_field_json >,
-        ::wfc::json::member<n_force, set::field, bool, &set::field::force>
-      >
-    > field_json;
-    typedef ::wfc::json::array< std::vector< field_json >, 10 > array_of_fields_json;
-    */
 
     typedef ::wfc::json::object<
       set,
@@ -60,16 +40,6 @@ namespace response
     JSON_NAME(prefix)
     JSON_NAME(status)
     JSON_NAME(fields)
-
-    /*
-    typedef ::wfc::json::object<
-      set::field,
-      ::wfc::json::member_list<
-        ::wfc::json::base< basic_field_json >
-      >
-    > field_json;
-    typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
-    */
 
     typedef ::wfc::json::object<
       set,

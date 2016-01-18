@@ -1,9 +1,10 @@
 #pragma once
 
 #include <prefixdb/api/del.hpp>
-#include <prefixdb/api/aux/basic_field_json.hpp>
+#include <prefixdb/api/aux/fields_json.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
+
 
 namespace wamba { namespace prefixdb {
 

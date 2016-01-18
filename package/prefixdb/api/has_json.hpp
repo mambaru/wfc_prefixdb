@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/api/has.hpp>
-#include <prefixdb/api/aux/field_base_json.hpp>
+#include <prefixdb/api/aux/fields_json.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <prefixdb/api/set.hpp>
 #include <prefixdb/api/aux/common_status.hpp>
+#include <prefixdb/api/aux/fields.hpp>
+#include <memory>
+#include <string>
 
 namespace wamba { namespace prefixdb {
 
@@ -9,17 +11,6 @@ namespace request
 {
   struct inc
   {
-    /*
-    struct field: field_base
-    {
-      // type игнорируется (всегда number)
-      bool force = true;
-      int64_t inc = 0;
-      int64_t def = 0;
-    };
-    typedef std::vector<field> field_list_t;
-    */
-    
     typedef raw_field_list_t field_list_t;
     std::string prefix;
     bool sync = false;

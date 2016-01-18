@@ -9,31 +9,32 @@ namespace wamba { namespace prefixdb {
 
 namespace request
 {
-  struct del
+  struct add
   {
-    typedef key_list_t field_list_t;
-    bool sync = false;
-    bool nores = true; // < [true] не нужен результат, noval игнорируется
-    bool noval = true; // < [true] если false - вернуть значения удаленных полей
+    typedef raw_field_list_t field_list_t;
     std::string prefix;
+    bool sync = false;
+    bool nores = true;  // no result пустой результат, prefix="", status=OK
+    bool noval = false; 
     field_list_t fields;
-    typedef std::unique_ptr<del> ptr;
+    
+    typedef std::unique_ptr<packed> ptr;
   };
 }
 
 namespace response
 {
-  struct del
+  struct add
   {
     typedef raw_field_list_t field_list_t;
-    common_status status = common_status::OK ;
+    
+    common_status status =  common_status::OK;
     std::string prefix;
     field_list_t fields;
 
-    typedef std::unique_ptr<del> ptr;
+    typedef std::unique_ptr<packed> ptr;
     typedef std::function< void(ptr) > handler;
   };
-
 }
 
 }}

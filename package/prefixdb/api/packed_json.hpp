@@ -1,7 +1,9 @@
 #pragma once
 
 #include <prefixdb/api/packed.hpp>
-#include <prefixdb/domain/storage/merge/merge.hpp>
+#include <prefixdb/api/add.hpp>
+#include <prefixdb/api/aux/fields_json.hpp>
+#include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {
@@ -11,9 +13,6 @@ namespace request
   struct packed_json
   {
     JSON_NAME(prefix)
-    JSON_NAME(def)
-    JSON_NAME(packed)
-    JSON_NAME(force)
     JSON_NAME(nores)
     JSON_NAME(update)
     JSON_NAME(sync)

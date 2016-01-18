@@ -1,7 +1,9 @@
 #pragma once
 
-#include <prefixdb/api/aux/basic_field.hpp>
 #include <prefixdb/api/aux/common_status.hpp>
+#include <prefixdb/api/aux/fields.hpp>
+#include <memory>
+#include <string>
 
 namespace wamba { namespace prefixdb {
 
