@@ -6,6 +6,7 @@
 #include <prefixdb/api/has_json.hpp>
 #include <prefixdb/api/del_json.hpp>
 #include <prefixdb/api/inc_json.hpp>
+#include <prefixdb/api/add_json.hpp>
 #include <prefixdb/api/packed_json.hpp>
 #include <prefixdb/api/range_json.hpp>
 #include <wfc/jsonrpc.hpp>
@@ -17,6 +18,7 @@ JSONRPC_TAG(set)
 JSONRPC_TAG(has)
 JSONRPC_TAG(del)
 JSONRPC_TAG(inc)
+JSONRPC_TAG(add)
 JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
 
@@ -28,6 +30,7 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _has_, request::has_json, response::has_json>,
   wfc::jsonrpc::call_method< _del_, request::del_json, response::del_json>,
   wfc::jsonrpc::call_method< _inc_, request::inc_json, response::inc_json>,
+  wfc::jsonrpc::call_method< _add_, request::add_json, response::add_json>,
   wfc::jsonrpc::call_method< _packed_, request::packed_json, response::packed_json>,
   wfc::jsonrpc::call_method< _range_, request::range_json, response::range_json>
 >
@@ -63,6 +66,11 @@ public:
   virtual void inc(request::inc::ptr req, response::inc::handler cb ) override
   {
     this->template call< _inc_ >( std::move(req), cb, nullptr);
+  }
+
+  virtual void add(request::add::ptr req, response::add::handler cb ) override
+  {
+    this->template call< _add_ >( std::move(req), cb, nullptr);
   }
 
   virtual void packed(request::packed::ptr req, response::packed::handler cb ) override

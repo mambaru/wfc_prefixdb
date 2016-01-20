@@ -257,6 +257,20 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
   }
 }
 
+void multidb::add( request::add::ptr req, response::add::handler cb) 
+{
+  if ( empty_fields<response::add>(req, cb) ) return;
+
+  if ( auto db = this->prefix_(req->prefix, true) )
+  {
+    db->add( std::move(req), std::move(cb) );
+  }
+  else 
+  {
+    create_prefix_fail<response::add>( std::move(req), std::move(cb) );
+  }
+}
+
 void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 {
   if ( empty_fields<response::packed>(req, cb) ) return;

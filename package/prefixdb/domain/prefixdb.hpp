@@ -19,6 +19,7 @@ public:
   virtual void has( request::has::ptr req, response::has::handler cb) override;
   virtual void del( request::del::ptr req, response::del::handler cb) override;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
+  virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
 private:

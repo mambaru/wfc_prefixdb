@@ -172,6 +172,11 @@ void rocksdb::inc( request::inc::ptr req, response::inc::handler cb)
   this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
 }
 
+void rocksdb::add( request::add::ptr req, response::add::handler cb) 
+{
+  this->merge_<merge_mode::add, response::add>( std::move(req), std::move(cb) );
+}
+
 void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 {  
   this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );

@@ -62,10 +62,7 @@ void rocksdb_factory::initialize(std::string db_path, std::string ini_path)
   _context = std::make_shared<rocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->path = db_path;
-  // Не нужно, ключи всегда строки
-  // _context->options.comparator = new rocksdb_comparator;
   _context->options.merge_operator = std::make_shared<merge_operator>();
-  
   
   auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
   if ( !status.ok() )
@@ -73,7 +70,6 @@ void rocksdb_factory::initialize(std::string db_path, std::string ini_path)
     DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
     abort();
   }
-  
 }
 
 ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_if_missing) 

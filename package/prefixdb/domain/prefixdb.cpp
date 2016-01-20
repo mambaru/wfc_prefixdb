@@ -43,6 +43,11 @@ void prefixdb::inc( request::inc::ptr req, response::inc::handler cb)
   _impl->inc( std::move(req), std::move(cb) );
 }
 
+void prefixdb::add( request::add::ptr req, response::add::handler cb) 
+{
+  _impl->add( std::move(req), std::move(cb) );
+}
+
 void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)
 {
   _impl->packed( std::move(req), std::move(cb) );

@@ -9,11 +9,13 @@ namespace wamba{ namespace prefixdb{
 struct merge_mode_json
 {
   JSON_NAME(inc)
+  JSON_NAME(add)
   JSON_NAME(packed)
   typedef ::wfc::json::enumerator<
     merge_mode,
     ::wfc::json::member_list<
         ::wfc::json::enum_value<n_inc, merge_mode, merge_mode::inc>,
+        ::wfc::json::enum_value<n_add, merge_mode, merge_mode::add>,
         ::wfc::json::enum_value<n_packed, merge_mode, merge_mode::packed>
     >
   > type;

@@ -23,6 +23,7 @@ public:
 private:
 
   void inc_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
+  void add_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
   void packed_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
   
 };

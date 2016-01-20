@@ -6,6 +6,7 @@
 #include <prefixdb/api/has_json.hpp>
 #include <prefixdb/api/del_json.hpp>
 #include <prefixdb/api/inc_json.hpp>
+#include <prefixdb/api/add_json.hpp>
 #include <prefixdb/api/packed_json.hpp>
 #include <prefixdb/api/range_json.hpp>
 #include <wfc/jsonrpc.hpp>
@@ -17,6 +18,7 @@ JSONRPC_TAG(set)
 JSONRPC_TAG(has)
 JSONRPC_TAG(del)
 JSONRPC_TAG(inc)
+JSONRPC_TAG(add)
 JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
 
@@ -28,6 +30,7 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _has_, request::has_json,  response::has_json, iprefixdb, &iprefixdb::has>,
   wfc::jsonrpc::invoke_method< _del_, request::del_json,  response::del_json, iprefixdb, &iprefixdb::del>,
   wfc::jsonrpc::invoke_method< _inc_, request::inc_json,  response::inc_json, iprefixdb, &iprefixdb::inc>,
+  wfc::jsonrpc::invoke_method< _add_, request::add_json,  response::add_json, iprefixdb, &iprefixdb::add>,
   wfc::jsonrpc::invoke_method< _packed_, request::packed_json,  response::packed_json, iprefixdb, &iprefixdb::packed>,
   wfc::jsonrpc::invoke_method< _range_, request::range_json,  response::range_json, iprefixdb, &iprefixdb::range>
 >

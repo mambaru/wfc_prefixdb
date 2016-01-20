@@ -18,7 +18,7 @@ namespace request
     bool noval = false; 
     field_list_t fields;
     
-    typedef std::unique_ptr<packed> ptr;
+    typedef std::unique_ptr<add> ptr;
   };
 }
 
@@ -32,7 +32,7 @@ namespace response
     std::string prefix;
     field_list_t fields;
 
-    typedef std::unique_ptr<packed> ptr;
+    typedef std::unique_ptr<add> ptr;
     typedef std::function< void(ptr) > handler;
   };
 }

@@ -8,6 +8,9 @@
 #include "packed_params.hpp"
 #include "packed_params_json.hpp"
 
+#include "add_params.hpp"
+#include "add_params_json.hpp"
+
 #include "packed.hpp"
 #include "packed_json.hpp"
 
@@ -84,19 +87,18 @@ try
   
   merge upd;
   helper::unserialize<merge_json>(upd, value);
-  std::cout << int(upd.mode) << std::endl;
   switch( upd.mode )
   {
     case merge_mode::inc:
-      std::cout << "M1" << std::endl;
       this->inc_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
       break;
+    case merge_mode::add:
+      this->add_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
+      break;
     case merge_mode::packed:
-      std::cout << "M2" << std::endl;
       this->packed_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
       break;
     default: 
-      std::cout << "M3" << std::endl;
       return false;
   }
   return true;
@@ -139,8 +141,10 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   }
   else
   {
-    // LOG!!!
+    if (beg!=end) out.assign(beg, end);
+    /*// LOG!!!
     out = std::move(params.val);
+    */
     return;
   }
   
@@ -164,20 +168,62 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   }
 }
 
+void merge_operator::add_(std::string& out, std::string&& in, const char* beg, const char* end ) const
+{
+  add_params upd;
+  if ( parser::is_array(in.begin(), in.end()) )
+  {
+    add_params_json::serializer()( upd, in.begin(), in.end() );
+  }
+  else
+  {
+    if (beg!=end) out.assign(beg, end);
+    return;
+  }
+  
+  std::vector<std::string> arr;
+  typedef ::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > arr_json;
+  
+  if (parser::is_array(beg, end) )
+  {
+    try{
+      arr_json::serializer()(arr, beg, end);
+    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+  }
+  
+  if ( parser::is_array(upd.arr.begin(), upd.arr.end()) )
+  {
+    try{
+      // пишем в конец arr
+      arr_json::serializer()(arr, upd.arr.begin(), upd.arr.end());
+    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+  }
+  else if ( parser::is_null(upd.arr.begin(), upd.arr.end()) )
+  {
+    arr.clear();
+  }
+  
+  if ( arr.size() > upd.lim )
+  {
+    size_t pos = arr.size() - upd.lim;
+    arr.erase( arr.begin(), arr.begin() + pos );
+  }
+  
+  out.reserve( upd.arr.size() + std::distance(beg, end) );
+  arr_json::serializer()(arr, std::inserter(out, out.end()));
+}
+
 void merge_operator::packed_(std::string& out, std::string&& in, const char* beg, const char* end ) const
 {
   packed_params_t upd;
   if ( parser::is_object(in.begin(), in.end()) )
   {
-    std::cout << in << std::endl;
     packed_params_json::serializer()( upd, in.begin(), in.end() );
-    //std::cout << "upd[0].key=" << upd[0].key << std::endl;
   }
   else
   {
-    std::cout << "-3-" << std::endl;
-    // LOG!!!
-    out = std::move(in);
+    //out = std::move(in);
+    if (beg!=end) out.assign(beg, end);
     return;
   }
   
@@ -185,7 +231,6 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   
   if ( beg!=end && parser::is_object(beg, end) )
   {
-    std::cout << "-4-" << std::endl;
     try{
       packed_json::serializer()(pck, beg, end);
     } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
@@ -204,8 +249,6 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   for (auto& p : upd )
   {
     packed_field_params& u = p.second;
-    //std::cout << ">>> " << u.key << " " << u.inc << std::endl;
-    //inc_params& u = p.second;
     field.first = std::move(p.first);
     auto itr = std::lower_bound(pck.begin(), pck.end(), field, less);
 

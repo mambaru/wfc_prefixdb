@@ -7,6 +7,7 @@ namespace wamba{ namespace prefixdb{
 enum class merge_mode
 {
   inc,
+  add,
   packed
 };
 

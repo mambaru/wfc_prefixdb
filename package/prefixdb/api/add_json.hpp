@@ -9,23 +9,23 @@ namespace wamba { namespace prefixdb {
 
 namespace request 
 {
-  struct packed_json
+  struct add_json
   {
     JSON_NAME(prefix)
-    JSON_NAME(def)
-    JSON_NAME(packed)
     JSON_NAME(force)
     JSON_NAME(nores)
-    JSON_NAME(update)
+    JSON_NAME(noval)
     JSON_NAME(sync)
+    JSON_NAME(update)
 
     typedef ::wfc::json::object<
-      packed,
+      add,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, packed, std::string, &packed::prefix>,
-        ::wfc::json::member<n_sync,   packed, bool, &packed::sync>,
-        ::wfc::json::member<n_nores,  packed, bool, &packed::nores>,
-        ::wfc::json::member<n_update, packed, packed::field_list_t, &packed::fields, raw_fields_list_json>
+        ::wfc::json::member<n_prefix, add, std::string, &add::prefix>,
+        ::wfc::json::member<n_sync,   add, bool, &add::sync>,
+        ::wfc::json::member<n_nores,  add, bool, &add::nores>,
+        ::wfc::json::member<n_noval,  add, bool, &add::noval>,
+        ::wfc::json::member<n_update, add, add::field_list_t, &add::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;
@@ -36,18 +36,18 @@ namespace request
 
 namespace response
 {
-  struct packed_json
+  struct add_json
   {
     JSON_NAME(prefix)
     JSON_NAME(status)
     JSON_NAME(fields)
 
     typedef ::wfc::json::object<
-      packed,
+      add,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, packed, std::string, &packed::prefix>,
-        ::wfc::json::member<n_fields, packed, packed::field_list_t, &packed::fields, raw_fields_list_json>,
-        ::wfc::json::member<n_status, packed, common_status, &packed::status, common_status_json>
+        ::wfc::json::member<n_prefix, add, std::string, &add::prefix>,
+        ::wfc::json::member<n_fields, add, add::field_list_t, &add::fields, raw_fields_list_json>,
+        ::wfc::json::member<n_status, add, common_status, &add::status, common_status_json>
       >
     > type;
     typedef type::target target;
