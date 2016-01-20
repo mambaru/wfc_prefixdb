@@ -76,6 +76,16 @@ namespace helper{
   
 }
   
+merge_operator::merge_operator()
+{
+  _config = std::make_shared<merge_config>();
+}
+
+void merge_operator::reconfigure(const merge_config& config)
+{
+  _config = std::make_shared<merge_config>(config);
+}
+
 bool merge_operator::Merge(const slice_type& key,
                      const slice_type* existing_value,
                      const slice_type& value,
