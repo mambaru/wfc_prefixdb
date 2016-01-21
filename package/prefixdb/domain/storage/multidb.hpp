@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/iprefixdb.hpp>
-#include "multidb_options.hpp"
+#include "multidb_config.hpp"
 #include <memory>
 #include <map>
 #include <mutex>
@@ -17,7 +17,7 @@ class multidb
   typedef std::shared_ptr<iprefixdb> prefixdb_ptr;
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
-  bool reconfigure(const multidb_options opt);
+  bool reconfigure(const multidb_config opt);
   void stop();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;

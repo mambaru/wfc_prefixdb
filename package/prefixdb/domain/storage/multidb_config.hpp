@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-
+#include "merge/merge_config.hpp"
 namespace wamba{ namespace prefixdb{
   
-struct multidb_options
+struct multidb_config: merge_config
 {
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
@@ -12,8 +12,6 @@ struct multidb_options
   std::string path = "./rocksdb";
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
-  // Файл опций в формате ini
-  std::string type = "rocksdb";
 };
 
 }}

@@ -111,19 +111,25 @@ namespace
     }
 }
 
-
-  
 void multidb::stop()
 {
-  _factory = nullptr;
+  std::lock_guard<std::mutex> lk(_mutex);
+  if ( _factory )
+  {
+    CONFIG_LOG_BEGIN("STOP DB...")
+    _factory = nullptr;
+    _db_map.clear();
+    CONFIG_LOG_END("STOP DB!")
+  }
 }
 
-bool multidb::reconfigure(const multidb_options opt)
+bool multidb::reconfigure(const multidb_config opt)
 {
+  this->stop();
   {
     std::lock_guard<std::mutex> lk(_mutex);
     CONFIG_LOG_MESSAGE("CREATE FACTORY...")
-    _factory = god::create(opt.type);
+    _factory = god::create("rocksdb");
     _factory->initialize(opt.path, opt.ini);
   }
   
@@ -141,15 +147,10 @@ bool multidb::reconfigure(const multidb_options opt)
     for (auto name: dirs)
     {
       CONFIG_LOG_MESSAGE("Pre open prefix " << name << "...")
-      if (auto db = this->prefix_(name, false) )
-      {
-        // CONFIG_LOG_MESSAGE("Pre open prefix OK")
-      }
-      else
+      if ( nullptr == this->prefix_(name, false) )
       {
         CONFIG_LOG_WARNING("Pre open prefix FAIL")
       }
-      //CONFIG_LOG_END("Pre open prefix DONE")
     }
     CONFIG_LOG_END("Pre open prefixes")
   }
