@@ -191,6 +191,12 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
     return;
   }
   
+  if ( upd.lim == 0 )
+  {
+    out="[]";
+    return;
+  }
+  
   std::vector<std::string> arr;
   typedef ::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > arr_json;
   
@@ -208,10 +214,12 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
       arr_json::serializer()(arr, upd.arr.begin(), upd.arr.end());
     } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
   }
-  else if ( parser::is_null(upd.arr.begin(), upd.arr.end()) )
+  else
   {
-    arr.clear();
+    // Добавлем объект как он пришел
+    arr.push_back(upd.arr);
   }
+  
   
   if ( arr.size() > upd.lim )
   {
