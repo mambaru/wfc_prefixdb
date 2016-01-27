@@ -15,8 +15,7 @@ struct merge_config_json
     merge_config,
     ::wfc::json::member_list<
       ::wfc::json::member<n_packed_limit, merge_config, size_t, &merge_config::packed_limit>,
-      ::wfc::json::member<n_array_limit, merge_config, size_t, &merge_config::array_limit>,
-      ::wfc::json::member<n_json_limit, merge_config, size_t, &merge_config::json_limit>
+      ::wfc::json::member<n_array_limit, merge_config, size_t, &merge_config::array_limit>
     >
   > type;
 

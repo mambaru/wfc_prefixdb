@@ -68,13 +68,7 @@ namespace
 
       if ( req->fields.empty() )
       {
-        if ( cb != nullptr )
-        {
-          auto res = std::make_unique<Res>();
-          res->prefix = std::move(req->prefix);
-          res->status = common_status::EmptyFields;
-          cb( std::move(res) );
-        }
+        send_error<common_status::EmptyFields, Res>(std::move(req), std::move(cb) );
         return true;
       }
       return false;
@@ -123,7 +117,7 @@ void multidb::stop()
   }
 }
 
-bool multidb::reconfigure(const multidb_config opt)
+bool multidb::reconfigure(const multidb_config& opt)
 {
   this->stop();
   {
@@ -157,6 +151,67 @@ bool multidb::reconfigure(const multidb_config opt)
   return true;
 }
 
+/*
+inline bool check_key( const std::pair<std::string, std::string>& field, size_t limit )
+{
+  return field.first.size() <= limit;
+}
+
+inline bool check_key( const std::string& field, size_t limit )
+{
+  return field.size() <= limit;
+}
+
+inline bool check_value( const std::pair<std::string, std::string>& field, size_t limit )
+{
+  return field.second.size() <= limit;
+}
+
+inline bool check_key( const std::string& field, size_t limit )
+{
+  return field.size() <= limit;
+}
+*/
+
+template<typename Res, typename ReqPtr, typename Callback>
+bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
+{
+  if ( empty_fields<Res>(req, cb) )
+    return false;
+  
+  if ( req->prefix.size() > _opt.prefix_size_limit )
+  {
+    send_error<common_status::PrefixLengthExceeded, Res>(std::move(req), std::move(cb) );
+    return false;
+  }
+  
+  if ( req->fields.size() > _opt.keys_per_req )
+  {
+    send_error<common_status::TooManyKeys, Res>(std::move(req), std::move(cb) );
+    return false;
+  }
+  
+  if ( _opt.value_size_limit==0 || _opt.key_size_limit==0 )
+    return true;
+  
+  for (const auto& f : req->fields)
+  {
+    if ( f.first.size() > _opt.key_size_limit)
+    {
+      send_error<common_status::KeyLengthExceeded, Res>(std::move(req), std::move(cb) );
+      return false;
+    }
+
+    if ( f.second.size() > _opt.value_size_limit)
+    {
+      send_error<common_status::ValueLengthExceeded, Res>(std::move(req), std::move(cb) );
+      return false;
+    }
+  }
+  return true;
+}
+
+
 /// Если create_if_missing всегда возвращает объект,
 /// в противном случае, только если база существует 
 multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if_missing)
@@ -175,6 +230,9 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
       return nullptr;
   }
   
+  if ( _db_map.size() >= _opt.max_prefixes )
+    return nullptr;
+  
   if ( auto db = _factory->create(prefix, create_if_missing) )
   {
     COMMON_LOG_MESSAGE("Открыт новый префикс: " << prefix)
@@ -189,7 +247,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
 
 void multidb::set( request::set::ptr req, response::set::handler cb)
 {
-  if ( empty_fields<response::set>(req, cb) ) return;
+  if ( !check_fields_<response::set>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -232,7 +290,8 @@ void multidb::has( request::has::ptr req, response::has::handler cb)
 
 void multidb::del( request::del::ptr req, response::del::handler cb) 
 {
-  if ( empty_fields<response::del>(req, cb) ) return;
+  if ( empty_fields<response::del>(req, cb) ) 
+    return;
 
   if ( auto db = this->prefix_(req->prefix, false) )
   {
@@ -246,7 +305,7 @@ void multidb::del( request::del::ptr req, response::del::handler cb)
 
 void multidb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-  if ( empty_fields<response::inc>(req, cb) ) return;
+  if ( !check_fields_<response::inc>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -260,7 +319,7 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void multidb::add( request::add::ptr req, response::add::handler cb) 
 {
-  if ( empty_fields<response::add>(req, cb) ) return;
+  if ( !check_fields_<response::add>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -274,7 +333,7 @@ void multidb::add( request::add::ptr req, response::add::handler cb)
 
 void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 {
-  if ( empty_fields<response::packed>(req, cb) ) return;
+  if ( !check_fields_<response::packed>(req, cb) ) return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {

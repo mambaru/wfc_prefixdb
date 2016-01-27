@@ -17,7 +17,7 @@ class multidb
   typedef std::shared_ptr<iprefixdb> prefixdb_ptr;
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
-  bool reconfigure(const multidb_config opt);
+  bool reconfigure(const multidb_config& opt);
   void stop();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -30,10 +30,14 @@ public:
 private:
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool check_fields_(const ReqPtr& req, const Callback& cb);
+    
 private:
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;
   std::mutex _mutex;
+  multidb_config _opt;
 };
 
 }}
