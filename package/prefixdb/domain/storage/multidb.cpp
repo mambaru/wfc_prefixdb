@@ -151,41 +151,19 @@ bool multidb::reconfigure(const multidb_config& opt)
   return true;
 }
 
-/*
-inline bool check_key( const std::pair<std::string, std::string>& field, size_t limit )
-{
-  return field.first.size() <= limit;
-}
-
-inline bool check_key( const std::string& field, size_t limit )
-{
-  return field.size() <= limit;
-}
-
-inline bool check_value( const std::pair<std::string, std::string>& field, size_t limit )
-{
-  return field.second.size() <= limit;
-}
-
-inline bool check_key( const std::string& field, size_t limit )
-{
-  return field.size() <= limit;
-}
-*/
-
 template<typename Res, typename ReqPtr, typename Callback>
 bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
 {
   if ( empty_fields<Res>(req, cb) )
     return false;
   
-  if ( req->prefix.size() > _opt.prefix_size_limit )
+  if ( _opt.prefix_size_limit!=0 && req->prefix.size() > _opt.prefix_size_limit )
   {
     send_error<common_status::PrefixLengthExceeded, Res>(std::move(req), std::move(cb) );
     return false;
   }
   
-  if ( req->fields.size() > _opt.keys_per_req )
+  if ( _opt.keys_per_req!=0 && req->fields.size() > _opt.keys_per_req )
   {
     send_error<common_status::TooManyKeys, Res>(std::move(req), std::move(cb) );
     return false;
@@ -230,7 +208,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
       return nullptr;
   }
   
-  if ( _db_map.size() >= _opt.max_prefixes )
+  if ( _opt.max_prefixes!=0 && _db_map.size() >= _opt.max_prefixes )
     return nullptr;
   
   if ( auto db = _factory->create(prefix, create_if_missing) )
