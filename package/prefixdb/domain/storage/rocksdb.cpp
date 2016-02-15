@@ -185,6 +185,8 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 void rocksdb::range( request::range::ptr req, response::range::handler cb)
 {
   typedef ::rocksdb::Iterator iterator_type;
+  typedef ::rocksdb::Slice slice_type;
+  
   typedef std::shared_ptr<iterator_type> iterator_ptr;
   auto res=std::make_unique<response::range>();
   res->status = common_status::OK;
@@ -196,14 +198,20 @@ void rocksdb::range( request::range::ptr req, response::range::handler cb)
   if ( itr != nullptr )
   {
     field_pair field;
+    
+    // offset
     itr->Seek( req->from );
-    while ( req->offset && itr->Valid() ) { req->offset--; itr->Next(); }
+    while ( req->offset && itr->Valid() ) 
+    {
+      req->offset--; itr->Next(); 
+    }
+    
     while ( req->limit && itr->Valid() )
     {
-      auto key = itr->key();
+      slice_type key = itr->key();
       field.first.assign(key.data(), key.data() + key.size() );
       
-      if ( field.first == req->to )
+      if ( field.first > req->to )
         break;
       
       if ( !req->noval )

@@ -26,13 +26,6 @@ namespace response
 {
   struct inc
   {
-    /*
-    struct field
-      : basic_field
-    {
-    };
-    typedef std::vector<field> field_list_t;
-    */
     typedef raw_field_list_t field_list_t;
     
     common_status status =  common_status::OK;

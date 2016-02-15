@@ -152,9 +152,6 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   else
   {
     if (beg!=end) out.assign(beg, end);
-    /*// LOG!!!
-    out = std::move(params.val);
-    */
     return;
   }
   
@@ -174,7 +171,14 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   }
   else
   {
-    out = std::move(params.val);
+    if ( parser::is_number( params.inc.begin(), params.inc.end() ) )
+    {
+      out = std::move(params.val);
+    }
+    else
+    {
+      out = "0";
+    }
   }
 }
 
@@ -320,34 +324,5 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   out.reserve(in.size());
   packed_json::serializer()( pck, std::inserter(out, out.end()) );
 }
-
-/*
-bool merge_operator::set_(const slice_type& key,
-                          const slice_type* existing_slice,
-                          const slice_type& value_op,
-                          std::string* new_value,
-                          ::rocksdb::Logger* logger) const
-{
-  return true;
-}
-
-bool merge_operator::inc_(const slice_type& key,
-                          const slice_type* existing_slice,
-                          const slice_type& value_op,
-                          std::string* new_value,
-                          ::rocksdb::Logger* logger) const
-{
-  return true;
-}
-
-bool merge_operator::upd_(const slice_type& key,
-                          const slice_type* existing_slice,
-                          const slice_type& value_op,
-                          std::string* new_value,
-                          ::rocksdb::Logger* logger) const
-{
-  return true;
-}
-*/
 
 }}
