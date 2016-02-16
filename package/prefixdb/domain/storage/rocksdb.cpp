@@ -125,7 +125,6 @@ void rocksdb::set( request::set::ptr req, response::set::handler cb)
   this->write_batch_<response::set>(batch, std::move(req), std::move(cb) );
 }
 
-
 void rocksdb::get( request::get::ptr req, response::get::handler cb)
 {
   this->get_<response::get>( std::move(req), std::move(cb) );
@@ -184,6 +183,7 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void rocksdb::range( request::range::ptr req, response::range::handler cb)
 {
+  DEBUG_LOG_MESSAGE("range from '" << req->from << " to '" << req->to )
   typedef ::rocksdb::Iterator iterator_type;
   typedef ::rocksdb::Slice slice_type;
   
@@ -209,9 +209,11 @@ void rocksdb::range( request::range::ptr req, response::range::handler cb)
     while ( req->limit && itr->Valid() )
     {
       slice_type key = itr->key();
-      field.first.assign(key.data(), key.data() + key.size() );
       
-      if ( field.first > req->to )
+      field.first.assign(key.data(), key.data() + key.size() );
+      DEBUG_LOG_MESSAGE("key " << field.first << " > " << req->to << "? " << (field.first > req->to) )
+      
+      if ( !req->to.empty() && field.first > req->to )
         break;
       
       if ( !req->noval )
