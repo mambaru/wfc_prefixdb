@@ -171,7 +171,7 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   }
   else
   {
-    if ( parser::is_number( params.inc.begin(), params.inc.end() ) )
+    if ( parser::is_number( params.val.begin(), params.val.end() ) )
     {
       out = std::move(params.val);
     }

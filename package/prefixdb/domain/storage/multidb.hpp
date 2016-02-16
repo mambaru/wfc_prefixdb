@@ -18,7 +18,7 @@ class multidb
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
   bool reconfigure(const multidb_config& opt);
-  void stop();
+  void release();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;

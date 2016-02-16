@@ -12,29 +12,36 @@ class prefixdb::impl: public multidb
 void prefixdb::reconfigure()
 {
   if ( _impl == nullptr )
+  {
     _impl = std::make_shared<impl>();
-  
-  auto& stop_list = this->options().stop_list;
-  for ( const std::string& name : stop_list )
+    _impl->reconfigure( this->options() );
+  }
+  else
   {
-    if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
+    auto& stop_list = this->options().stop_list;
+    for ( const std::string& name : stop_list )
     {
-      obj->stop("");
+      if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
+      {
+        obj->stop("");
+      }
     }
-  }
-  
-  if ( !_impl->reconfigure( this->options() ) )
-  {
-    wfc_abort("prefixdb open DB abort!");
-  }
-  
-  for ( const std::string& name : stop_list )
-  {
-    if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
+    
+    if ( !_impl->reconfigure( this->options() ) )
     {
-      obj->start("");
+      wfc_abort("prefixdb open DB abort!");
     }
-  }
+    
+    for ( const std::string& name : stop_list )
+    {
+      if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
+      {
+        obj->start("");
+      }
+    }
+    
+    DEBUG_LOG_MESSAGE("void prefixdb::reconfigured()!!!")
+  } 
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)

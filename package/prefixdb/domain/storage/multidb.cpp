@@ -105,7 +105,7 @@ namespace
     }
 }
 
-void multidb::stop()
+void multidb::release()
 {
   std::lock_guard<std::mutex> lk(_mutex);
   if ( _factory )
@@ -119,7 +119,7 @@ void multidb::stop()
 
 bool multidb::reconfigure(const multidb_config& opt)
 {
-  this->stop();
+  this->release();
   {
     std::lock_guard<std::mutex> lk(_mutex);
     CONFIG_LOG_MESSAGE("CREATE FACTORY...")
@@ -195,6 +195,13 @@ bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
 multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if_missing)
 {
   std::lock_guard<std::mutex> lk(_mutex);
+  
+  if ( _factory == nullptr )
+  {
+    DOMAIN_LOG_ERROR("multidb не сконфигурирован!")
+    return nullptr;
+  }
+  
   prefixdb_ptr result = nullptr;
   
   auto itr = _db_map.find(prefix);
