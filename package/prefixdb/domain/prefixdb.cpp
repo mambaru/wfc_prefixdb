@@ -84,4 +84,9 @@ void prefixdb::range( request::range::ptr req, response::range::handler cb)
   _impl->range( std::move(req), std::move(cb) );
 }
 
+void prefixdb::backup( request::backup::ptr req, response::backup::handler cb)
+{
+  _impl->backup( std::move(req), std::move(cb) );
+}
+
 }}

@@ -22,6 +22,7 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
+  virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
 private:
   std::shared_ptr<impl> _impl;
 };

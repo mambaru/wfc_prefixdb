@@ -8,12 +8,13 @@ struct common_status_json
 {
   JSON_NAME(OK)
   JSON_NAME(EmptyFields)
+  JSON_NAME(EmptyPrefix)
   JSON_NAME(WriteError)
   JSON_NAME(CreatePrefixFail)
   JSON_NAME(SomeFieldFail)
   JSON_NAME(PrefixNotFound)
   JSON_NAME(TooManyKeys)
-  //JSON_NAME(TooManyPrefixes)
+  
   JSON_NAME(KeyLengthExceeded)
   JSON_NAME(ValueLengthExceeded)
   JSON_NAME(PrefixLengthExceeded)
@@ -23,6 +24,7 @@ struct common_status_json
     ::wfc::json::member_list<
         ::wfc::json::enum_value<n_OK, common_status, common_status::OK>,
         ::wfc::json::enum_value<n_EmptyFields, common_status, common_status::EmptyFields>,
+        ::wfc::json::enum_value<n_EmptyPrefix, common_status, common_status::EmptyPrefix>,
         ::wfc::json::enum_value<n_CreatePrefixFail, common_status, common_status::CreatePrefixFail>,
         ::wfc::json::enum_value<n_WriteError, common_status, common_status::WriteError>,
         ::wfc::json::enum_value<n_SomeFieldFail, common_status, common_status::SomeFieldFail>,

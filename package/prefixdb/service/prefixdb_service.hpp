@@ -9,6 +9,7 @@
 #include <prefixdb/api/add_json.hpp>
 #include <prefixdb/api/packed_json.hpp>
 #include <prefixdb/api/range_json.hpp>
+#include <prefixdb/api/backup_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace service{
@@ -21,6 +22,7 @@ JSONRPC_TAG(inc)
 JSONRPC_TAG(add)
 JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
+JSONRPC_TAG(backup)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -32,7 +34,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _inc_, request::inc_json,  response::inc_json, iprefixdb, &iprefixdb::inc>,
   wfc::jsonrpc::invoke_method< _add_, request::add_json,  response::add_json, iprefixdb, &iprefixdb::add>,
   wfc::jsonrpc::invoke_method< _packed_, request::packed_json,  response::packed_json, iprefixdb, &iprefixdb::packed>,
-  wfc::jsonrpc::invoke_method< _range_, request::range_json,  response::range_json, iprefixdb, &iprefixdb::range>
+  wfc::jsonrpc::invoke_method< _range_, request::range_json,  response::range_json, iprefixdb, &iprefixdb::range>,
+  wfc::jsonrpc::invoke_method< _backup_, request::backup_json,  response::backup_json, iprefixdb, &iprefixdb::backup>
 >
 {
 };

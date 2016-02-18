@@ -27,12 +27,18 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
+  virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
 private:
+  
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   
   template<typename Res, typename ReqPtr, typename Callback>
   bool check_fields_(const ReqPtr& req, const Callback& cb);
-    
+
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool check_prefix_(const ReqPtr& req, const Callback& cb);
+
+  std::vector< std::string > all_prefixes_();
 private:
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;

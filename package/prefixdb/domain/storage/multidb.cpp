@@ -1,109 +1,11 @@
+#include <wfc/logger.hpp>
 #include "multidb.hpp"
 #include "ifactory.hpp"
 #include "god.hpp"
-#include <wfc/logger.hpp>
-
-
-#include <stdio.h>
-#include <sys/types.h>
-#include <dirent.h>
+#include "aux/multidb.hpp"
+#include "aux/scan_dir.hpp"
 
 namespace wamba{ namespace prefixdb {
- 
-/*
- * ЖШЖ
- * iii
- * ...
- */
-namespace
-{
-    template<common_status Status, typename Res, typename ReqPtr, typename Callback>
-    inline void send_error(const ReqPtr& req, const Callback& cb)
-    {
-      if ( cb!=nullptr )
-      {
-        auto res = std::make_unique<Res>();
-        res->prefix = std::move(req->prefix);
-        res->status = Status;
-        cb( std::move(res) );
-      }
-    }
-
-    template<typename Res, typename ReqPtr, typename Callback>
-    inline void prefix_not_found(const ReqPtr& req, const Callback& cb)
-    {
-      send_error<common_status::PrefixNotFound, Res>(std::move(req), std::move(cb) );
-    }
-
-    template<typename Res, typename ReqPtr, typename Callback>
-    inline void create_prefix_fail(const ReqPtr& req, const Callback& cb)
-    {
-      send_error<common_status::CreatePrefixFail, Res>(std::move(req), std::move(cb) );
-    }
-
-    template<typename Req, typename Callback>
-    inline bool req_null(const Req& req, const Callback& cb)
-    {
-      if ( req==nullptr )
-      {
-        if ( cb!=nullptr )
-        {
-          cb(nullptr);
-        }
-        return true;
-      }
-      return false;
-    }
-
-    template<typename Req, typename Callback>
-    inline bool notify_ban(const Req& req, const Callback& cb)
-    {
-      return cb==nullptr || req_null(req, cb);
-    }
-
-    template<typename Res, typename ReqPtr, typename Callback>
-    inline bool empty_fields(const ReqPtr& req, const Callback& cb)
-    {
-      if ( req_null(req, cb) ) return true; 
-
-      if ( req->fields.empty() )
-      {
-        send_error<common_status::EmptyFields, Res>(std::move(req), std::move(cb) );
-        return true;
-      }
-      return false;
-    }
-    
-    inline std::vector<std::string> scan_dir(std::string path, bool& fail)
-    {
-      fail = false;
-      std::vector<std::string> result;
-
-      DIR *dir;
-      struct dirent *entry;
-
-      dir = opendir(path.c_str());
-      if (!dir) 
-      {
-        // perror("diropen");
-        fail = true;
-        return result;
-      };
-
-      while ( (entry = readdir(dir)) != NULL) 
-      {
-        if ( entry->d_type == 4)
-        {
-          std::string file = entry->d_name;
-          if ( file=="." || file==".." ) continue;
-          result.push_back(file);
-        }
-      };
-
-      closedir(dir);
-      return result;
-    }
-}
 
 void multidb::release()
 {
@@ -152,16 +54,32 @@ bool multidb::reconfigure(const multidb_config& opt)
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
-bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
+bool multidb::check_prefix_(const ReqPtr& req, const Callback& cb)
 {
-  if ( empty_fields<Res>(req, cb) )
+  if ( req->prefix.empty() )
+  {
+    send_error<common_status::EmptyPrefix, Res>(std::move(req), std::move(cb) );
     return false;
+  }
   
   if ( _opt.prefix_size_limit!=0 && req->prefix.size() > _opt.prefix_size_limit )
   {
     send_error<common_status::PrefixLengthExceeded, Res>(std::move(req), std::move(cb) );
     return false;
   }
+  
+  return true;
+}
+
+
+template<typename Res, typename ReqPtr, typename Callback>
+bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
+{
+  if ( empty_fields<Res>(req, cb) )
+    return false;
+
+  if ( !this->check_prefix_<Res>(req, cb) )
+    return false;
   
   if ( _opt.keys_per_req!=0 && req->fields.size() > _opt.keys_per_req )
   {
@@ -228,6 +146,15 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
   // Запоминаем, чтобы не создавать заного
   _db_map[prefix] = nullptr;
   return nullptr;
+}
+
+std::vector< std::string > multidb::all_prefixes_()
+{
+  std::vector< std::string > result;
+  result.reserve( _db_map.size() );
+  for (const auto& p : _db_map)
+    result.push_back(p.first);
+  return std::move(result);
 }
 
 void multidb::set( request::set::ptr req, response::set::handler cb)
@@ -342,6 +269,36 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
   {
     prefix_not_found<response::range>( std::move(req), std::move(cb) );
   }
+}
+
+void multidb::backup( request::backup::ptr req, response::backup::handler cb) 
+{
+  auto prefixes = std::move(req->prefixes);
+  if ( prefixes.empty() )
+    prefixes = this->all_prefixes_();
+  
+  for ( const std::string& prefix: prefixes)
+  {
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      
+    }
+    else
+    {
+        // TODO: внести в массив статусов, если sync
+    }
+  }
+  
+  /*
+  if ( auto db = this->prefix_(req->prefix, false) )
+  {
+    db->range( std::move(req), std::move(cb) );
+  }
+  else
+  {
+    prefix_not_found<response::range>( std::move(req), std::move(cb) );
+  }
+  */
 }
 
 

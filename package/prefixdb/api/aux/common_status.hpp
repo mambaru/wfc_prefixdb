@@ -6,12 +6,12 @@ enum class common_status
 {
   OK,
   EmptyFields,
+  EmptyPrefix, 
   CreatePrefixFail,
   PrefixNotFound,
   WriteError,
   SomeFieldFail, // Несоответсвие типа по некоторым (или всех) полям
   TooManyKeys,     // Слишком много ключей в запросе 
-  //TooManyPrefixes, 
   KeyLengthExceeded,
   ValueLengthExceeded,
   PrefixLengthExceeded

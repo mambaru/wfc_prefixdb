@@ -237,4 +237,35 @@ void rocksdb::range( request::range::ptr req, response::range::handler cb)
   cb( std::move(res) );
 }
 
+namespace {
+
+bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req, const response::backup::handler& cb)
+{
+  if ( s.ok() ) return true;
+  if ( cb == nullptr ) return false;
+  auto res = std::make_unique< response::backup >();
+  res->status = common_status::WriteError;
+  if ( !req->nores &&  !req->prefixes.empty() )
+  {
+    res->status_map.push_back( std::make_pair( std::move(req->prefixes[0]), "false") );
+  }
+  cb( std::move(res) );
+  return false;
+}
+
+}
+
+void rocksdb::backup( request::backup::ptr req, response::backup::handler cb) 
+{
+  typedef ::rocksdb::BackupEngine backup_engine;
+  backup_engine* engine;
+  ::rocksdb::BackupableDBOptions opt(req->path);
+  ::rocksdb::Status s = ::rocksdb::BackupEngine::Open( ::rocksdb::Env::Default(), opt, &engine);
+  if ( !backup_status_(s, req, cb) )
+    return;
+  std::unique_ptr<backup_engine> ptr(engine);
+  ptr->CreateNewBackup( _db.get() );
+
+}
+
 }}

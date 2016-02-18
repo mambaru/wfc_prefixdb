@@ -15,7 +15,7 @@ namespace request
     JSON_NAME(prefix)
     JSON_NAME(sync)
     JSON_NAME(nores)
-    JSON_NAME(fields)
+    JSON_NAME(update)
 
     typedef ::wfc::json::object<
       inc,
@@ -23,7 +23,7 @@ namespace request
         ::wfc::json::member<n_prefix, inc, std::string, &inc::prefix>,
         ::wfc::json::member<n_sync,   inc, bool, &inc::sync>,
         ::wfc::json::member<n_nores,  inc, bool, &inc::nores>,
-        ::wfc::json::member<n_fields, inc, inc::field_list_t, &inc::fields, raw_fields_list_json>
+        ::wfc::json::member<n_update, inc, inc::field_list_t, &inc::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;

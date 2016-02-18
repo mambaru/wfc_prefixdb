@@ -4,6 +4,7 @@
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
 #include <rocksdb/merge_operator.h>
+#include <rocksdb/utilities/backupable_db.h>
 
 #include <memory>
 #include <iostream>
@@ -78,22 +79,17 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_i
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   
-  //_context->options.OptimizeForPointLookup();
-  //_context->options.OptimizeLevelStyleCompaction();
-  //_context->options.OptimizeUniversalStyleCompaction();
-  //_context->options.max_open_files = 1024 * 100;
-  //_context->options.filter_policy = ::rocksdb::NewBloomFilterPolicy(20);
-  //_context->options.write_buffer_size = 512 * 1024 * 1024;
-  //_context->options.block_cache = ::rocksdb::NewLRUCache( conf.cache_size * 1024 * 1024);
-
-  
   std::string path = _context->path + "/" + prefix;
   ::rocksdb::DB* db;
   
   auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
   if ( status.ok() )
   {
-    return std::make_shared<rocksdb>(db, nullptr);
+#warning TODO
+    abort();
+    ::rocksdb::BackupableDBOptions tmp("kjsdflkjsl");
+    auto bdb = new ::rocksdb::BackupableDB(db, tmp);
+    return std::make_shared< rocksdb >(bdb, nullptr);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

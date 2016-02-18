@@ -3,6 +3,7 @@
 #include <prefixdb/iprefixdb.hpp>
 #include <prefixdb/domain/storage/merge/merge.hpp>
 #include <rocksdb/db.h>
+#include <rocksdb/utilities/backupable_db.h>
 #include <memory>
 
 namespace rocksdb{ class DB;}
@@ -12,7 +13,8 @@ namespace wamba{ namespace prefixdb{
 class rocksdb
   : public iprefixdb
 {
-  typedef ::rocksdb::DB db_type;
+  // typedef ::rocksdb::DB db_type;
+  typedef ::rocksdb::BackupableDB db_type;
 public:
   rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli);
   virtual void set( request::set::ptr req, response::set::handler cb) override;
@@ -23,13 +25,12 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
-public:
+  virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
   
-  // void del_( request::del::ptr req, response::del::handler cb);
+private:
 
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
   void merge_(ReqPtr req, Callback cb);
-
   
   template<typename Res, typename ReqPtr, typename Callback>
   void get_(ReqPtr req, Callback cb);
