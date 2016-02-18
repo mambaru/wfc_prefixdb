@@ -12,21 +12,8 @@
 #include <wfc/logger.hpp>
 #include <list>
 
-
-/*
- #include <leveldb/db.h>
- #include <leveldb/env.h>
- #include <leveldb/filter_policy.h>
- #include <leveldb/cache.h>
- #include <leveldb/write_batch.h>
-*/
-
-
 #include "rocksdb.hpp"
 #include "merge/merge_operator.hpp"
-//#include "aux/rocksdb_comparator.hpp"
-
-
 
 namespace rocksdb
 {
@@ -49,6 +36,7 @@ struct rocksdb_factory::context
   ::rocksdb::Options options;
   CFD_list cdf;
   std::string path;
+  std::string backup_path;
 };
 
 rocksdb_factory::~rocksdb_factory()
@@ -56,13 +44,14 @@ rocksdb_factory::~rocksdb_factory()
   _context->env = nullptr;
 }
 
-void rocksdb_factory::initialize(std::string db_path, std::string ini_path) 
+void rocksdb_factory::initialize(std::string db_path, std::string backup_path, std::string ini_path) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
   
   _context = std::make_shared<rocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->path = db_path;
+  _context->backup_path = backup_path;
   _context->options.merge_operator = std::make_shared<merge_operator>();
   
   auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
@@ -85,10 +74,8 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_i
   auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
   if ( status.ok() )
   {
-#warning TODO
-    abort();
-    ::rocksdb::BackupableDBOptions tmp("kjsdflkjsl");
-    auto bdb = new ::rocksdb::BackupableDB(db, tmp);
+    ::rocksdb::BackupableDBOptions backup_opt(_context->backup_path);
+    auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
     return std::make_shared< rocksdb >(bdb, nullptr);
   }
 

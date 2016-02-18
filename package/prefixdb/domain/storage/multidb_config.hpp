@@ -20,10 +20,13 @@ struct multidb_config: merge_config
   
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
-  // Путь к базе данных
+  // Путь к базе данных для всех префиксов
   std::string path = "./rocksdb";
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
+  // Путь к бэкапу базы данных для всех префиксов
+  std::string backup_path  = "./rocksdb/backup";
+  
 };
 
 }}

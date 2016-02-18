@@ -13,7 +13,7 @@ class rocksdb_factory
 public:
   virtual ~rocksdb_factory();
   typedef ifactory::prefixdb_ptr prefixdb_ptr;
-  virtual void initialize(std::string db_path, std::string ini_path) override;
+  virtual void initialize(std::string db_path, std::string backup_path, std::string ini_path) override;
   virtual ifactory::prefixdb_ptr create(std::string prefix, bool) override;
 private:
   struct context;

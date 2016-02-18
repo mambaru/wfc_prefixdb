@@ -26,7 +26,7 @@ bool multidb::reconfigure(const multidb_config& opt)
     std::lock_guard<std::mutex> lk(_mutex);
     CONFIG_LOG_MESSAGE("CREATE FACTORY...")
     _factory = god::create("rocksdb");
-    _factory->initialize(opt.path, opt.ini);
+    _factory->initialize(opt.path, opt.backup_path, opt.ini);
   }
   
   bool fail = false;
