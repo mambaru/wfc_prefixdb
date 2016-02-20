@@ -10,6 +10,7 @@
 #include <prefixdb/api/packed.hpp>
 #include <prefixdb/api/range.hpp>
 #include <prefixdb/api/backup.hpp>
+#include <prefixdb/api/restore.hpp>
 
 namespace wamba { namespace prefixdb {
 
@@ -25,6 +26,7 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void packed( request::packed::ptr req, response::packed::handler cb) = 0;
   virtual void range( request::range::ptr req, response::range::handler cb) = 0;
   virtual void backup( request::backup::ptr req, response::backup::handler cb) = 0;
+  virtual void restore( request::restore::ptr req, response::restore::handler cb) = 0;
 };
 
 }}

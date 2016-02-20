@@ -17,9 +17,9 @@ namespace {
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
 }
 
-rocksdb::rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli)
+rocksdb::rocksdb( db_type* db, restore_db_type* rdb)
   : _db(db)
-  , _repli(repli)
+  , _rdb(rdb)
 {}
 
 template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
@@ -258,6 +258,15 @@ bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req,
 
 void rocksdb::backup( request::backup::ptr req, response::backup::handler cb) 
 {
+  ::rocksdb::Status status = _db->CreateNewBackup();
+  DEBUG_LOG_MESSAGE("CreateNewBackup: " << status.ToString() )
+  if ( cb != nullptr )
+  {
+    auto res = std::make_unique<response::backup>();
+    res->status = status.ok() ? common_status::OK : common_status::WriteError;
+    cb( std::move(res) );
+  }
+  /*
   typedef ::rocksdb::BackupEngine backup_engine;
   backup_engine* engine;
   ::rocksdb::BackupableDBOptions opt(req->path);
@@ -266,7 +275,12 @@ void rocksdb::backup( request::backup::ptr req, response::backup::handler cb)
     return;
   std::unique_ptr<backup_engine> ptr(engine);
   ptr->CreateNewBackup( _db.get() );
+  */
+}
 
+void rocksdb::restore( request::restore::ptr req, response::restore::handler cb) 
+{
+  
 }
 
 }}

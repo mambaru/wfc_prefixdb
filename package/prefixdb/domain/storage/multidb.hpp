@@ -19,6 +19,8 @@ class multidb
 public:
   bool reconfigure(const multidb_config& opt);
   void release();
+  void backup();
+  void restore();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
@@ -28,6 +30,7 @@ public:
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
+  virtual void restore( request::restore::ptr req, response::restore::handler cb) override;
 private:
   
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);

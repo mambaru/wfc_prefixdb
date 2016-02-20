@@ -13,10 +13,11 @@ namespace wamba{ namespace prefixdb{
 class rocksdb
   : public iprefixdb
 {
-  // typedef ::rocksdb::DB db_type;
-  typedef ::rocksdb::BackupableDB db_type;
 public:
-  rocksdb( db_type* db, std::shared_ptr<iprefixdb> repli);
+  typedef ::rocksdb::BackupableDB db_type;
+  typedef ::rocksdb::RestoreBackupableDB restore_db_type;
+
+  rocksdb( db_type* db, restore_db_type* rdb);
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
@@ -26,6 +27,7 @@ public:
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
+  virtual void restore( request::restore::ptr req, response::restore::handler cb) override;
   
 private:
 
@@ -39,7 +41,8 @@ private:
   void write_batch_(Batch& batch, ReqPtr req, Callback cb);
   
   std::unique_ptr<db_type> _db;
-  std::shared_ptr<iprefixdb> _repli;
+  std::unique_ptr<restore_db_type> _rdb;
+  //std::shared_ptr<iprefixdb> _repli;
 };
 
 }}

@@ -10,6 +10,7 @@
 #include <prefixdb/api/packed_json.hpp>
 #include <prefixdb/api/range_json.hpp>
 #include <prefixdb/api/backup_json.hpp>
+#include <prefixdb/api/restore_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace gateway{
@@ -23,6 +24,7 @@ JSONRPC_TAG(add)
 JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
 JSONRPC_TAG(backup)
+JSONRPC_TAG(restore)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -35,7 +37,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _add_, request::add_json, response::add_json>,
   wfc::jsonrpc::call_method< _packed_, request::packed_json, response::packed_json>,
   wfc::jsonrpc::call_method< _range_, request::range_json, response::range_json>,
-  wfc::jsonrpc::call_method< _backup_, request::backup_json, response::backup_json>
+  wfc::jsonrpc::call_method< _backup_, request::backup_json, response::backup_json>,
+  wfc::jsonrpc::call_method< _restore_, request::restore_json, response::restore_json>
 >
 {
 };
@@ -91,6 +94,10 @@ public:
     this->template call< _backup_ >( std::move(req), cb, nullptr);
   }
 
+  virtual void restore(request::restore::ptr req, response::restore::handler cb ) override
+  {
+    this->template call< _restore_ >( std::move(req), cb, nullptr);
+  }
 };
 
 }}}

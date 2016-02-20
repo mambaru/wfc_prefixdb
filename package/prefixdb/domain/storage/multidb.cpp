@@ -26,7 +26,7 @@ bool multidb::reconfigure(const multidb_config& opt)
     std::lock_guard<std::mutex> lk(_mutex);
     CONFIG_LOG_MESSAGE("CREATE FACTORY...")
     _factory = god::create("rocksdb");
-    _factory->initialize(opt.path, opt.backup_path, opt.ini);
+    _factory->initialize(opt.path, opt.backup_path, opt.restore_path, opt.ini);
   }
   
   bool fail = false;
@@ -271,8 +271,15 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
   }
 }
 
+void multidb::backup()
+{
+  auto req = std::make_unique<request::backup>();
+  this->backup(std::move(req), nullptr);
+}
+
 void multidb::backup( request::backup::ptr req, response::backup::handler cb) 
 {
+  // ТОDO: сделать отдельную ветку для ручного бэкапа
   auto prefixes = std::move(req->prefixes);
   if ( prefixes.empty() )
     prefixes = this->all_prefixes_();
@@ -281,7 +288,10 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
   {
     if ( auto db = this->prefix_(prefix, false) )
     {
-      
+      db->backup( 
+        std::make_unique<request::backup>(*req),
+        nullptr
+      );
     }
     else
     {
@@ -289,6 +299,11 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
     }
   }
   
+  if ( cb != nullptr )
+  {
+    auto res = std::make_unique<response::backup>();
+    cb( std::move(res) );
+  }
   /*
   if ( auto db = this->prefix_(req->prefix, false) )
   {
@@ -301,5 +316,17 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
   */
 }
 
+
+void multidb::restore()
+{
+  /*
+  auto req = std::make_unique<request::backup>();
+  this->backup(std::move(req), nullptr);
+  */
+}
+
+void multidb::restore( request::restore::ptr /*req*/, response::restore::handler /*cb*/) 
+{
+}
 
 }}

@@ -37,6 +37,7 @@ struct rocksdb_factory::context
   CFD_list cdf;
   std::string path;
   std::string backup_path;
+  std::string restore_path;
 };
 
 rocksdb_factory::~rocksdb_factory()
@@ -44,7 +45,7 @@ rocksdb_factory::~rocksdb_factory()
   _context->env = nullptr;
 }
 
-void rocksdb_factory::initialize(std::string db_path, std::string backup_path, std::string ini_path) 
+void rocksdb_factory::initialize(std::string db_path, std::string backup_path, std::string restore_path, std::string ini_path) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
   
@@ -52,6 +53,7 @@ void rocksdb_factory::initialize(std::string db_path, std::string backup_path, s
   _context->env = ::rocksdb::Env::Default();
   _context->path = db_path;
   _context->backup_path = backup_path;
+  _context->restore_path = restore_path;
   _context->options.merge_operator = std::make_shared<merge_operator>();
   
   auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
@@ -61,22 +63,39 @@ void rocksdb_factory::initialize(std::string db_path, std::string backup_path, s
     abort();
   }
 }
-
-ifactory::prefixdb_ptr rocksdb_factory::create(std::string prefix, bool create_if_missing) 
+//::rocksdb::RestoreBackupableDB
+ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_if_missing) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   
-  std::string path = _context->path + "/" + prefix;
+  std::string path = _context->path + "/" + dbname;
+  
+  std::string bpath = _context->backup_path;
+  if ( bpath.empty() ) bpath = path + "/backup";
+  else bpath += std::string("/") + dbname;
+  
+  std::string rpath = _context->restore_path;
+  if ( rpath.empty() ) rpath = path + "/backup";
+  else rpath += std::string("/") + dbname;
+
   ::rocksdb::DB* db;
   
   auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
   if ( status.ok() )
   {
-    ::rocksdb::BackupableDBOptions backup_opt(_context->backup_path);
+    COMMON_LOG_MESSAGE("Backup path: " << bpath)
+    ::rocksdb::BackupableDBOptions backup_opt( bpath );
+    backup_opt.destroy_old_data = true;
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
-    return std::make_shared< rocksdb >(bdb, nullptr);
+    ::rocksdb::RestoreBackupableDB* rdb = nullptr;
+    if ( !rpath.empty() )
+    {
+      ::rocksdb::BackupableDBOptions restore_opt( rpath );
+      rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
+    }
+    return std::make_shared< rocksdb >(bdb, rdb);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

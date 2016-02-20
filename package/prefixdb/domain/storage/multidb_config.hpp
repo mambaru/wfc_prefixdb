@@ -25,7 +25,8 @@ struct multidb_config: merge_config
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
   // Путь к бэкапу базы данных для всех префиксов
-  std::string backup_path  = "./rocksdb/backup";
+  std::string backup_path   = "./rocksdb/backup";
+  std::string restore_path  = "./rocksdb/backup";
   
 };
 

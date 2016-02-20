@@ -3,22 +3,76 @@
 #include <wfc/core/icore.hpp>
 #include <wfc/module/iinstance.hpp>
 #include "storage/multidb.hpp"
+#include <ctime>
 
 namespace wamba{ namespace prefixdb {
   
 class prefixdb::impl: public multidb
 {};
 
-void prefixdb::reconfigure()
+void prefixdb::__do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() )
 {
-  if ( _impl == nullptr )
+  if ( period == 0 )
+    return;
+  
+  if ( timer == nullptr )
   {
-    _impl = std::make_shared<impl>();
-    _impl->reconfigure( this->options() );
+    timer = std::make_unique<deadline_timer>(
+      this->global()->io_service,  
+      boost::posix_time::seconds( period ) 
+    );
   }
   else
   {
-    auto& stop_list = this->options().stop_list;
+    multidb* p = _impl.get();
+    (p->*dfun)();
+    timer->expires_at( timer->expires_at() + boost::posix_time::seconds( period));
+  }
+  
+  std::weak_ptr<prefixdb> wthis = this->shared_from_this();
+  timer->async_wait([wthis, ifun](const boost::system::error_code& )
+  {
+    if ( auto pthis = wthis.lock() )
+    {
+      prefixdb* p = pthis.get();
+      (p->*ifun)();
+    }
+  });
+ 
+}
+
+void prefixdb::do_backup_()
+{
+  this->__do__(
+    this->options().backup_period_s,
+    this->_backup_timer,
+    &multidb::backup,
+    &prefixdb::do_backup_
+  );
+}
+
+void prefixdb::do_restore_()
+{
+  this->__do__(
+    this->options().restore_period_s,
+    this->_restore_timer,
+    &multidb::restore,
+    &prefixdb::do_restore_
+  );
+
+}
+
+void prefixdb::reconfigure()
+{
+  auto opt = this->options();
+  if ( _impl == nullptr )
+  {
+    _impl = std::make_shared<impl>();
+    _impl->reconfigure( opt );
+  }
+  else
+  {
+    auto& stop_list = opt.stop_list;
     for ( const std::string& name : stop_list )
     {
       if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
@@ -27,7 +81,7 @@ void prefixdb::reconfigure()
       }
     }
     
-    if ( !_impl->reconfigure( this->options() ) )
+    if ( !_impl->reconfigure( opt ) )
     {
       wfc_abort("prefixdb open DB abort!");
     }
@@ -41,7 +95,13 @@ void prefixdb::reconfigure()
     }
     
     DEBUG_LOG_MESSAGE("void prefixdb::reconfigured()!!!")
-  } 
+  }
+  
+  _backup_timer = nullptr;
+  this->do_backup_();
+
+  _restore_timer = nullptr;
+  this->do_restore_();
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)
@@ -87,6 +147,11 @@ void prefixdb::range( request::range::ptr req, response::range::handler cb)
 void prefixdb::backup( request::backup::ptr req, response::backup::handler cb)
 {
   _impl->backup( std::move(req), std::move(cb) );
+}
+
+void prefixdb::restore( request::restore::ptr req, response::restore::handler cb)
+{
+  _impl->restore( std::move(req), std::move(cb) );
 }
 
 }}
