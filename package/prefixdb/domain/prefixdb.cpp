@@ -10,7 +10,7 @@ namespace wamba{ namespace prefixdb {
 class prefixdb::impl: public multidb
 {};
 
-void prefixdb::__do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() )
+void prefixdb::timer_(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() )
 {
   if ( period == 0 )
     return;
@@ -38,12 +38,11 @@ void prefixdb::__do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(),
       (p->*ifun)();
     }
   });
- 
 }
 
 void prefixdb::do_backup_()
 {
-  this->__do__(
+  this->timer_(
     this->options().backup_period_s,
     this->_backup_timer,
     &multidb::backup,
@@ -53,13 +52,12 @@ void prefixdb::do_backup_()
 
 void prefixdb::do_restore_()
 {
-  this->__do__(
+  this->timer_(
     this->options().restore_period_s,
     this->_restore_timer,
     &multidb::restore,
     &prefixdb::do_restore_
   );
-
 }
 
 void prefixdb::reconfigure()

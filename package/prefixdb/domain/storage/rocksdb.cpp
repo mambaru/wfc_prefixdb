@@ -280,7 +280,14 @@ void rocksdb::backup( request::backup::ptr req, response::backup::handler cb)
 
 void rocksdb::restore( request::restore::ptr req, response::restore::handler cb) 
 {
-  
+  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup();
+  DEBUG_LOG_MESSAGE("RestoreDBFromLatestBackup: " << status.ToString() )
+  if ( cb != nullptr )
+  {
+    auto res = std::make_unique<response::restore>();
+    res->status = status.ok() ? common_status::OK : common_status::WriteError;
+    cb( std::move(res) );
+  }
 }
 
 }}

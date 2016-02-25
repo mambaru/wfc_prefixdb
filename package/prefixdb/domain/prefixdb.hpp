@@ -15,7 +15,6 @@ class prefixdb
 {
   class impl;
 public:
-  //virtual void start(const std::string&) override;
   virtual void reconfigure() override;
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -32,13 +31,7 @@ private:
   typedef std::unique_ptr<deadline_timer> timer_ptr; 
   void do_backup_();
   void do_restore_();
-  void __do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() );
-
-
-/*  template<typename DoFun, typename ImplFun>
-  void do__(time_t period, timer_ptr& timer, DoFun dfun, ImplFun ifun);
-  */
-
+  void timer_(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() );
 private:
   std::shared_ptr<impl> _impl;
   timer_ptr _backup_timer;
