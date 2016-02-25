@@ -13,13 +13,15 @@ namespace request
     JSON_NAME(prefix)
     JSON_NAME(sync)
     JSON_NAME(path)
+    JSON_NAME(compact_range)
 
     typedef ::wfc::json::object<
       backup,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefix, backup, std::vector<std::string>, &backup::prefixes, ::wfc::json::array_of_strings >,
         ::wfc::json::member<n_path,   backup, std::string, &backup::path>,
-        ::wfc::json::member<n_sync,   backup, bool, &backup::sync>
+        ::wfc::json::member<n_sync,   backup, bool, &backup::sync>,
+        ::wfc::json::member<n_compact_range,   backup, bool, &backup::compact_range>
       >
     > type;
     typedef type::target target;

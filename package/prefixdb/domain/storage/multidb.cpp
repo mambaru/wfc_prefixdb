@@ -7,13 +7,19 @@
 
 namespace wamba{ namespace prefixdb {
 
-void multidb::release()
+void multidb::close()
 {
   std::lock_guard<std::mutex> lk(_mutex);
   if ( _factory )
   {
     CONFIG_LOG_BEGIN("STOP DB...")
     _factory = nullptr;
+    for (auto& db : _db_map)
+    {
+      if ( db.second!= nullptr )
+        db.second->close();
+      db.second=nullptr;
+    }
     _db_map.clear();
     CONFIG_LOG_END("STOP DB!")
   }
@@ -21,7 +27,7 @@ void multidb::release()
 
 bool multidb::reconfigure(const multidb_config& opt)
 {
-  this->release();
+  this->close();
   {
     std::lock_guard<std::mutex> lk(_mutex);
     CONFIG_LOG_MESSAGE("CREATE FACTORY...")
@@ -271,14 +277,16 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
   }
 }
 
-void multidb::backup()
+void multidb::backup(bool compact_range)
 {
   auto req = std::make_unique<request::backup>();
-  this->backup(std::move(req), nullptr);
+  req->compact_range = compact_range;
+  this->backup(compact_range);
 }
 
 void multidb::backup( request::backup::ptr req, response::backup::handler cb) 
 {
+  
   // ТОDO: сделать отдельную ветку для ручного бэкапа
   auto prefixes = std::move(req->prefixes);
   if ( prefixes.empty() )
@@ -286,6 +294,7 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
   
   for ( const std::string& prefix: prefixes)
   {
+    DEBUG_LOG_MESSAGE("Backup for: " << prefix << "..." )
     if ( auto db = this->prefix_(prefix, false) )
     {
       db->backup( 
@@ -304,6 +313,7 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
     auto res = std::make_unique<response::backup>();
     cb( std::move(res) );
   }
+  
   /*
   if ( auto db = this->prefix_(req->prefix, false) )
   {

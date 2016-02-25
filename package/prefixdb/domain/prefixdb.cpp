@@ -10,7 +10,8 @@ namespace wamba{ namespace prefixdb {
 class prefixdb::impl: public multidb
 {};
 
-void prefixdb::__do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() )
+template<typename Fun>
+void prefixdb::deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefixdb::* ifun)() )
 {
   if ( period == 0 )
     return;
@@ -24,8 +25,8 @@ void prefixdb::__do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(),
   }
   else
   {
-    multidb* p = _impl.get();
-    (p->*dfun)();
+    //multidb* p = _impl.get();
+    dfun();
     timer->expires_at( timer->expires_at() + boost::posix_time::seconds( period));
   }
   
@@ -43,20 +44,32 @@ void prefixdb::__do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(),
 
 void prefixdb::do_backup_()
 {
-  this->__do__(
+  std::weak_ptr<impl> wimpl = _impl;
+  bool compact = this->options().compact_before_backup;
+  auto backup = [wimpl, compact](){
+    if ( auto pimpl = wimpl.lock() )
+      pimpl->backup(compact);
+  };
+
+  this->deadline_(
     this->options().backup_period_s,
     this->_backup_timer,
-    &multidb::backup,
+    backup,
     &prefixdb::do_backup_
   );
 }
 
 void prefixdb::do_restore_()
 {
-  this->__do__(
+  std::weak_ptr<impl> wimpl = _impl;
+  auto restore = [wimpl](){
+    if ( auto pimpl = wimpl.lock() )
+      pimpl->restore();
+  };
+  this->deadline_(
     this->options().restore_period_s,
     this->_restore_timer,
-    &multidb::restore,
+    restore,
     &prefixdb::do_restore_
   );
 
@@ -102,6 +115,12 @@ void prefixdb::reconfigure()
 
   _restore_timer = nullptr;
   this->do_restore_();
+}
+
+void prefixdb::stop(const std::string&) 
+{
+  if ( _impl )
+    _impl->close();
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)

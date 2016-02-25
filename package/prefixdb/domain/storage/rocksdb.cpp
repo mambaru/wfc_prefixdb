@@ -17,10 +17,19 @@ namespace {
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
 }
 
-rocksdb::rocksdb( db_type* db, restore_db_type* rdb)
-  : _db(db)
+rocksdb::rocksdb( std::string name,  db_type* db, restore_db_type* rdb)
+  : _name(name)
+  , _db(db)
   , _rdb(rdb)
 {}
+
+
+void rocksdb::close()
+{
+  _rdb=nullptr;
+  _db=nullptr;
+}
+
 
 template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
 void rocksdb::merge_(ReqPtr req, Callback cb)
@@ -256,8 +265,35 @@ bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req,
 
 }
 
-void rocksdb::backup( request::backup::ptr req, response::backup::handler cb) 
+
+void rocksdb::backup(bool compact_range)
 {
+  if ( compact_range )
+  {
+    ::rocksdb::Status status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
+    DEBUG_LOG_MESSAGE("CompactRange: " << status.ToString() )
+  }
+  ::rocksdb::Status status = _db->CreateNewBackup();
+  if ( status.ok() )
+  {
+    DEBUG_LOG_MESSAGE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
+  }
+  else
+  {
+    COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
+  }
+}
+
+void rocksdb::backup( request::backup::ptr /*req*/, response::backup::handler cb) 
+{
+  if (cb!=nullptr)
+    cb(nullptr);
+  /*
+  if ( req->compact_range )
+  {
+    ::rocksdb::Status status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
+    DEBUG_LOG_MESSAGE("CompactRange: " << status.ToString() )
+  }
   ::rocksdb::Status status = _db->CreateNewBackup();
   DEBUG_LOG_MESSAGE("CreateNewBackup: " << status.ToString() )
   if ( cb != nullptr )
@@ -266,6 +302,7 @@ void rocksdb::backup( request::backup::ptr req, response::backup::handler cb)
     res->status = status.ok() ? common_status::OK : common_status::WriteError;
     cb( std::move(res) );
   }
+  */
   /*
   typedef ::rocksdb::BackupEngine backup_engine;
   backup_engine* engine;

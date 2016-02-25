@@ -16,7 +16,11 @@ class prefixdb
   class impl;
 public:
   //virtual void start(const std::string&) override;
+  // domain_object
   virtual void reconfigure() override;
+  virtual void stop(const std::string&) override;
+  
+  // iprefixdb
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
@@ -32,7 +36,9 @@ private:
   typedef std::unique_ptr<deadline_timer> timer_ptr; 
   void do_backup_();
   void do_restore_();
-  void __do__(time_t period, timer_ptr& timer, void (multidb::* dfun)(), void (prefixdb::* ifun)() );
+  
+  template<typename Fun>
+  void deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefixdb::* ifun)() );
 
 
 /*  template<typename DoFun, typename ImplFun>

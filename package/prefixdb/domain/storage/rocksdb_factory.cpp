@@ -95,7 +95,7 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
       ::rocksdb::BackupableDBOptions restore_opt( rpath );
       rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
-    return std::make_shared< rocksdb >(bdb, rdb);
+    return std::make_shared< rocksdb >(dbname, bdb, rdb);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

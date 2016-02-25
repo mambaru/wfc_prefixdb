@@ -1,7 +1,7 @@
 #pragma once
 
-#include <prefixdb/iprefixdb.hpp>
-#include "multidb_config.hpp"
+#include <prefixdb/domain/storage/multidb_config.hpp>
+#include <prefixdb/domain/storage/iprefixdb_ex.hpp>
 #include <memory>
 #include <map>
 #include <mutex>
@@ -12,14 +12,12 @@ namespace wamba{ namespace prefixdb{
 struct ifactory;
 
 class multidb
-  : public iprefixdb
+  : public iprefixdb_ex
 {
-  typedef std::shared_ptr<iprefixdb> prefixdb_ptr;
+  typedef std::shared_ptr<iprefixdb_ex> prefixdb_ptr;
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
   bool reconfigure(const multidb_config& opt);
-  void release();
-  void backup();
   void restore();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -31,6 +29,9 @@ public:
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
   virtual void restore( request::restore::ptr req, response::restore::handler cb) override;
+  
+  virtual void close() override;
+  virtual void backup(bool compact_range) override;
 private:
   
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);

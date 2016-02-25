@@ -49,7 +49,7 @@ namespace helper{
   }
   catch( const ::wfc::json::json_error& e)
   {
-    e.message(beg, end);
+    COMMON_LOG_ERROR( "unserialize merge_operator error: " << e.message(beg, end) );
     return false;
   }
 
@@ -86,6 +86,83 @@ void merge_operator::reconfigure(const merge_config& config)
   _config = std::make_shared<merge_config>(config);
 }
 
+bool merge_operator::FullMerge(
+    const slice_type& key,
+    const slice_type* value,
+    const operand_list& operands,
+    std::string* result,
+    logger_type* logger) const
+try
+{
+  if ( operands.empty() )
+    return true;
+  
+  merge mrg;
+  merge_mode mode = merge_mode::none;
+  
+  update_list updates;
+  updates.reserve(operands.size());
+  for (size_t i = 0; i < operands.size(); ++i)
+  {
+    if ( helper::unserialize<merge_json>(mrg, operands[i]) )
+    {
+      if ( mode == merge_mode::none )
+        mode = mrg.mode;
+      updates.push_back(mrg.raw);
+    }
+  } 
+  
+  switch( mode )
+  {
+    /*
+    case merge_mode::inc:
+      this->inc_(*new_value, std::move(upd.raw), beg, end ); 
+      break;
+    case merge_mode::add:
+      this->add_(*new_value, std::move(upd.raw), beg, end ); 
+      break;
+      */
+    case merge_mode::packed:
+      this->packed_(value, updates, *result); 
+      break;
+    default: 
+      COMMON_LOG_MESSAGE("merge_operator::Merge: Invalid method merge: " << updates[0]  )
+      if ( value!=nullptr )
+        *result = value->ToString();
+      else
+        *result="\"\"";
+      COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << *result  )
+  }
+  DEBUG_LOG_MESSAGE("Merge save: " 
+    << "\nValue: "   << (value ? value->ToString() : "nullptr")
+    << "\nOperand[0]: " << updates[0]
+    << "\nResult: " << *result)
+  return true;
+
+}
+catch(std::exception e)
+{
+  if ( value )
+    *result = value->ToString();
+  
+  DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge exception: "<< e.what() << ": key=" 
+                  << key.ToString() << " existing=" << ( value ? value->ToString() : std::string("nullptr") )
+                  << " operands=" << operands.size() )
+  return true;
+}
+catch(...)
+{
+  if ( value )
+    *result = value->ToString();
+
+  DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge unhandled exception: key=" 
+                  << key.ToString() << " value=" << ( value ? value->ToString() : "nullptr" )
+                  << " operands=" << operands.size() )
+  return true;
+}
+
+
+
 bool merge_operator::Merge(const slice_type& key,
                      const slice_type* existing_value,
                      const slice_type& value,
@@ -93,24 +170,34 @@ bool merge_operator::Merge(const slice_type& key,
                      ::rocksdb::Logger* /*logger*/) const 
 try
 {
-  DEBUG_LOG_MESSAGE("merge_operator::Merge: " << value.ToString()  )
-  
   merge upd;
   helper::unserialize<merge_json>(upd, value);
+  
+  const char *beg = helper::begin(existing_value);
+  const char *end = helper::end(existing_value);
   switch( upd.mode )
   {
     case merge_mode::inc:
-      this->inc_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
+      this->inc_(*new_value, std::move(upd.raw), beg, end ); 
       break;
     case merge_mode::add:
-      this->add_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
+      this->add_(*new_value, std::move(upd.raw), beg, end ); 
       break;
     case merge_mode::packed:
-      this->packed_(*new_value, std::move(upd.raw), helper::begin(existing_value), helper::end(existing_value) ); 
+      this->packed_(*new_value, std::move(upd.raw), beg, end ); 
       break;
     default: 
-      return false;
+      COMMON_LOG_MESSAGE("merge_operator::Merge: Invalid method merge: " << value.ToString()  )
+      if ( beg!=end )
+        new_value->assign(beg, end );
+      else
+        *new_value="\"\"";
+      COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << *new_value  )
   }
+  DEBUG_LOG_MESSAGE("Merge save: " 
+    << "\nValue: "   << (beg!=end ? std::string(beg, end) : "nullptr")
+    << "\nOperand: " << value.ToString()
+    << "\nResult: " << *new_value)
   return true;
 }
 catch(std::exception e)
@@ -145,11 +232,17 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   ::wfc::json::value<int64_t>::serializer intser;
 
   inc_params params;
+  
+  bool ready = false;
   if ( parser::is_object(upd.begin(), upd.end()) )
   {
-    inc_params_json::serializer()( params, upd.begin(), upd.end() );
+    try{
+      inc_params_json::serializer()( params, upd.begin(), upd.end() );
+      ready = true;
+    } catch(...) {}
   }
-  else
+  
+  if ( !ready )
   {
     if (beg!=end) out.assign(beg, end);
     return;
@@ -185,13 +278,21 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
 void merge_operator::add_(std::string& out, std::string&& in, const char* beg, const char* end ) const
 {
   add_params upd;
-  if ( parser::is_array(in.begin(), in.end()) )
+  bool ready = false;
+  if ( parser::is_object(in.begin(), in.end()) )
   {
-    add_params_json::serializer()( upd, in.begin(), in.end() );
+    try{
+      add_params_json::serializer()( upd, in.begin(), in.end() );
+    } catch(...) {};
+    ready = true;
   }
-  else
+  
+  if ( !ready )
   {
-    if (beg!=end) out.assign(beg, end);
+    if (beg!=end) 
+    {
+      out.assign(beg, end);
+    }
     return;
   }
   
@@ -214,8 +315,11 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
   if ( parser::is_array(upd.arr.begin(), upd.arr.end()) )
   {
     try{
-      // пишем в конец arr
-      arr_json::serializer()(arr, upd.arr.begin(), upd.arr.end());
+      std::vector<std::string> tail;
+      tail.reserve(upd.lim);
+      arr_json::serializer()(tail, upd.arr.begin(), upd.arr.end());
+      arr.insert( arr.end(), tail.begin(), tail.end());
+      //arr.emplace_back(tail.begin(), tail.end());
     } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
   }
   else
@@ -223,7 +327,6 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
     // Добавлем объект как он пришел
     arr.push_back(upd.arr);
   }
-  
   
   if ( arr.size() > upd.lim )
   {
@@ -233,6 +336,24 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
   
   out.reserve( upd.arr.size() + std::distance(beg, end) );
   arr_json::serializer()(arr, std::inserter(out, out.end()));
+}
+
+void merge_operator::packed_(const slice_type* value, const update_list& operands, std::string& result) const
+{
+  packed_t pck;
+  // Десериализуем текущий объект
+  if ( value != nullptr )
+  {
+    const char* beg = value->data();
+    const char* end = beg + value->size();
+    if ( parser::is_object(beg, end) ) try
+    {
+      packed_json::serializer()(pck, beg, end);
+    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+  }
+
+  //for (auto )
+  
 }
 
 void merge_operator::packed_(std::string& out, std::string&& in, const char* beg, const char* end ) const
@@ -271,55 +392,55 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   for (auto& p : upd )
   {
     packed_field_params& u = p.second;
+    const bool erase = parser::is_null( u.inc.begin(), u.inc.end() )
+                    && parser::is_null( u.val.begin(), u.val.end() );
+              
     field.first = std::move(p.first);
     auto itr = std::lower_bound(pck.begin(), pck.end(), field, less);
+    const bool found = ( itr != pck.end() && itr->first == field.first );
 
-    if ( parser::is_null( u.inc.begin(), u.inc.end() ) 
-      && parser::is_null( u.val.begin(), u.val.end() ) 
-    )
+    if ( erase )
+    {
+      if ( found ) pck.erase(itr);
+      continue;
+    }
+    
+    bool inc_ready = parser::is_number( u.inc.begin(), u.inc.end() );
+      
+    if ( !found )
     { 
-      // Если не заданы оба, то удаляем поле
-      if ( itr != pck.end() )
-        pck.erase(itr);
+      field.second = inc_ready ? "0" : "null" ;
+      itr = pck.insert(itr, std::move(field) );
+    }
+      
+    if ( inc_ready )
+    { // если в inc число, то работаем как с числом и делаем инкремент
+      
+      ::wfc::json::value<int64_t>::serializer intser;
+      if ( !parser::is_number( itr->second.begin(), itr->second.end() ) )
+      { // если текущее значение не число, то берём из val
+        itr->second = std::move( u.val );
+        if ( !parser::is_number( itr->second.begin(), itr->second.end() ) )
+        { // если все равно не число
+          itr->second = "0";
+        }
+      }
+      
+      int64_t val = 0;
+      int64_t inc = 0;
+      intser(val, itr->second.begin(), itr->second.end());
+      intser(inc, u.inc.begin(), u.inc.end() );
+      val += inc;
+      itr->second.clear();
+      // немного быстрее, чем std::back_inserter
+      intser(val, std::inserter(itr->second, itr->second.end()) );
     }
     else
     {
-      bool inc_ready = parser::is_number( u.inc.begin(), u.inc.end() );
-      
-      if ( itr == pck.end() || itr->first != field.first )
-      { 
-        field.second = inc_ready ? "0" : "null" ;
-        itr = pck.insert(itr, std::move(field) );
-      }
-      
-      if ( inc_ready )
-      { // если в inc число, то работаем как с числом и делаем инкремент
-        
-        ::wfc::json::value<int64_t>::serializer intser;
-        if ( !parser::is_number( itr->second.begin(), itr->second.end() ) )
-        { // если текущее значение не число, то берём из val
-          itr->second = std::move( u.val );
-          if ( !parser::is_number( itr->second.begin(), itr->second.end() ) )
-          { // если все равно не число
-            itr->second = "0";
-          }
-        }
-        
-        int64_t val = 0;
-        int64_t inc = 0;
-        intser(val, itr->second.begin(), itr->second.end());
-        intser(inc, u.inc.begin(), u.inc.end() );
-        val += inc;
-        itr->second.clear();
-        // немного быстрее, чем std::back_inserter
-        intser(val, std::inserter(itr->second, itr->second.end()) );
-      }
-      else
-      {
-        itr->second = std::move(u.val);
-      }
+      itr->second = std::move(u.val);
     }
-  }
+    
+  } // for
   
   out.reserve(in.size());
   packed_json::serializer()( pck, std::inserter(out, out.end()) );
