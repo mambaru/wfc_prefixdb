@@ -26,6 +26,7 @@ rocksdb::rocksdb( std::string name,  db_type* db, restore_db_type* rdb)
 
 void rocksdb::close()
 {
+  COMMON_LOG_MESSAGE("preffix DB close " << _name)
   _rdb=nullptr;
   _db=nullptr;
 }
@@ -45,7 +46,7 @@ void rocksdb::merge_(ReqPtr req, Callback cb)
     upd.raw = std::move(f.second);
     json.clear();
     ser( upd, std::inserter(json, json.end()));
-    std::cout << "rocksdb::merge_ " << json << std::endl;
+    //std::cout << "rocksdb::merge_ " << json << std::endl;
     batch.Merge(f.first, json);
   }
   
@@ -268,10 +269,24 @@ bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req,
 
 void rocksdb::backup(bool compact_range)
 {
+  
   if ( compact_range )
   {
+    DEBUG_LOG_BEGIN("CompactRange: " << _name )
     ::rocksdb::Status status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
-    DEBUG_LOG_MESSAGE("CompactRange: " << status.ToString() )
+    DEBUG_LOG_END("CompactRange: " << status.ToString() )
+  }
+  
+  {
+    ::rocksdb::Status status = _db->GarbageCollect();
+    if ( status.ok() )
+    {
+      DEBUG_LOG_MESSAGE("GarbageCollect for " << _name <<  ": " << status.ToString() )
+    }
+    else
+    {
+      COMMON_LOG_MESSAGE("GarbageCollect ERROR for " << _name << ": " << status.ToString() )
+    }
   }
   ::rocksdb::Status status = _db->CreateNewBackup();
   if ( status.ok() )

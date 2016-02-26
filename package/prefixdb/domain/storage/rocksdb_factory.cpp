@@ -54,22 +54,27 @@ void rocksdb_factory::initialize(std::string db_path, std::string backup_path, s
   _context->path = db_path;
   _context->backup_path = backup_path;
   _context->restore_path = restore_path;
-  _context->options.merge_operator = std::make_shared<merge_operator>();
-  
+  //_context->options.merge_operator = std::make_shared<merge_operator>();
   auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
   if ( !status.ok() )
   {
     DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
     abort();
   }
+
+  _context->cdf[0].options.merge_operator = std::make_shared<merge_operator>();
+  /*std::cout << "_context->options.max_successive_merges=" << _context->cdf[0].options.max_successive_merges << std::endl;
+  abort();*/
+  //_context->options.max_successive_merges = _context->cdf[0].options.max_successive_merges; 
 }
+
 //::rocksdb::RestoreBackupableDB
 ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_if_missing) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
-  
+  //_context->cdf[0].options.create_if_missing = create_if_missing;
   std::string path = _context->path + "/" + dbname;
   
   std::string bpath = _context->backup_path;
@@ -82,7 +87,18 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
 
   ::rocksdb::DB* db;
   
-  auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
+  std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
+  //std::cout << create_if_missing << path << std::endl;
+  
+  auto status = ::rocksdb::DB::Open(_context->options, path, _context->cdf , &handles, &db);
+  if ( status.ok() ) {
+    assert(handles.size() == 1);
+    // i can delete the handle since DBImpl is always holding a reference to
+    // default column family
+    delete handles[0];
+  }
+
+  //auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
   if ( status.ok() )
   {
     COMMON_LOG_MESSAGE("Backup path: " << bpath)

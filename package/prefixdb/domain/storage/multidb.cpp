@@ -279,9 +279,22 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
 
 void multidb::backup(bool compact_range)
 {
+  auto prefixes = this->all_prefixes_();
+  
+  for ( const std::string& prefix: prefixes)
+  {
+    DEBUG_LOG_MESSAGE("Backup for: " << prefix << "..." )
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      db->backup( compact_range );
+    }
+  }
+
+  /*
   auto req = std::make_unique<request::backup>();
   req->compact_range = compact_range;
-  this->backup(compact_range);
+  this->backup(std::move(req), nullptr);
+  */
 }
 
 void multidb::backup( request::backup::ptr req, response::backup::handler cb) 

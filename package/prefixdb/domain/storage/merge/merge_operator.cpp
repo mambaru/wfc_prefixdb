@@ -106,22 +106,24 @@ try
   {
     if ( helper::unserialize<merge_json>(mrg, operands[i]) )
     {
-      if ( mode == merge_mode::none )
+      if ( mode != mrg.mode )
+      {
+        // при i==0 или если сменился метод (тогда предыдущие не имеют смысла )
+        updates.clear();
         mode = mrg.mode;
-      updates.push_back(mrg.raw);
+      }
+      updates.push_back( std::move(mrg.raw) );
     }
   } 
   
   switch( mode )
   {
-    /*
     case merge_mode::inc:
-      this->inc_(*new_value, std::move(upd.raw), beg, end ); 
+      this->inc_(value, updates, *result ); 
       break;
     case merge_mode::add:
-      this->add_(*new_value, std::move(upd.raw), beg, end ); 
+      this->add_(value, updates, *result ); 
       break;
-      */
     case merge_mode::packed:
       this->packed_(value, updates, *result); 
       break;
@@ -136,6 +138,7 @@ try
   DEBUG_LOG_MESSAGE("Merge save: " 
     << "\nValue: "   << (value ? value->ToString() : "nullptr")
     << "\nOperand[0]: " << updates[0]
+    << "\nsize: " << updates.size()
     << "\nResult: " << *result)
   return true;
 
@@ -161,13 +164,13 @@ catch(...)
   return true;
 }
 
-
+/*
 
 bool merge_operator::Merge(const slice_type& key,
                      const slice_type* existing_value,
                      const slice_type& value,
                      std::string* new_value,
-                     ::rocksdb::Logger* /*logger*/) const 
+                     ::rocksdb::Logger* logger) const 
 try
 {
   merge upd;
@@ -220,10 +223,62 @@ catch(...)
                   << " value=" << value.ToString() )
   return true;
 }
+*/
   
 const char* merge_operator::Name() const 
 {
   return "PreffixDBMergeOperator";
+}
+
+void merge_operator::inc_(const slice_type* value, const update_list& operands, std::string& result) const
+{
+  typedef ::wfc::json::value<int64_t> int64json;
+  typedef ::wfc::json::value<int64_t>::serializer intser;
+  int64_t num = 0;
+  bool exist = true;
+  // Десериализуем текущий объект
+  if ( !helper::unserialize<int64json>(num, value) )
+  {
+    num = 0;
+    exist = false;
+  }
+
+  for (const std::string& oper : operands )
+  {
+    this->inc_operand_(oper, num, exist);
+    exist = true;
+  }
+
+  result.reserve(8);
+  intser()( num, std::inserter(result, result.end()) );
+}
+
+void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool exist) const
+{
+  typedef ::wfc::json::value<int64_t> int64json;
+  typedef int64json::serializer intser;
+  
+  inc_params params;
+  if ( !helper::unserialize<inc_params_json>(params, oper) )
+    return;
+  
+  if ( !exist )
+  {
+    if ( !parser::is_number( params.val.begin(), params.val.end() ) )
+    {
+      num = 0;
+    }
+    else
+    {
+      helper::unserialize<int64json>(num, params.val);
+    }
+  }
+  else if (parser::is_number( params.inc.begin(), params.inc.end()))
+  {
+    int64_t inc = 0;
+    helper::unserialize<int64json>(inc, params.inc);
+    num += inc;
+  }
 }
 
 
@@ -274,6 +329,55 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
     }
   }
 }
+
+void merge_operator::add_(const slice_type* value, const update_list& operands, std::string& result) const
+{
+  std::deque<std::string> arr;
+  typedef ::wfc::json::array< std::deque< ::wfc::json::raw_value<> > > arr_json;
+
+  // Десериализуем текущий объект
+  
+  if ( !helper::unserialize<arr_json>(arr, value) )
+  {
+    // очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его
+    arr.clear();
+  }
+
+  for (const std::string& oper : operands )
+  {
+    this->add_operand_(oper, arr);
+  }
+  
+  if ( value!= nullptr )
+    result.reserve(value->size());
+  arr_json::serializer()( arr, std::inserter(result, result.end()) );
+}
+
+void merge_operator::add_operand_(const std::string& oper, std::deque<std::string>& arr) const
+{
+  add_params update;
+  if ( !helper::unserialize<add_params_json>(update, oper) )
+    return;
+  
+  if ( update.lim == 0 )
+  {
+    arr.clear();
+    return;
+  }
+  
+  std::vector<std::string> tail;
+  typedef ::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > tail_json;
+  if ( !helper::unserialize<tail_json>(tail, update.arr) )
+    return;
+  
+  arr.insert( arr.end(), tail.begin(), tail.end() );
+  if ( arr.size() > update.lim )
+  {
+    size_t pos = arr.size() - update.lim;
+    arr.erase( arr.begin(), arr.begin() + pos );
+  }
+}
+
 
 void merge_operator::add_(std::string& out, std::string&& in, const char* beg, const char* end ) const
 {
@@ -338,23 +442,108 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
   arr_json::serializer()(arr, std::inserter(out, out.end()));
 }
 
+// new
 void merge_operator::packed_(const slice_type* value, const update_list& operands, std::string& result) const
 {
   packed_t pck;
+  
   // Десериализуем текущий объект
-  if ( value != nullptr )
+  
+  if ( !helper::unserialize<packed_json>(pck, value) )
   {
-    const char* beg = value->data();
-    const char* end = beg + value->size();
-    if ( parser::is_object(beg, end) ) try
-    {
-      packed_json::serializer()(pck, beg, end);
-    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+    // очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его
+    pck.clear();
   }
 
-  //for (auto )
+  for (const std::string& oper : operands )
+  {
+    this->packed_operand_(oper, pck);
+  }
   
+  if ( value!= nullptr )
+    result.reserve(value->size());
+  packed_json::serializer()( pck, std::inserter(result, result.end()) );
 }
+
+void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) const
+{
+  packed_params_t update;
+  if ( !helper::unserialize<packed_params_json>(update, oper) )
+    return;
+    
+  static auto less = []( const packed_field& l, const packed_field& r) { return l.first < r.first; };
+  if ( !std::is_sorted( pck.begin(), pck.end(), less ) )
+  { 
+    // сортируем для быстропоиска
+    // как фитча все поля у хранимого пакета упорядочены 
+    std::sort( pck.begin(), pck.end(), less );
+  }
+    
+  packed_field field;
+  for (const auto& upd : update)
+  {
+    const packed_field_params& u = upd.second;
+    const bool erase = parser::is_null( u.inc.begin(), u.inc.end() )
+                    && parser::is_null( u.val.begin(), u.val.end() );
+              
+    field.first = std::move(upd.first);
+    auto itr = std::lower_bound(pck.begin(), pck.end(), field, less);
+    const bool found = ( itr != pck.end() && itr->first == field.first );
+     
+    if ( erase )
+    {
+      if ( found ) pck.erase(itr);
+        continue;
+    }
+
+    // это инкремент или просто замена
+    bool inc_ready = parser::is_number( u.inc.begin(), u.inc.end() );
+    if ( !found )
+    { 
+      field.second = inc_ready ? "0" : "null" ;
+      itr = pck.insert(itr, std::move(field) );
+    }
+
+      if ( inc_ready )
+      { // если в inc число, то работаем как с числом и делаем инкремент
+        this->packed_inc_( u, itr->second );
+      }
+      else
+      {
+        itr->second = std::move(u.val);
+      }
+    }
+}
+
+void merge_operator::packed_inc_(const packed_field_params& upd, std::string& result) const
+{
+  ::wfc::json::value<int64_t>::serializer intser;
+  if ( !parser::is_number( result.begin(), result.end() ) )
+  { // если текущее значение не число, то берём из val
+    result = std::move( upd.val );
+    if ( !parser::is_number( result.begin(), result.end() ) )
+    { // если все равно не число
+      result = "0";
+    }
+  }
+
+  int64_t val = 0;
+  int64_t inc = 0;
+  intser(val, result.begin(), result.end());
+  intser(inc, upd.inc.begin(), upd.inc.end() );
+  val += inc;
+  result.clear();
+  
+  // немного быстрее, чем std::back_inserter
+  intser(val, std::inserter(result, result.end()) );
+}
+
+/*
+void merge_operator::packed_field_(const packed_field_params& upd, packed_field& field )
+{
+    
+}
+*/
 
 void merge_operator::packed_(std::string& out, std::string&& in, const char* beg, const char* end ) const
 {
