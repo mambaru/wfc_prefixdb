@@ -12,8 +12,10 @@ namespace request
   {
     // синхронный backup (ответ после записи backup)
     bool sync = false;
+    // не используеться
     bool nores = true;
-    
+    // Делать предварительно CompactRange
+    bool compact_range = false;
     // если не задан, то все префиксы
     std::vector<std::string> prefixes;
     
