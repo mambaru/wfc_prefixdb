@@ -18,7 +18,6 @@ class multidb
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
   bool reconfigure(const multidb_config& opt);
-  void restore();
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
@@ -32,6 +31,7 @@ public:
   
   virtual void close() override;
   virtual void backup(bool compact_range) override;
+  virtual void restore() override;
 private:
   
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);

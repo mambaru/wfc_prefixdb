@@ -1,10 +1,11 @@
 #pragma once
 
 #include <string>
-#include "merge/merge_config.hpp"
+#include <prefixdb/domain/storage/rocksdb_config.hpp>
+
 namespace wamba{ namespace prefixdb{
   
-struct multidb_config: merge_config
+struct multidb_config: rocksdb_config
 {
   // максимальное количество ключей на запрос
   size_t keys_per_req = 100;
@@ -20,13 +21,6 @@ struct multidb_config: merge_config
   
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
-  // Путь к базе данных для всех префиксов
-  std::string path = "./rocksdb";
-  // Файл опций в формате ini
-  std::string ini = "./rocksdb.ini";
-  // Путь к бэкапу базы данных для всех префиксов
-  std::string backup_path   = "./rocksdb/backup";
-  std::string restore_path  = "./rocksdb/backup";
   
 };
 

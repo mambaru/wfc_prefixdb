@@ -17,8 +17,9 @@ namespace {
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
 }
 
-rocksdb::rocksdb( std::string name,  db_type* db, restore_db_type* rdb)
+rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db, restore_db_type* rdb)
   : _name(name)
+  , _conf(conf)
   , _db(db)
   , _rdb(rdb)
 {}
@@ -250,7 +251,7 @@ void rocksdb::range( request::range::ptr req, response::range::handler cb)
 
 namespace {
 
-bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req, const response::backup::handler& cb)
+inline bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req, const response::backup::handler& cb)
 {
   if ( s.ok() ) return true;
   if ( cb == nullptr ) return false;
@@ -267,9 +268,13 @@ bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req,
 }
 
 
-void rocksdb::backup(bool compact_range)
+void rocksdb::prebackup_(bool compact_range)
 {
   
+}
+
+void rocksdb::backup(bool compact_range)
+{
   if ( compact_range )
   {
     DEBUG_LOG_BEGIN("CompactRange: " << _name )
@@ -288,6 +293,7 @@ void rocksdb::backup(bool compact_range)
       COMMON_LOG_MESSAGE("GarbageCollect ERROR for " << _name << ": " << status.ToString() )
     }
   }
+  
   ::rocksdb::Status status = _db->CreateNewBackup();
   if ( status.ok() )
   {
@@ -329,6 +335,12 @@ void rocksdb::backup( request::backup::ptr /*req*/, response::backup::handler cb
   ptr->CreateNewBackup( _db.get() );
   */
 }
+
+void rocksdb::restore() 
+{
+  
+}
+
 
 void rocksdb::restore( request::restore::ptr req, response::restore::handler cb) 
 {

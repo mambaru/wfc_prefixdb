@@ -52,10 +52,11 @@ public:
     std::string* result,
     logger_type* logger) const override;
 private:
-
+  /*
   void inc_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
   void add_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
   void packed_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
+  */
 
   void inc_(const slice_type* value, const update_list& operands, std::string& result) const;
   void inc_operand_(const std::string& operand, int64_t& num, bool exist) const;

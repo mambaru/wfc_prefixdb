@@ -5,7 +5,6 @@
 
 namespace wamba{ namespace prefixdb{
 
-
 struct packed_field_params
 {
   std::string inc = "null";

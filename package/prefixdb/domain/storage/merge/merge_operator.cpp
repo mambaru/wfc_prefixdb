@@ -281,7 +281,7 @@ void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool ex
   }
 }
 
-
+/*
 void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, const char* end ) const
 {
   ::wfc::json::value<int64_t>::serializer intser;
@@ -330,6 +330,7 @@ void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, 
   }
 }
 
+*/
 void merge_operator::add_(const slice_type* value, const update_list& operands, std::string& result) const
 {
   std::deque<std::string> arr;
@@ -378,7 +379,7 @@ void merge_operator::add_operand_(const std::string& oper, std::deque<std::strin
   }
 }
 
-
+/*
 void merge_operator::add_(std::string& out, std::string&& in, const char* beg, const char* end ) const
 {
   add_params upd;
@@ -413,7 +414,7 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
   {
     try{
       arr_json::serializer()(arr, beg, end);
-    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+    } catch(...) { }
   }
   
   if ( parser::is_array(upd.arr.begin(), upd.arr.end()) )
@@ -424,7 +425,7 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
       arr_json::serializer()(tail, upd.arr.begin(), upd.arr.end());
       arr.insert( arr.end(), tail.begin(), tail.end());
       //arr.emplace_back(tail.begin(), tail.end());
-    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+    } catch(...) { }
   }
   else
   {
@@ -441,7 +442,7 @@ void merge_operator::add_(std::string& out, std::string&& in, const char* beg, c
   out.reserve( upd.arr.size() + std::distance(beg, end) );
   arr_json::serializer()(arr, std::inserter(out, out.end()));
 }
-
+*/
 // new
 void merge_operator::packed_(const slice_type* value, const update_list& operands, std::string& result) const
 {
@@ -544,7 +545,7 @@ void merge_operator::packed_field_(const packed_field_params& upd, packed_field&
     
 }
 */
-
+/*
 void merge_operator::packed_(std::string& out, std::string&& in, const char* beg, const char* end ) const
 {
   packed_params_t upd;
@@ -565,7 +566,7 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   {
     try{
       packed_json::serializer()(pck, beg, end);
-    } catch(...) { /* очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его */ }
+    } catch(...) {  }
   }
   
   static auto less = []( const packed_field& l, const packed_field& r) { return l.first < r.first; };
@@ -634,5 +635,6 @@ void merge_operator::packed_(std::string& out, std::string&& in, const char* beg
   out.reserve(in.size());
   packed_json::serializer()( pck, std::inserter(out, out.end()) );
 }
+*/
 
 }}

@@ -38,6 +38,9 @@ struct rocksdb_factory::context
   std::string path;
   std::string backup_path;
   std::string restore_path;
+  
+  rocksdb_config config;
+
 };
 
 rocksdb_factory::~rocksdb_factory()
@@ -45,10 +48,39 @@ rocksdb_factory::~rocksdb_factory()
   _context->env = nullptr;
 }
 
+void rocksdb_factory::initialize(const rocksdb_config& conf1) 
+{
+  rocksdb_config conf = conf1;
+  while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
+  while ( !conf.backup_path.empty() && conf.backup_path.back()=='/' ) conf.backup_path.pop_back();
+  while ( !conf.restore_path.empty() && conf.restore_path.back()=='/' ) conf.restore_path.pop_back();
+  
+  if ( !conf.path.empty() )
+  {
+    if ( conf.backup_path.empty() ) conf.backup_path = conf.path + "_backup";
+    if ( conf.restore_path.empty() ) conf.restore_path = conf.path + "_restore";  
+  }
+    
+  std::lock_guard<std::mutex> lk(_mutex);  
+  _context = std::make_shared<rocksdb_factory::context>();
+  _context->env = ::rocksdb::Env::Default();
+  _context->config = conf;
+  
+  auto status = ::rocksdb::LoadOptionsFromFile( conf.ini, _context->env, &(_context->options), &(_context->cdf) );
+  if ( !status.ok() )
+  {
+    DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
+    abort();
+  }
+
+  _context->cdf[0].options.merge_operator = std::make_shared<merge_operator>();
+  
+}
+/*
 void rocksdb_factory::initialize(std::string db_path, std::string backup_path, std::string restore_path, std::string ini_path) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  
+#error убрать
   _context = std::make_shared<rocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->path = db_path;
@@ -63,10 +95,8 @@ void rocksdb_factory::initialize(std::string db_path, std::string backup_path, s
   }
 
   _context->cdf[0].options.merge_operator = std::make_shared<merge_operator>();
-  /*std::cout << "_context->options.max_successive_merges=" << _context->cdf[0].options.max_successive_merges << std::endl;
-  abort();*/
-  //_context->options.max_successive_merges = _context->cdf[0].options.max_successive_merges; 
 }
+*/
 
 //::rocksdb::RestoreBackupableDB
 ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_if_missing) 
@@ -75,20 +105,12 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   //_context->cdf[0].options.create_if_missing = create_if_missing;
-  std::string path = _context->path + "/" + dbname;
-  
-  std::string bpath = _context->backup_path;
-  if ( bpath.empty() ) bpath = path + "/backup";
-  else bpath += std::string("/") + dbname;
-  
-  std::string rpath = _context->restore_path;
-  if ( rpath.empty() ) rpath = path + "/backup";
-  else rpath += std::string("/") + dbname;
+  std::string path = _context->config.path   + "/" + dbname;
+  std::string bpath = _context->backup_path  + "/" + dbname;
+  std::string rpath = _context->restore_path + "/" + dbname;
 
   ::rocksdb::DB* db;
-  
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
-  //std::cout << create_if_missing << path << std::endl;
   
   auto status = ::rocksdb::DB::Open(_context->options, path, _context->cdf , &handles, &db);
   if ( status.ok() ) {
@@ -98,7 +120,6 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
     delete handles[0];
   }
 
-  //auto status =  ::rocksdb::DB::Open( _context->options, path, &db);
   if ( status.ok() )
   {
     COMMON_LOG_MESSAGE("Backup path: " << bpath)
@@ -111,7 +132,7 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
       ::rocksdb::BackupableDBOptions restore_opt( rpath );
       rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
-    return std::make_shared< rocksdb >(dbname, bdb, rdb);
+    return std::make_shared< rocksdb >(dbname, _context->config, bdb, rdb);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());
