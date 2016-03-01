@@ -25,9 +25,11 @@ void prefixdb::deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefix
   }
   else
   {
-    //multidb* p = _impl.get();
+    
+    //timer->expires_at()
     dfun();
-    timer->expires_at( timer->expires_at() + boost::posix_time::seconds( period));
+    //timer->expires_at( timer->expires_from_now() + ::boost::posix_time::seconds( period ) );
+    timer->expires_from_now( ::boost::posix_time::seconds( period ) );
   }
   
   std::weak_ptr<prefixdb> wthis = this->shared_from_this();
@@ -119,6 +121,20 @@ void prefixdb::stop(const std::string&)
 {
   if ( _impl )
     _impl->close();
+  
+  DEBUG_LOG_BEGIN("stop prefixdb timers")
+  if ( _backup_timer )
+  {
+    _backup_timer->cancel();
+    _backup_timer->wait();
+  }
+  
+  if (_restore_timer)
+  {
+    _restore_timer->cancel();
+    _restore_timer->cancel();
+  }
+  DEBUG_LOG_END("stop prefixdb timers")
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)

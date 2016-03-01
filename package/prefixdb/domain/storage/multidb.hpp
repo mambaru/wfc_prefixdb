@@ -33,6 +33,7 @@ public:
   virtual void backup(bool compact_range) override;
   virtual void restore() override;
 private:
+  bool preopen_(std::string path, bool create_if_missing);
   
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   

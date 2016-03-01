@@ -35,10 +35,11 @@ struct rocksdb_factory::context
   ::rocksdb::Env* env;
   ::rocksdb::Options options;
   CFD_list cdf;
+  /*
   std::string path;
   std::string backup_path;
   std::string restore_path;
-  
+  */
   rocksdb_config config;
 
 };
@@ -105,14 +106,17 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   //_context->cdf[0].options.create_if_missing = create_if_missing;
-  std::string path = _context->config.path   + "/" + dbname;
-  std::string bpath = _context->backup_path  + "/" + dbname;
-  std::string rpath = _context->restore_path + "/" + dbname;
+  auto conf = _context->config;
+  conf.path = _context->config.path + "/" + dbname;
+  conf.backup_path = _context->config.backup_path + "/" + dbname;
+  conf.restore_path = _context->config.restore_path + "/" + dbname;
 
+  //std::cout << "----===========#################33333333----->" << conf.path << std::endl;
+  
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
-  auto status = ::rocksdb::DB::Open(_context->options, path, _context->cdf , &handles, &db);
+  auto status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
   if ( status.ok() ) {
     assert(handles.size() == 1);
     // i can delete the handle since DBImpl is always holding a reference to
@@ -122,17 +126,18 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
 
   if ( status.ok() )
   {
-    COMMON_LOG_MESSAGE("Backup path: " << bpath)
-    ::rocksdb::BackupableDBOptions backup_opt( bpath );
+    COMMON_LOG_MESSAGE("Backup path: " << conf.backup_path)
+    ::rocksdb::BackupableDBOptions backup_opt( conf.backup_path );
     backup_opt.destroy_old_data = true;
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
     ::rocksdb::RestoreBackupableDB* rdb = nullptr;
-    if ( !rpath.empty() )
+    if ( !conf.restore_path.empty() )
     {
-      ::rocksdb::BackupableDBOptions restore_opt( rpath );
+      ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
       rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
-    return std::make_shared< rocksdb >(dbname, _context->config, bdb, rdb);
+    DEBUG_LOG_MESSAGE("New RocksDB " << dbname)
+    return std::make_shared< rocksdb >(dbname, conf, bdb, rdb);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

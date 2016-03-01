@@ -25,6 +25,29 @@ void multidb::close()
   }
 }
 
+bool multidb::preopen_(std::string path, bool create_if_missing)
+{
+  bool fail = false;
+  auto dirs = scan_dir(path, fail);
+  if (fail)
+  {
+    CONFIG_LOG_FATAL("Directory " << path << " is missing");
+    return false;
+  }
+  
+  CONFIG_LOG_BEGIN("Pre open prefixes ...")
+  for (auto name: dirs)
+  {
+    CONFIG_LOG_MESSAGE("Pre open prefix " << name << "...")
+    if ( nullptr == this->prefix_(name, create_if_missing) )
+    {
+      CONFIG_LOG_WARNING("Pre open prefix FAIL")
+    }
+  }
+  CONFIG_LOG_END("Pre open prefixes")
+  return true;
+}
+
 bool multidb::reconfigure(const multidb_config& opt)
 {
   this->close();
@@ -36,6 +59,8 @@ bool multidb::reconfigure(const multidb_config& opt)
     //_factory->initialize(opt.path, opt.backup_path, opt.restore_path, opt.ini);
   }
   
+  return !opt.preopen || this->preopen_(opt.path, false);
+  /*
   bool fail = false;
   auto dirs = scan_dir(opt.path, fail);
   if (fail)
@@ -57,6 +82,7 @@ bool multidb::reconfigure(const multidb_config& opt)
     }
     CONFIG_LOG_END("Pre open prefixes")
   }
+  */
   return true;
 }
 
@@ -290,12 +316,6 @@ void multidb::backup(bool compact_range)
       db->backup( compact_range );
     }
   }
-
-  /*
-  auto req = std::make_unique<request::backup>();
-  req->compact_range = compact_range;
-  this->backup(std::move(req), nullptr);
-  */
 }
 
 void multidb::backup( request::backup::ptr req, response::backup::handler cb) 
@@ -328,21 +348,24 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
     cb( std::move(res) );
   }
   
-  /*
-  if ( auto db = this->prefix_(req->prefix, false) )
-  {
-    db->range( std::move(req), std::move(cb) );
-  }
-  else
-  {
-    prefix_not_found<response::range>( std::move(req), std::move(cb) );
-  }
-  */
-}
+ }
 
 
 void multidb::restore()
 {
+  this->preopen_(this->_opt.restore_path, true);
+  
+  auto prefixes = this->all_prefixes_();
+  
+  for ( const std::string& prefix: prefixes)
+  {
+    DEBUG_LOG_MESSAGE("Restore for: " << prefix << "..." )
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      db->restore( );
+    }
+  }
+
   /*
   auto req = std::make_unique<request::backup>();
   this->backup(std::move(req), nullptr);

@@ -338,6 +338,49 @@ void rocksdb::backup( request::backup::ptr /*req*/, response::backup::handler cb
 
 void rocksdb::restore() 
 {
+  ::rocksdb::SequenceNumber seq_number = 0/*_db->GetLatestSequenceNumber()*/;
+  std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
+  
+  ::rocksdb::Status status = _db->GetUpdatesSince(seq_number, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
+  
+  std::cout << "Replication " << status.ToString() << ": " << seq_number << std::endl;
+  while (iter->Valid() )
+  {
+    ::rocksdb::BatchResult batch = iter->GetBatch();
+    std::string ser = batch.writeBatchPtr->Data();
+    std::cout << "LOG sequence=" << batch.sequence << ":" << ser << std::endl;
+    //batch.seq_number
+    
+    iter->Next();
+  }
+  
+  /*
+  virtual Status GetUpdatesSince(
+      SequenceNumber seq_number, unique_ptr<TransactionLogIterator>* iter,
+      const TransactionLogIterator::ReadOptions&
+          read_options = TransactionLogIterator::ReadOptions()) = 0;
+          */
+
+  //auto path = _conf.path;
+  /*
+  std::vector< ::rocksdb::BackupInfo > backup_info;
+  _rdb->GetBackupInfo(&backup_info);
+  for (const auto bi : backup_info)
+  {
+    ::rocksdb::Status status = _rdb->RestoreDBFromBackup( bi.backup_id, path, path, ::rocksdb::RestoreOptions());
+    DEBUG_LOG_MESSAGE("RestoreDBFromBackup (" <<bi.backup_id << "): "  << status.ToString() << " to " << path );
+    status = _rdb->DeleteBackup( bi.backup_id );
+    DEBUG_LOG_MESSAGE("DeleteBackup: " << status.ToString() )
+  }
+  */
+  
+  /*
+  DEBUG_LOG_BEGIN("RestoreDBFromLatestBackup... " )
+  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup(path, path);
+  DEBUG_LOG_END("RestoreDBFromLatestBackup: " << status.ToString() )
+  */
+  //status = _rdb->PurgeOldBackups(1);
+  //DEBUG_LOG_MESSAGE("PurgeOldBackups: " << status.ToString() )
   
 }
 
