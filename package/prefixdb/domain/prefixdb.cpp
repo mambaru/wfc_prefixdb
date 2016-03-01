@@ -187,4 +187,9 @@ void prefixdb::restore( request::restore::ptr req, response::restore::handler cb
   _impl->restore( std::move(req), std::move(cb) );
 }
 
+void prefixdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
+{
+  _impl->get_updates_since( std::move(req), std::move(cb) );  
+}
+
 }}

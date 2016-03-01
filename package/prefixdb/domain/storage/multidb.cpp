@@ -304,6 +304,21 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
   }
 }
 
+void multidb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
+{
+  if ( notify_ban(req, cb) ) return;
+
+  if ( auto db = this->prefix_(req->prefix, false) )
+  {
+    db->get_updates_since( std::move(req), std::move(cb) );
+  }
+  else
+  {
+    prefix_not_found<response::get_updates_since>( std::move(req), std::move(cb) );
+  }  
+}
+
+
 void multidb::backup(bool compact_range)
 {
   auto prefixes = this->all_prefixes_();

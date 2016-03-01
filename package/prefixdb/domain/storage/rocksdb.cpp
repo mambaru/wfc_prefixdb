@@ -193,6 +193,12 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
   this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );
 }
 
+void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 
+{
+  abort();
+}
+
+
 void rocksdb::range( request::range::ptr req, response::range::handler cb)
 {
   DEBUG_LOG_MESSAGE("range from '" << req->from << " to '" << req->to )
@@ -248,6 +254,7 @@ void rocksdb::range( request::range::ptr req, response::range::handler cb)
   }
   cb( std::move(res) );
 }
+
 
 namespace {
 
@@ -349,6 +356,9 @@ void rocksdb::restore()
     ::rocksdb::BatchResult batch = iter->GetBatch();
     std::string ser = batch.writeBatchPtr->Data();
     std::cout << "LOG sequence=" << batch.sequence << ":" << ser << std::endl;
+    /*::rocksdb::WriteBatch wb;
+    wb.PutLogData();*/
+    //_db->GetEnv()->WriteStringToFile();
     //batch.seq_number
     
     iter->Next();
