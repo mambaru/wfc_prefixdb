@@ -7,6 +7,7 @@ namespace wamba { namespace prefixdb {
 struct common_status_json
 {
   JSON_NAME(OK)
+  JSON_NAME(TransactLogError)
   JSON_NAME(EmptyFields)
   JSON_NAME(EmptyPrefix)
   JSON_NAME(WriteError)
@@ -23,6 +24,7 @@ struct common_status_json
     common_status,
     ::wfc::json::member_list<
         ::wfc::json::enum_value<n_OK, common_status, common_status::OK>,
+        ::wfc::json::enum_value<n_TransactLogError, common_status, common_status::TransactLogError>,
         ::wfc::json::enum_value<n_EmptyFields, common_status, common_status::EmptyFields>,
         ::wfc::json::enum_value<n_EmptyPrefix, common_status, common_status::EmptyPrefix>,
         ::wfc::json::enum_value<n_CreatePrefixFail, common_status, common_status::CreatePrefixFail>,

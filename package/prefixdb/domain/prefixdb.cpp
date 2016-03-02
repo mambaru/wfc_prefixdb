@@ -10,6 +10,93 @@ namespace wamba{ namespace prefixdb {
 class prefixdb::impl: public multidb
 {};
 
+class timer
+  : public std::enable_shared_from_this< timer >
+{
+  struct options
+  {
+    std::string start_date;
+    time_t start_wait_ms;
+    time_t interval_ms;
+  };
+  
+  typedef ::iow::asio::deadline_timer deadline_timer;
+  typedef std::unique_ptr<deadline_timer> timer_ptr; 
+
+  timer( ::iow::asio::io_service& io, const options& opt )
+    : _opt(opt)
+  {
+    if ( opt.interval_ms == 0 )
+      return;
+    
+    _timer = std::make_unique<deadline_timer>(io);
+  }
+
+  void start(std::function<void()> fun)
+  {
+    this->wait_( _opt.start_wait_ms, fun );
+    /*
+    _timer->expires_from_now( ::boost::posix_time::seconds( _opt.start_wait_s ) );
+    std::weak_ptr<timer> wthis = this->shared_from_this();
+    _timer->async_wait( [wthis, fun](const boost::system::error_code& ec){
+      if ( !ec )
+      {
+        // TODO: LOG
+        return;
+      }
+      if (auto pthis = wthis.lock() )
+      {
+        pthis->handler(fun);
+      }
+    });
+    */
+  }
+  
+private:
+  void wait_( time_t ms, std::function<void()> fun )
+  {
+    _timer->expires_from_now( ::boost::posix_time::microseconds( ms ) );
+    std::weak_ptr<timer> wthis = this->shared_from_this();
+    _timer->async_wait( [wthis, fun](const boost::system::error_code& ec){
+      if ( !ec )
+      {
+        // TODO: LOG
+        return;
+      }
+      if (auto pthis = wthis.lock() )
+      {
+        pthis->handler(fun);
+      }
+    });
+    
+  }
+  
+  void handler( std::function<void()> fun )
+  {
+    try{
+      fun();
+    }catch(...){
+      // TODO: LOG
+    };
+    this->wait_(_opt.interval_ms, fun);
+    /*
+    _timer->expires_from_now( ::boost::posix_time::microseconds( _opt.interval_ms ) );
+    std::weak_ptr<timer> wthis = this->shared_from_this();
+    _timer->async_wait( [wthis, fun](){
+      if (auto pthis = wthis.lock() )
+      {
+        pthis->handler(fun);
+      }
+    });
+    */
+  }
+  
+private:
+  
+  options _opt;
+  timer_ptr _timer;
+};
+
 template<typename Fun>
 void prefixdb::deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefixdb::* ifun)() )
 {

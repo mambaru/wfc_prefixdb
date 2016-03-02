@@ -195,7 +195,36 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 
 {
-  abort();
+  auto res = std::make_unique<response::get_updates_since>();
+  res->logs.reserve(req->limit);
+  std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
+  ::rocksdb::Status status = _db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
+  ::rocksdb::SequenceNumber cur_seq;
+  if ( status.ok() )
+  {
+    if ( iter->Valid() )
+    {
+      bool first = true;
+      while ( iter->Valid() && req->limit-- )
+      {
+        ::rocksdb::BatchResult batch = iter->GetBatch();
+        res->logs.push_back( batch.writeBatchPtr->Data() );
+        cur_seq = batch.sequence;
+        if ( first )
+        {
+          res->seq_first = cur_seq;
+          first = false;
+        }
+      }
+      res->seq_last  = cur_seq;
+      res->seq_final = _db->GetLatestSequenceNumber();
+    }
+  }
+  else
+  {
+    res->status = common_status::TransactLogError;
+  }
+  cb( std::move(res) );  
 }
 
 
