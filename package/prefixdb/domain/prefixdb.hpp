@@ -5,6 +5,7 @@
 #include <prefixdb/iprefixdb.hpp>
 
 #include <wfc/domain_object.hpp>
+#include <iow/io/timer/timer.hpp>
 #include <memory>
 
 namespace wamba{ namespace prefixdb{
@@ -44,6 +45,11 @@ private:
   std::shared_ptr<impl> _impl;
   timer_ptr _backup_timer;
   timer_ptr _restore_timer;
+  
+  
+  typedef ::iow::io::timer timer_type;
+  typedef std::shared_ptr<timer_type> timer1_ptr;
+  timer1_ptr _timer;
 };
 
 }}
