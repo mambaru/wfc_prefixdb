@@ -13,6 +13,7 @@ struct prefixdb_config: multidb_config
   bool compact_before_backup = false;
   time_t backup_period_s = 0;
   time_t restore_period_s = 0;
+  int threads = 0;
 };
 
 }}

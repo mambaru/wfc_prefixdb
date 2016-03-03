@@ -49,8 +49,15 @@ rocksdb_factory::~rocksdb_factory()
   _context->env = nullptr;
 }
 
+rocksdb_factory::rocksdb_factory( ::iow::asio::io_service& io)
+  : _io(io)
+{
+}
+
 void rocksdb_factory::initialize(const rocksdb_config& conf1) 
 {
+  
+  
   rocksdb_config conf = conf1;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
   while ( !conf.backup_path.empty() && conf.backup_path.back()=='/' ) conf.backup_path.pop_back();

@@ -48,14 +48,16 @@ bool multidb::preopen_(std::string path, bool create_if_missing)
   return true;
 }
 
-bool multidb::reconfigure(const multidb_config& opt)
+bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory)
 {
   this->close();
   {
     std::lock_guard<std::mutex> lk(_mutex);
-    CONFIG_LOG_MESSAGE("CREATE FACTORY...")
-    _factory = god::create("rocksdb");
+    _factory = factory;
+    /*CONFIG_LOG_MESSAGE("CREATE FACTORY...")
+    _factory = god::create("rocksdb", this->global()->);
     _factory->initialize(opt);
+    */
     //_factory->initialize(opt.path, opt.backup_path, opt.restore_path, opt.ini);
   }
   

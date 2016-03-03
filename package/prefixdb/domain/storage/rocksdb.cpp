@@ -24,7 +24,12 @@ rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db, res
   , _rdb(rdb)
 {}
 
-
+/*
+void rocksdb::set_master(std::shared_ptr<iprefixdb> master)
+{
+  _master = master;
+}
+*/
 void rocksdb::close()
 {
   COMMON_LOG_MESSAGE("preffix DB close " << _name)

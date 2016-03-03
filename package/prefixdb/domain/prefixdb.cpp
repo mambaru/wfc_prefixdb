@@ -3,6 +3,7 @@
 #include <wfc/core/icore.hpp>
 #include <wfc/module/iinstance.hpp>
 #include "storage/multidb.hpp"
+#include "storage/god.hpp"
 #include <ctime>
 
 namespace wamba{ namespace prefixdb {
@@ -79,18 +80,22 @@ void prefixdb::do_restore_()
 void prefixdb::reconfigure()
 {
   ::iow::io::timer_options opt1;
-  opt1.delay_ms = 2000;
-  _timer = std::make_shared<timer_type>( this->global()->io_service, opt1);
-  _timer->start([]( ::iow::io::timer::handler1 callback){
+  //opt1.start_time = "19:29:00";
+  opt1.delay_ms = 2222;
+  _timer = std::make_shared<timer_type>( this->global()->io_service);
+  DEBUG_LOG_MESSAGE("---------TIME--------")
+  _timer->start([]( /*::iow::io::timer::handler1 callback*/){
     DEBUG_LOG_MESSAGE("TIMER")
-    callback();
-  });
+    //callback();
+  }, opt1);
  
   auto opt = this->options();
   if ( _impl == nullptr )
   {
     _impl = std::make_shared<impl>();
-    _impl->reconfigure( opt );
+    auto factory = god::create("rocksdb", this->global()->io_service );
+    factory->initialize(opt);
+    _impl->reconfigure( opt, factory );
   }
   else
   {
@@ -103,7 +108,10 @@ void prefixdb::reconfigure()
       }
     }
     
-    if ( !_impl->reconfigure( opt ) )
+    auto factory = god::create("rocksdb", this->global()->io_service );
+    factory->initialize(opt);
+
+    if ( !_impl->reconfigure( opt, factory ) )
     {
       wfc_abort("prefixdb open DB abort!");
     }
@@ -119,11 +127,13 @@ void prefixdb::reconfigure()
     DEBUG_LOG_MESSAGE("void prefixdb::reconfigured()!!!")
   }
   
+  /*!!!
   _backup_timer = nullptr;
   this->do_backup_();
 
   _restore_timer = nullptr;
   this->do_restore_();
+  */
 }
 
 void prefixdb::stop(const std::string&) 
