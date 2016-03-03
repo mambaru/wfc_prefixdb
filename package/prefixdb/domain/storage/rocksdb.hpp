@@ -15,6 +15,7 @@ namespace wamba{ namespace prefixdb{
  
 class rocksdb
   : public iprefixdb_ex
+  , public std::enable_shared_from_this<rocksdb>
 {
 public:
   typedef ::rocksdb::BackupableDB db_type;
@@ -35,6 +36,7 @@ public:
   virtual void restore( request::restore::ptr req, response::restore::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   
+  virtual void start( ) override;
   virtual void close() override;
   virtual void backup(bool compact_range) override;
   virtual void restore() override;

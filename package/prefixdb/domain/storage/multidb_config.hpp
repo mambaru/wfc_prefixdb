@@ -17,8 +17,6 @@ struct multidb_config: rocksdb_config
   size_t prefix_size_limit = 256;
   // ограничкение на общее число префиксов
   size_t max_prefixes = 128;
-
-  
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
   

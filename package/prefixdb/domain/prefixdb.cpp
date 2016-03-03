@@ -83,7 +83,7 @@ void prefixdb::reconfigure()
   //opt1.start_time = "19:29:00";
   opt1.delay_ms = 2222;
   _timer = std::make_shared<timer_type>( this->global()->io_service);
-  DEBUG_LOG_MESSAGE("---------TIME--------")
+  DEBUG_LOG_MESSAGE("---------TIME--------" )
   _timer->start([]( /*::iow::io::timer::handler1 callback*/){
     DEBUG_LOG_MESSAGE("TIMER")
     //callback();
@@ -94,6 +94,17 @@ void prefixdb::reconfigure()
   {
     _impl = std::make_shared<impl>();
     auto factory = god::create("rocksdb", this->global()->io_service );
+    opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
+    if ( opt.slave.master != nullptr )
+    {
+      DEBUG_LOG_MESSAGE("-------------------------------------")
+      DEBUG_LOG_MESSAGE("slave target '" << opt.slave.target << "' disabled " << opt.slave.pull_timeout_ms << " " << opt.path )
+      DEBUG_LOG_MESSAGE("-------------------------------------")
+      /*if (opt.slave.enabled)
+      {
+        abort();
+      }*/
+    }
     factory->initialize(opt);
     _impl->reconfigure( opt, factory );
   }

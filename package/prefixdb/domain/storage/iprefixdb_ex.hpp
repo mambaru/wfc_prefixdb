@@ -7,6 +7,9 @@ namespace wamba { namespace prefixdb {
 struct iprefixdb_ex: iprefixdb
 {
   virtual ~iprefixdb_ex() {}
+
+  virtual void start( ) = 0;
+
   virtual void close( ) = 0;
   
   using iprefixdb::backup;

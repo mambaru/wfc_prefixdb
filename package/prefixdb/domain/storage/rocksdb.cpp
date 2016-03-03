@@ -22,7 +22,57 @@ rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db, res
   , _conf(conf)
   , _db(db)
   , _rdb(rdb)
-{}
+{
+ }
+
+void rocksdb::start( ) 
+{
+  ::iow::io::timer_options topt;
+  topt.start_time = _conf.slave.start_time;
+  topt.delay_ms = 1000; /*_conf.slave.pull_timeout_ms;*/
+  
+  // if ( _conf.slave.enabled )
+  // if ( _conf.path == "./rocksdb2")
+ 
+ 
+  if ( auto master = _conf.slave.master )
+  {
+    if ( _conf.slave.enabled )
+    {
+      std::weak_ptr<rocksdb> wthis = this->shared_from_this();
+      auto hdl = [wthis, master]( ::iow::io::timer::handler1 handler)
+      {
+        if ( auto pthis = wthis.lock() )
+        {
+          // DEBUG_LOG_MESSAGE("rocksdb::rocksdb timer " << pthis->_name)
+          // handler();
+          auto req = std::make_unique<request::get_updates_since>();
+          req->seq = 0;
+          req->prefix  = pthis->_name;
+          req->limit = 100;
+          master->get_updates_since( std::move(req), [handler, wthis](response::get_updates_since::ptr res){
+            if ( auto pthis = wthis.lock() )
+            {
+              DEBUG_LOG_MESSAGE("rocksdb::rocksdb timer " << pthis->_name )
+              DEBUG_LOG_MESSAGE("rocksdb::rocksdb timer " << res->logs.size() )
+              DEBUG_LOG_MESSAGE("rocksdb::rocksdb timer " << int(res->status) )
+              DEBUG_LOG_MESSAGE("rocksdb::rocksdb seq_first " << res->seq_first )
+              DEBUG_LOG_MESSAGE("rocksdb::rocksdb seq_last " << res->seq_last )
+              DEBUG_LOG_MESSAGE("rocksdb::rocksdb seq_final " << res->seq_final )
+              handler();
+            }
+          } );
+        }
+      };
+      _conf.slave.timer->start(hdl, topt);
+    }
+  }
+  /*else
+  {
+    DEBUG_LOG_MESSAGE("rocksdb::start slave disabled " << _conf.slave.target   )
+    abort();
+  }*/
+}
 
 /*
 void rocksdb::set_master(std::shared_ptr<iprefixdb> master)
@@ -200,8 +250,8 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 
 {
+  DEBUG_LOG_MESSAGE("rocksdb::get_updates_since")
   auto res = std::make_unique<response::get_updates_since>();
-  res->logs.reserve(req->limit);
   std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
   ::rocksdb::Status status = _db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
   ::rocksdb::SequenceNumber cur_seq;
@@ -209,17 +259,20 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
   {
     if ( iter->Valid() )
     {
+      res->logs.reserve(req->limit);
       bool first = true;
       while ( iter->Valid() && req->limit-- )
       {
         ::rocksdb::BatchResult batch = iter->GetBatch();
         res->logs.push_back( batch.writeBatchPtr->Data() );
         cur_seq = batch.sequence;
+        std::cout << "cur seq " << cur_seq << std::endl;
         if ( first )
         {
           res->seq_first = cur_seq;
           first = false;
         }
+        iter->Next();
       }
       res->seq_last  = cur_seq;
       res->seq_final = _db->GetLatestSequenceNumber();
@@ -228,6 +281,8 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
   else
   {
     res->status = common_status::TransactLogError;
+    DEBUG_LOG_MESSAGE("rocksdb::get_updates_since " << status.ToString() )
+
   }
   cb( std::move(res) );  
 }

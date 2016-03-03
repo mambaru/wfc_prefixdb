@@ -48,6 +48,11 @@ bool multidb::preopen_(std::string path, bool create_if_missing)
   return true;
 }
 
+void multidb::start() 
+{
+  // not used
+}
+
 bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory)
 {
   this->close();
@@ -175,6 +180,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
   {
     COMMON_LOG_MESSAGE("Открыт новый префикс: " << prefix)
     _db_map.insert(itr, std::make_pair(prefix, db));
+    db->start();
     return db;
   }
   
