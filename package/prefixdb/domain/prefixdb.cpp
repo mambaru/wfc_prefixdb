@@ -84,9 +84,9 @@ void prefixdb::reconfigure()
   opt1.delay_ms = 2222;
   _timer = std::make_shared<timer_type>( this->global()->io_service);
   DEBUG_LOG_MESSAGE("---------TIME--------" )
-  _timer->start([]( /*::iow::io::timer::handler1 callback*/){
+  _timer->start([]( ::iow::io::timer::handler_callback callback){
     DEBUG_LOG_MESSAGE("TIMER")
-    //callback();
+    callback(true);
   }, opt1);
  
   auto opt = this->options();
