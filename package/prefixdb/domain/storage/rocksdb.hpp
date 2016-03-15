@@ -23,8 +23,7 @@ public:
   typedef ::rocksdb::RestoreBackupableDB restore_db_type;
 
   rocksdb( std::string name, const rocksdb_config conf, db_type* db, restore_db_type* rdb);
-  //void set_master(std::shared_ptr<iprefixdb> master);
-  
+
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
