@@ -5,6 +5,8 @@
 #include "aux/multidb.hpp"
 #include "aux/scan_dir.hpp"
 
+#include <boost/filesystem.hpp>
+
 namespace wamba{ namespace prefixdb {
 
 void multidb::close()
@@ -59,6 +61,7 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
   {
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
+    _opt = opt;
     /*CONFIG_LOG_MESSAGE("CREATE FACTORY...")
     _factory = god::create("rocksdb", this->global()->);
     _factory->initialize(opt);
@@ -373,6 +376,34 @@ void multidb::backup( request::backup::ptr req, response::backup::handler cb)
   
  }
 
+void multidb::archive(std::string suffix)
+{
+  std::tm ti;
+  std::time_t now = time(0);
+  localtime_r( &now, &ti );
+  char buf[80]={0};
+  strftime( buf, 80, "/%Y%m%d-%H%M%S/", &ti);
+  suffix += buf;
+  
+  ::boost::system::error_code ec;
+  if( !::boost::filesystem::create_directory( _opt.archive_path + suffix, ec) )
+  {
+    COMMON_LOG_ERROR("Create dir " << _opt.archive_path + suffix << " FAIL: " << ec.message() );
+    return;
+  }
+  
+  auto prefixes = this->all_prefixes_();
+  
+  for ( const std::string& prefix: prefixes)
+  {
+    DEBUG_LOG_MESSAGE("Archive for: " << prefix << "... " )
+    
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      db->archive(suffix);
+    }
+  }
+}
 
 void multidb::restore()
 {

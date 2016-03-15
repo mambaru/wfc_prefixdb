@@ -12,6 +12,7 @@ class prefixdb::impl: public multidb
 {};
 
 
+/*
 template<typename Fun>
 void prefixdb::deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefixdb::* ifun)() )
 {
@@ -76,11 +77,28 @@ void prefixdb::do_restore_()
     &prefixdb::do_restore_
   );
 }
+*/
+
+void prefixdb::start(const std::string&)
+{
+  _flow->start();
+  //this->global()->idle.push_back
+  /*
+  this->global()->workflow.create_timer(
+    std::chrono::seconds(1),
+    []() -> bool {
+      DEBUG_LOG_MESSAGE("prefixdb idle test");
+      return true;
+    }
+  );
+  */
+}
 
 void prefixdb::reconfigure()
 {
+  /*
   ::iow::io::timer_options opt1;
-  //opt1.start_time = "19:29:00";
+  opt1.start_time = "19:29:00";
   opt1.delay_ms = 2222;
   _timer = std::make_shared<timer_type>( this->global()->io_service);
   DEBUG_LOG_MESSAGE("---------TIME--------" )
@@ -88,8 +106,49 @@ void prefixdb::reconfigure()
     DEBUG_LOG_MESSAGE("TIMER")
     callback(true);
   }, opt1);
- 
+  */
+  if ( _flow == nullptr )
+  {
+    _flow = std::make_shared< ::wfc::workflow >( this->global()->io_service );
+  }
+  
   auto opt = this->options();
+  _flow->reconfigure( opt.workflow );
+  
+  
+  if ( _backup_timer != -1 ) _flow->release_timer(_backup_timer);
+  std::weak_ptr<prefixdb> wthis = this->shared_from_this();
+  _backup_timer = _flow->create_timer(
+    opt.backup_time,
+    std::chrono::seconds( opt.backup_period_s ),
+    [wthis]() {
+      if (auto pthis = wthis.lock() )
+      {
+        bool compact = pthis->options().compact_before_backup;
+        pthis->_impl->backup(compact);
+        return true;
+      }
+      return false;
+    }
+  );
+  
+  if ( _archive_timer != -1 ) _flow->release_timer(_archive_timer);
+  wthis = this->shared_from_this();
+  _archive_timer = _flow->create_timer(
+    opt.archive_time,
+    std::chrono::seconds( opt.archive_period_s ),
+    [wthis]() {
+      DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
+      if (auto pthis = wthis.lock() )
+      {
+        pthis->_impl->archive( /*pthis->options().archive_path*/"" );
+        return true;
+      }
+      return false;
+    }
+  );
+
+  
   if ( _impl == nullptr )
   {
     _impl = std::make_shared<impl>();
@@ -149,9 +208,12 @@ void prefixdb::reconfigure()
 
 void prefixdb::stop(const std::string&) 
 {
+  _flow->stop();
+  
   if ( _impl )
     _impl->close();
   
+  /*
   DEBUG_LOG_BEGIN("stop prefixdb timers")
   if ( _backup_timer )
   {
@@ -165,6 +227,7 @@ void prefixdb::stop(const std::string&)
     _restore_timer->cancel();
   }
   DEBUG_LOG_END("stop prefixdb timers")
+  */
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)

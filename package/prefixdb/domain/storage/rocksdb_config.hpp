@@ -36,12 +36,16 @@ struct master_config
 struct rocksdb_config: merge_config
 {
   // Путь к базе данных для всех префиксов
-  std::string path = "./rocksdb";
+  std::string path = "./prefixdb";
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
   // Путь к бэкапу базы данных для всех префиксов
-  std::string backup_path   = "./rocksdb_backup";
-  std::string restore_path  = "./rocksdb_backup";
+  std::string backup_path   = "./prefixdb_backup";
+  // Откуда востанавливаться в случае сбоя 
+  std::string restore_path  = "./prefixdb_backup";
+  // архив бэкапов
+  std::string archive_path  = "./prefixdb_archive";
+  
   slave_config slave;
   master_config master;
 };

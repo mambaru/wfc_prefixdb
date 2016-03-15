@@ -62,11 +62,13 @@ void rocksdb_factory::initialize(const rocksdb_config& conf1)
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
   while ( !conf.backup_path.empty() && conf.backup_path.back()=='/' ) conf.backup_path.pop_back();
   while ( !conf.restore_path.empty() && conf.restore_path.back()=='/' ) conf.restore_path.pop_back();
+  while ( !conf.archive_path.empty() && conf.restore_path.back()=='/' ) conf.archive_path.pop_back();
   
   if ( !conf.path.empty() )
   {
     if ( conf.backup_path.empty() ) conf.backup_path = conf.path + "_backup";
-    if ( conf.restore_path.empty() ) conf.restore_path = conf.path + "_restore";  
+    if ( conf.restore_path.empty() ) conf.restore_path = conf.path + "_restore";
+    if ( conf.archive_path.empty() ) conf.restore_path = conf.path + "_archive";  
   }
     
   std::lock_guard<std::mutex> lk(_mutex);  
@@ -135,12 +137,13 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
   {
     COMMON_LOG_MESSAGE("Backup path: " << conf.backup_path)
     ::rocksdb::BackupableDBOptions backup_opt( conf.backup_path );
-    backup_opt.destroy_old_data = true;
+    backup_opt.destroy_old_data = true; //???? 
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
     ::rocksdb::RestoreBackupableDB* rdb = nullptr;
     if ( !conf.restore_path.empty() )
     {
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
+      //restore_opt.destroy_old_data = true; //???? 
       rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
     

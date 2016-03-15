@@ -33,6 +33,7 @@ public:
   virtual void start() override;
   virtual void close() override;
   virtual void backup(bool compact_range) override;
+  virtual void archive(std::string suffix) override;
   virtual void restore() override;
 private:
   bool preopen_(std::string path, bool create_if_missing);

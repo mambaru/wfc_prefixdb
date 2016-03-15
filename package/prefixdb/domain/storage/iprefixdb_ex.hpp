@@ -14,6 +14,7 @@ struct iprefixdb_ex: iprefixdb
   
   using iprefixdb::backup;
   virtual void backup(bool compact_range) =0;
+  virtual void archive(std::string suffix) =0;
 
   using iprefixdb::restore;
   virtual void restore() = 0;

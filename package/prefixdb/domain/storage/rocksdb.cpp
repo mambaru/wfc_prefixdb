@@ -9,6 +9,10 @@
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/iterator.h>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
+#include <boost/filesystem.hpp>
 
 namespace wamba{ namespace prefixdb {
 
@@ -397,13 +401,15 @@ inline bool backup_status_(const ::rocksdb::Status& s, const request::backup::pt
 }
 
 
-void rocksdb::prebackup_(bool compact_range)
+void rocksdb::prebackup_(bool /*compact_range*/)
 {
   
 }
 
 void rocksdb::backup(bool compact_range)
 {
+  std::lock_guard<std::mutex> lk(_backup_mutex);
+  
   if ( compact_range )
   {
     DEBUG_LOG_BEGIN("CompactRange: " << _name )
@@ -431,6 +437,112 @@ void rocksdb::backup(bool compact_range)
   else
   {
     COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
+  }
+  
+  status = _db->PurgeOldBackups(5);
+  if ( status.ok() )
+  {
+    DEBUG_LOG_MESSAGE("PurgeOldBackups(5) for " << _name <<  ": " << status.ToString() )
+  }
+  else
+  {
+    COMMON_LOG_MESSAGE("PurgeOldBackups(5) ERROR for " << _name << ": " << status.ToString() )
+  }
+}
+
+namespace 
+{
+  inline bool copy_dir(
+    boost::filesystem::path const & source,
+    boost::filesystem::path const & destination,
+    std::string& message
+  )
+  {
+    namespace fs = boost::filesystem;
+  
+    try
+    {
+      // Check whether the function call is valid
+      if( !fs::exists(source) || !fs::is_directory(source) )
+      {
+        std::stringstream ss;
+        ss << "Source directory " << source.string() << " does not exist or is not a directory." << '\n';
+        message = ss.str();
+        return false;
+      }
+      
+      if ( fs::exists(destination) )
+      {
+        std::stringstream ss;
+        ss << "Destination directory " << destination.string() << " already exists." << '\n';
+        message = ss.str();
+        return false;
+      }
+      
+      // Create the destination directory
+      if( !fs::create_directory(destination) )
+      {
+        std::stringstream ss;
+        ss << "Unable to create destination directory " << destination.string() << '\n';
+        message = ss.str();
+        return false;
+      }
+    }
+    catch(fs::filesystem_error const & e)
+    {
+      std::stringstream ss;
+      ss << e.what() << '\n';
+      message = ss.str();
+      return false;
+    }
+    
+    // Iterate through the source directory
+    for( fs::directory_iterator file(source); file != fs::directory_iterator(); ++file) try
+    {
+      fs::path current(file->path());
+      if( fs::is_directory(current) )
+      {
+        // Found directory: Recursion
+        if( !copy_dir(current, destination / current.filename(), message) )
+          return false;
+      }
+      else
+      {
+        // Found file: Copy
+        fs::copy_file( current, destination / current.filename());
+      }
+    }
+    catch(const fs::filesystem_error& e)
+    {
+      std::stringstream ss;
+      ss << e.what() << '\n';
+      message = ss.str();
+      return false;
+    }
+    return true;
+  }
+
+  inline bool copy_dir(const std::string& from, const std::string& to, std::string& message)
+  {
+    return copy_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
+  }
+}
+
+void rocksdb::archive(std::string suffix)
+{
+
+  DEBUG_LOG_MESSAGE("================== " << suffix << " ==========================")
+  std::lock_guard<std::mutex> lk(_backup_mutex);
+  if ( _conf.archive_path.empty() )
+    return;
+  std::string path = _conf.archive_path + suffix + _name;
+  //std::string path = suffix + _name;
+
+  COMMON_LOG_MESSAGE("Archive for '" << _name << " from " << _conf.backup_path << " ' to " << path)
+  std::string error;
+  if ( !copy_dir( _conf.backup_path, path, error ) )
+  {
+    DOMAIN_LOG_ERROR("Archive for '" << _name << "' fail. " << error );
   }
 }
 

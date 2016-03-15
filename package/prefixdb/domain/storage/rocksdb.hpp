@@ -8,6 +8,7 @@
 #include <rocksdb/utilities/backupable_db.h>
 
 #include <memory>
+#include <mutex>
 
 namespace rocksdb{ class DB;}
 
@@ -39,6 +40,7 @@ public:
   virtual void start( ) override;
   virtual void close() override;
   virtual void backup(bool compact_range) override;
+  virtual void archive(std::string suffix) override;
   virtual void restore() override;
 
 private:
@@ -60,6 +62,7 @@ private:
   std::unique_ptr<db_type> _db;
   std::unique_ptr<restore_db_type> _rdb;
   std::shared_ptr<iprefixdb> _master;
+  std::mutex _backup_mutex;
   
 };
 

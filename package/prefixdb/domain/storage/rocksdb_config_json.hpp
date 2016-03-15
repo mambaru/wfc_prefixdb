@@ -54,6 +54,7 @@ struct rocksdb_config_json
   JSON_NAME(path)
   JSON_NAME(backup_path)
   JSON_NAME(restore_path)
+  JSON_NAME(archive_path)
   JSON_NAME(ini)
   JSON_NAME(slave)
   JSON_NAME(master)
@@ -65,6 +66,7 @@ struct rocksdb_config_json
       ::wfc::json::member<n_path,    rocksdb_config, std::string, &rocksdb_config::path>,
       ::wfc::json::member<n_backup_path,    rocksdb_config, std::string, &rocksdb_config::backup_path>,
       ::wfc::json::member<n_restore_path,    rocksdb_config, std::string, &rocksdb_config::restore_path>,
+      ::wfc::json::member<n_archive_path,    rocksdb_config, std::string, &rocksdb_config::archive_path>,
       ::wfc::json::member<n_ini,     rocksdb_config, std::string, &rocksdb_config::ini>,
       ::wfc::json::member<n_slave,     rocksdb_config, slave_config, &rocksdb_config::slave, slave_config_json>,
       ::wfc::json::member<n_master,     rocksdb_config, master_config, &rocksdb_config::master, master_config_json>
