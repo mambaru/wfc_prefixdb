@@ -17,7 +17,7 @@ struct iprefixdb_ex: iprefixdb
   virtual void archive(std::string suffix) =0;
 
   using iprefixdb::restore;
-  virtual void restore() = 0;
+  virtual bool restore(std::string path) = 0;
 };
 
 }}

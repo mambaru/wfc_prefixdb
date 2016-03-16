@@ -577,9 +577,15 @@ void rocksdb::backup( request::backup::ptr /*req*/, response::backup::handler cb
   */
 }
 
-void rocksdb::restore() 
+bool rocksdb::restore(std::string path) 
 {
-  ::rocksdb::SequenceNumber seq_number = 0/*_db->GetLatestSequenceNumber()*/;
+  COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore_path )
+  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
+  COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
+  return status.ok();
+  
+  /*
+  ::rocksdb::SequenceNumber seq_number = _db->GetLatestSequenceNumber();
   std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
   
   ::rocksdb::Status status = _db->GetUpdatesSince(seq_number, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
@@ -590,14 +596,9 @@ void rocksdb::restore()
     ::rocksdb::BatchResult batch = iter->GetBatch();
     std::string ser = batch.writeBatchPtr->Data();
     std::cout << "LOG sequence=" << batch.sequence << ":" << ser << std::endl;
-    /*::rocksdb::WriteBatch wb;
-    wb.PutLogData();*/
-    //_db->GetEnv()->WriteStringToFile();
-    //batch.seq_number
-    
     iter->Next();
   }
-  
+  */
   /*
   virtual Status GetUpdatesSince(
       SequenceNumber seq_number, unique_ptr<TransactionLogIterator>* iter,

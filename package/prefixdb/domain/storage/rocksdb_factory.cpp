@@ -116,9 +116,10 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
   _context->options.create_if_missing = create_if_missing;
   //_context->cdf[0].options.create_if_missing = create_if_missing;
   auto conf = _context->config;
-  conf.path = _context->config.path + "/" + dbname;
-  conf.backup_path = _context->config.backup_path + "/" + dbname;
-  conf.restore_path = _context->config.restore_path + "/" + dbname;
+  if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
+  if ( !conf.backup_path.empty()  ) conf.backup_path = _context->config.backup_path + "/" + dbname;
+  if ( !conf.restore_path.empty() ) conf.restore_path = _context->config.restore_path + "/" + dbname;
+  
 
   //std::cout << "----===========#################33333333----->" << conf.path << std::endl;
   
@@ -137,12 +138,14 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
   {
     COMMON_LOG_MESSAGE("Backup path: " << conf.backup_path)
     ::rocksdb::BackupableDBOptions backup_opt( conf.backup_path );
-    backup_opt.destroy_old_data = true; //???? 
+    //backup_opt.destroy_old_data = true; //???? 
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
     ::rocksdb::RestoreBackupableDB* rdb = nullptr;
     if ( !conf.restore_path.empty() )
     {
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
+      DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
+      
       //restore_opt.destroy_old_data = true; //???? 
       rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }

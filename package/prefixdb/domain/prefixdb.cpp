@@ -81,17 +81,17 @@ void prefixdb::do_restore_()
 
 void prefixdb::start(const std::string&)
 {
-  _flow->start();
-  //this->global()->idle.push_back
-  /*
-  this->global()->workflow.create_timer(
-    std::chrono::seconds(1),
-    []() -> bool {
-      DEBUG_LOG_MESSAGE("prefixdb idle test");
-      return true;
+  if ( this->has_arg("restore") )  
+  {
+    std::string path = this->get_arg("restore");
+    COMMON_LOG_MESSAGE("Restore from " << path)
+    if ( !_impl->restore(path) )
+    {
+      wfc_abort("restore fail");
+      return;
     }
-  );
-  */
+  }
+  _flow->start();
 }
 
 void prefixdb::reconfigure()

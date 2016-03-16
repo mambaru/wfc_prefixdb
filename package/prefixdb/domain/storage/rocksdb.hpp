@@ -40,7 +40,7 @@ public:
   virtual void close() override;
   virtual void backup(bool compact_range) override;
   virtual void archive(std::string suffix) override;
-  virtual void restore() override;
+  virtual bool restore(std::string path) override;
 
 private:
 

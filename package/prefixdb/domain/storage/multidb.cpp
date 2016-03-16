@@ -62,38 +62,9 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
-    /*CONFIG_LOG_MESSAGE("CREATE FACTORY...")
-    _factory = god::create("rocksdb", this->global()->);
-    _factory->initialize(opt);
-    */
-    //_factory->initialize(opt.path, opt.backup_path, opt.restore_path, opt.ini);
   }
   
   return !opt.preopen || this->preopen_(opt.path, false);
-  /*
-  bool fail = false;
-  auto dirs = scan_dir(opt.path, fail);
-  if (fail)
-  {
-    CONFIG_LOG_FATAL("Directory " << opt.path << " is missing");
-    return false;
-  }
-  
-  if ( opt.preopen )
-  {
-    CONFIG_LOG_BEGIN("Pre open prefixes ...")
-    for (auto name: dirs)
-    {
-      CONFIG_LOG_MESSAGE("Pre open prefix " << name << "...")
-      if ( nullptr == this->prefix_(name, false) )
-      {
-        CONFIG_LOG_WARNING("Pre open prefix FAIL")
-      }
-    }
-    CONFIG_LOG_END("Pre open prefixes")
-  }
-  */
-  return true;
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
@@ -405,21 +376,23 @@ void multidb::archive(std::string suffix)
   }
 }
 
-void multidb::restore()
+bool multidb::restore( std::string path )
 {
   this->preopen_(this->_opt.restore_path, true);
   
   auto prefixes = this->all_prefixes_();
   
+  bool result = true;
   for ( const std::string& prefix: prefixes)
   {
-    DEBUG_LOG_MESSAGE("Restore for: " << prefix << "..." )
-    if ( auto db = this->prefix_(prefix, false) )
+    DEBUG_LOG_MESSAGE("Restore for: " << prefix << "... " << path << prefix )
+    if ( auto db = this->prefix_(prefix, true) )
     {
-      db->restore( );
+      result &= db->restore( path + prefix );
     }
   }
 
+  return result;
   /*
   auto req = std::make_unique<request::backup>();
   this->backup(std::move(req), nullptr);
