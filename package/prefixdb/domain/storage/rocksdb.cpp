@@ -37,9 +37,15 @@ void rocksdb::start( )
   //topt.delay_ms = 1000; /*_conf.slave.pull_timeout_ms;*/
   //topt.expires_from_now = true;
   
+  _master = _conf.slave.master;
   if ( _conf.slave.master!=nullptr && _conf.slave.enabled )
   {
-    create_slave_timer_();
+    DEBUG_LOG_MESSAGE("SLAVE ENABLED" )
+    this->create_slave_timer_();
+  }
+  else
+  {
+    DEBUG_LOG_MESSAGE("SLAVE DISABLED" )
   }
   // if ( _conf.slave.enabled )
   // if ( _conf.path == "./rocksdb2")
@@ -120,6 +126,8 @@ void rocksdb::set_master(std::shared_ptr<iprefixdb> master)
 
 void rocksdb::create_slave_timer_()
 {
+  DEBUG_LOG_MESSAGE("rocksdb::create_slave_timer_() " << _conf.slave.pull_timeout_ms)
+  
   auto preq = std::make_shared<request::get_updates_since>();
   preq->seq = 0;
   preq->prefix  = this->_name;
@@ -137,6 +145,8 @@ void rocksdb::create_slave_timer_()
   }
   DEBUG_LOG_MESSAGE("request get_updates_since seq=" << preq->seq )
 
+  if (_master == nullptr)
+    return;
   std::weak_ptr<iprefixdb> wmaster = _master;
   std::weak_ptr<rocksdb> wthis = this->shared_from_this();
   _conf.slave.timer->create_timer(
@@ -144,6 +154,8 @@ void rocksdb::create_slave_timer_()
     std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
     [wmaster, wthis, preq]( timer_handler handler )
     {
+      DEBUG_LOG_MESSAGE("rocksdb::create_slave_timer_() READY")
+
       if (auto pthis = wthis.lock() )
       {
         pthis->query_updates_since_( wmaster, std::move(handler), preq );
@@ -169,6 +181,10 @@ void rocksdb::query_updates_since_(std::weak_ptr<iprefixdb> wmaster, timer_handl
         pthis->result_handler_updates_since_(wmaster, handler, preq, std::move(res));
       }
     });
+  }
+  else
+  {
+    DEBUG_LOG_MESSAGE("rocksdb::create_slave_timer_() MASTER FAIL")
   }
 }
 

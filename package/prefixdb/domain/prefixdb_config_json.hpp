@@ -26,7 +26,7 @@ struct prefixdb_config_json
       ::wfc::json::member<n_backup_time, prefixdb_config, std::string, &prefixdb_config::backup_time>,
       ::wfc::json::member<n_archive_period_s, prefixdb_config, time_t, &prefixdb_config::archive_period_s>,
       ::wfc::json::member<n_archive_time, prefixdb_config, std::string, &prefixdb_config::archive_time>,
-      ::wfc::json::member<n_workflow, prefixdb_config, ::wfc::workflow_options, &prefixdb_config::workflow, ::wfc::workflow_options_json>,
+      ::wfc::json::member<n_workflow, prefixdb_config, ::wfc::workflow_options, &prefixdb_config::workflow_opt, ::wfc::workflow_options_json>,
       ::wfc::json::member<n_stop_list, prefixdb_config, std::vector<std::string>,  &prefixdb_config::stop_list,
                           ::wfc::json::array< std::vector< ::wfc::json::value<std::string> > >
       >

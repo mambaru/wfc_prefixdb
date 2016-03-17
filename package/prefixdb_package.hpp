@@ -13,7 +13,6 @@ namespace wamba{ namespace prefixdb{
 class prefixdb_package
   : public ::wfc::package
 {
-  class impl;
 public:
   prefixdb_package();
 };

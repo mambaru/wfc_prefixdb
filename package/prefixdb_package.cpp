@@ -13,20 +13,23 @@
 
 namespace wamba{ namespace prefixdb{
 
-class prefixdb_package::impl: public ::wfc::module_list<
-  prefixdb_build_info,
-  prefixdb_module
->
-{
-public:
-  virtual std::string description() const override
+namespace 
+{  
+  class impl: public ::wfc::module_list<
+    prefixdb_build_info,
+    prefixdb_module
+  >
   {
-    return "PrefixDB package. Included PrefixDB.";
-  }
-};
+  public:
+    virtual std::string description() const override
+    {
+      return "PrefixDB package. Included PrefixDB.";
+    }
+  };
+}
 
 prefixdb_package::prefixdb_package()
-  : package( std::make_shared<prefixdb_package::impl>() )
+  : package( std::make_shared<impl>() )
 {
 }
 

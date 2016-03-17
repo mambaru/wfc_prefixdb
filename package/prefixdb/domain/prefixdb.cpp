@@ -132,49 +132,58 @@ void prefixdb::reconfigure()
   }
   
   auto opt = this->options();
-  _flow->reconfigure( opt.workflow );
-  
+  _flow->reconfigure( opt.workflow_opt );
   
   if ( _backup_timer != -1 ) _flow->release_timer(_backup_timer);
-  std::weak_ptr<prefixdb> wthis = this->shared_from_this();
-  _backup_timer = _flow->create_timer(
-    opt.backup_time,
-    std::chrono::seconds( opt.backup_period_s ),
-    [wthis]() {
-      if (auto pthis = wthis.lock() )
-      {
-        pthis->_impl->backup();
-        return true;
+  if ( !opt.backup_path.empty() )
+  {
+    std::weak_ptr<prefixdb> wthis = this->shared_from_this();
+    _backup_timer = _flow->create_timer(
+      opt.backup_time,
+      std::chrono::seconds( opt.backup_period_s ),
+      [wthis]() {
+        if (auto pthis = wthis.lock() )
+        {
+          pthis->_impl->backup();
+          return true;
+        }
+        return false;
       }
-      return false;
-    }
-  );
+    );
+  }
   
   if ( _archive_timer != -1 ) _flow->release_timer(_archive_timer);
-  wthis = this->shared_from_this();
-  _archive_timer = _flow->create_timer(
-    opt.archive_time,
-    std::chrono::seconds( opt.archive_period_s ),
-    [wthis]() {
-      DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
-      if (auto pthis = wthis.lock() )
-      {
-        pthis->_impl->archive( pthis->options().archive_path );
-        return true;
+  if ( !opt.archive_path.empty() )
+  {
+    std::weak_ptr<prefixdb> wthis = this->shared_from_this();
+    _archive_timer = _flow->create_timer(
+      opt.archive_time,
+      std::chrono::seconds( opt.archive_period_s ),
+      [wthis]() {
+        DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
+        if (auto pthis = wthis.lock() )
+        {
+          pthis->_impl->archive( pthis->options().archive_path );
+          return true;
+        }
+        return false;
       }
-      return false;
-    }
-  );
-
+    );
+  }
   if ( _impl == nullptr )
   {
     _impl = std::make_shared<impl>();
     auto factory = god::create("rocksdb", this->global()->io_service );
+  #warning TODO по деволту core, но надо сделать свой
+    opt.slave.timer = _flow;
+    
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
+    DEBUG_LOG_MESSAGE("opt.slave.master = " << opt.slave.target)
+
     if ( opt.slave.master != nullptr )
     {
       DEBUG_LOG_MESSAGE("-------------------------------------")
-      DEBUG_LOG_MESSAGE("slave target '" << opt.slave.target << "' disabled " << opt.slave.pull_timeout_ms << " " << opt.path )
+      DEBUG_LOG_MESSAGE("slave target '" << opt.slave.target << "' enabled " << opt.slave.pull_timeout_ms << " " << opt.path )
       DEBUG_LOG_MESSAGE("-------------------------------------")
     }
     factory->initialize(opt, false);
