@@ -51,10 +51,11 @@ rocksdb_factory::~rocksdb_factory()
 
 rocksdb_factory::rocksdb_factory( ::iow::asio::io_service& io)
   : _io(io)
+  , _restore(false)
 {
 }
 
-void rocksdb_factory::initialize(const rocksdb_config& conf1) 
+void rocksdb_factory::initialize(const rocksdb_config& conf1, bool restore) 
 {
   
   
@@ -72,6 +73,7 @@ void rocksdb_factory::initialize(const rocksdb_config& conf1)
   }
     
   std::lock_guard<std::mutex> lk(_mutex);  
+  _restore = restore;
   _context = std::make_shared<rocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->config = conf;
@@ -157,6 +159,28 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());
   return nullptr;
+}
+
+
+rocksdb_factory::restore_ptr rocksdb_factory::restore(std::string dbname) 
+{
+  //_context->options.env = _context->env;
+  auto conf = _context->config;
+  if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
+  if ( !conf.backup_path.empty()  ) conf.backup_path = _context->config.backup_path + "/" + dbname;
+  if ( !conf.restore_path.empty() ) conf.restore_path = _context->config.restore_path + "/" + dbname;
+
+  
+  ::rocksdb::RestoreBackupableDB* rdb = nullptr;
+  if ( !conf.restore_path.empty() )
+  {
+    ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
+    DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
+    rdb = new ::rocksdb::RestoreBackupableDB( _context->env, restore_opt);
+    return std::make_shared< rocksdb_restore >(dbname, conf, rdb);
+  }
+  return nullptr;
+  
 }
 
 }}

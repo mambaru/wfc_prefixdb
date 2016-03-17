@@ -20,4 +20,10 @@ struct iprefixdb_ex: iprefixdb
   virtual bool restore(std::string path) = 0;
 };
 
+struct iprefixdb_restore
+{
+  virtual ~iprefixdb_restore() {}
+  virtual bool restore() = 0;
+};
+
 }}

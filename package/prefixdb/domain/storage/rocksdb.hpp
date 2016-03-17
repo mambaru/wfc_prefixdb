@@ -42,6 +42,7 @@ public:
   virtual void archive(std::string suffix) override;
   virtual bool restore(std::string path) override;
 
+  //static bool restore(std::string path, std::string backup, std::string archive);
 private:
 
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
@@ -62,7 +63,19 @@ private:
   std::unique_ptr<restore_db_type> _rdb;
   std::shared_ptr<iprefixdb> _master;
   std::mutex _backup_mutex;
-  
+};
+
+class rocksdb_restore
+  : public iprefixdb_restore
+{
+public:
+  typedef ::rocksdb::RestoreBackupableDB restore_db_type;
+  rocksdb_restore( std::string name, const rocksdb_config conf, restore_db_type* rdb);
+  virtual bool restore() override;
+private:
+  std::string _name;  
+  const rocksdb_config _conf;
+  std::unique_ptr<restore_db_type> _rdb;
 };
 
 }}

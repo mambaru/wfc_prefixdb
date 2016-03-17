@@ -35,6 +35,8 @@ public:
   virtual void backup(bool compact_range) override;
   virtual void archive(std::string suffix) override;
   virtual bool restore(std::string path) override;
+  
+  static bool restore(std::string path, std::string backup, std::string archive);
 private:
   bool preopen_(std::string path, bool create_if_missing);
   

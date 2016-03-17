@@ -530,7 +530,6 @@ namespace
 
 void rocksdb::archive(std::string suffix)
 {
-
   DEBUG_LOG_MESSAGE("================== " << suffix << " ==========================")
   std::lock_guard<std::mutex> lk(_backup_mutex);
   if ( _conf.archive_path.empty() )
@@ -577,13 +576,117 @@ void rocksdb::backup( request::backup::ptr /*req*/, response::backup::handler cb
   */
 }
 
-bool rocksdb::restore(std::string path) 
+rocksdb_restore::rocksdb_restore(std::string name, const rocksdb_config conf, restore_db_type* rdb)
+  : _name(name)
+  , _conf(conf)
+  , _rdb(rdb)
+{
+  
+}
+bool rocksdb_restore::restore() 
 {
   COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore_path )
+  /*
+  ::boost::filesystem::copy(
+    _conf.restore_path + "/shared", 
+    _conf.path + "/", 
+    ::boost::filesystem::copy_option::overwrite_if_exists, 
+    ec
+  );
+  */
   ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
   COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
-  return status.ok();
+  if ( status.ok() )
+    return true;
   
+  std::vector< ::rocksdb::BackupInfo > info;
+  _rdb->GetBackupInfo( &info );
+  std::vector< ::rocksdb::BackupID > bads;
+  _rdb->GetCorruptedBackups(&bads);
+  if ( !bads.empty() )
+  {
+    std::stringstream ss;
+    for (auto b : bads)
+      ss << b;
+    DOMAIN_LOG_ERROR("Есть поврежденные бэкапы " << ss.str());
+  }
+
+  for ( auto inf : info )
+  {
+    COMMON_LOG_BEGIN("Restore from backup_id=" << inf.backup_id )
+    ::rocksdb::Status status = _rdb->RestoreDBFromBackup( inf.backup_id, _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
+    COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
+    if ( status.ok() )
+      return true;
+
+  }
+  /*
+  ::boost::filesystem::directory_iterator itr(_conf.restore_path + "/shared");
+  for( ;itr!=::boost::filesystem::directory_iterator(); ++itr )
+  {
+    ::boost::filesystem::path p = *itr;
+    std::string to = _conf.path + "/" + p.filename().native();
+    DEBUG_LOG_MESSAGE("Copy from " << p << " to " << to );
+    ::boost::system::error_code ec;
+    
+    ::boost::filesystem::copy_file( *itr, to , ec);
+    if ( ec )
+    {
+      COMMON_LOG_END("Restore FAIL: " << ec.message() );
+      return false;
+    }
+  }
+  */
+  return false;
+
+  
+}
+
+/*
+static bool rocksdb::restore(std::string path, std::string backup, std::string archive)
+{
+  COMMON_LOG_BEGIN("Restore to " << path << " from " << restore_path )
+  ::rocksdb::BackupEngine* ptr;
+  Status s = ::rocksdb::BackupEngineReadOnly::Open( ::rocksdb::Env::Default(), ::rocksdb::BackupableDBOptions(backup), ptr);
+  COMMON_LOG_END("Restore to " << path << " " << status.ToString() )
+  std::unique_ptr< ::rocksdb::BackupEngine> backup_engine = ptr;
+  backup_engine->RestoreDBFromLatestBackup(backup, backup);
+  backup_engine = nullptr;
+}
+*/
+
+bool rocksdb::restore(std::string /*path*/) 
+{
+  COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore_path )
+  /*
+  ::boost::filesystem::copy(
+    _conf.restore_path + "/shared", 
+    _conf.path + "/", 
+    ::boost::filesystem::copy_option::overwrite_if_exists, 
+    ec
+  );
+  */
+  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
+  COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
+  if ( status.ok() )
+    return true;
+  
+    ::boost::filesystem::directory_iterator itr(_conf.restore_path + "/shared");
+  for( ;itr!=::boost::filesystem::directory_iterator(); ++itr )
+  {
+    ::boost::filesystem::path p = *itr;
+    std::string to = _conf.path + "/" + p.filename().native();
+    DEBUG_LOG_MESSAGE("Copy from " << p << " to " << to );
+    ::boost::system::error_code ec;
+    
+    ::boost::filesystem::copy_file( *itr, to , ec);
+    if ( ec )
+    {
+      COMMON_LOG_END("Restore FAIL: " << ec.message() );
+      return false;
+    }
+  }
+  return true;
   /*
   ::rocksdb::SequenceNumber seq_number = _db->GetLatestSequenceNumber();
   std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;

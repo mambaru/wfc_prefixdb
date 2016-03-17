@@ -83,15 +83,34 @@ void prefixdb::start(const std::string&)
 {
   if ( this->has_arg("restore") )  
   {
+    auto opt = this->options();
+    auto db = std::make_shared<impl>();
+    auto factory = god::create("rocksdb", this->global()->io_service );
+    
     std::string path = this->get_arg("restore");
-    COMMON_LOG_MESSAGE("Restore from " << path)
-    if ( !_impl->restore(path) )
+    opt.preopen = false;
+    if ( !path.empty() )
+      opt.restore_path = path;
+    factory->initialize(opt, true);
+    db->reconfigure( opt, factory );
+
+    COMMON_LOG_MESSAGE("Restore from " << opt.restore_path)
+    if ( !db->restore("") )
     {
       wfc_abort("restore fail");
       return;
     }
+    db->close();
+    ::wfc_exit();
+    return;
   }
+  this->reconfigure();
   _flow->start();
+}
+
+void prefixdb::configure() 
+{
+  
 }
 
 void prefixdb::reconfigure()
@@ -164,7 +183,7 @@ void prefixdb::reconfigure()
         abort();
       }*/
     }
-    factory->initialize(opt);
+    factory->initialize(opt, false);
     _impl->reconfigure( opt, factory );
   }
   else
@@ -179,7 +198,7 @@ void prefixdb::reconfigure()
     }
     
     auto factory = god::create("rocksdb", this->global()->io_service );
-    factory->initialize(opt);
+    factory->initialize(opt, false);
 
     if ( !_impl->reconfigure( opt, factory ) )
     {
@@ -208,7 +227,8 @@ void prefixdb::reconfigure()
 
 void prefixdb::stop(const std::string&) 
 {
-  _flow->stop();
+  if ( _flow )
+    _flow->stop();
   
   if ( _impl )
     _impl->close();

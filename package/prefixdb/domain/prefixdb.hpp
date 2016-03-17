@@ -19,6 +19,7 @@ class prefixdb
 public:
   // domain_object
   virtual void start(const std::string&) override;
+  virtual void configure() override;
   virtual void reconfigure() override;
   virtual void stop(const std::string&) override;
   

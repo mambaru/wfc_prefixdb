@@ -16,13 +16,15 @@ public:
   virtual ~rocksdb_factory();
   rocksdb_factory( ::iow::asio::io_service& io);
   typedef ifactory::prefixdb_ptr prefixdb_ptr;
-  virtual void initialize(const rocksdb_config& conf) override;
+  virtual void initialize(const rocksdb_config& conf, bool restore) override;
   virtual ifactory::prefixdb_ptr create(std::string dbname, bool create_if_missing) override;
+  virtual restore_ptr restore(std::string prefix) override;
 private:
   struct context;
   ::iow::asio::io_service& _io;
   std::shared_ptr<context> _context;
   mutable std::mutex _mutex;
+  bool _restore;
 };
 
 }}
