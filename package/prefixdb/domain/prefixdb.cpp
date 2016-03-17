@@ -95,7 +95,7 @@ void prefixdb::start(const std::string&)
     db->reconfigure( opt, factory );
 
     COMMON_LOG_MESSAGE("Restore from " << opt.restore_path)
-    if ( !db->restore("") )
+    if ( !db->restore() )
     {
       wfc_abort("restore fail");
       return;
@@ -143,8 +143,7 @@ void prefixdb::reconfigure()
     [wthis]() {
       if (auto pthis = wthis.lock() )
       {
-        bool compact = pthis->options().compact_before_backup;
-        pthis->_impl->backup(compact);
+        pthis->_impl->backup();
         return true;
       }
       return false;
@@ -160,14 +159,13 @@ void prefixdb::reconfigure()
       DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
       if (auto pthis = wthis.lock() )
       {
-        pthis->_impl->archive( /*pthis->options().archive_path*/"" );
+        pthis->_impl->archive( pthis->options().archive_path );
         return true;
       }
       return false;
     }
   );
 
-  
   if ( _impl == nullptr )
   {
     _impl = std::make_shared<impl>();
@@ -178,10 +176,6 @@ void prefixdb::reconfigure()
       DEBUG_LOG_MESSAGE("-------------------------------------")
       DEBUG_LOG_MESSAGE("slave target '" << opt.slave.target << "' disabled " << opt.slave.pull_timeout_ms << " " << opt.path )
       DEBUG_LOG_MESSAGE("-------------------------------------")
-      /*if (opt.slave.enabled)
-      {
-        abort();
-      }*/
     }
     factory->initialize(opt, false);
     _impl->reconfigure( opt, factory );
@@ -215,14 +209,7 @@ void prefixdb::reconfigure()
     
     DEBUG_LOG_MESSAGE("void prefixdb::reconfigured()!!!")
   }
-  
-  /*!!!
-  _backup_timer = nullptr;
-  this->do_backup_();
-
-  _restore_timer = nullptr;
-  this->do_restore_();
-  */
+ 
 }
 
 void prefixdb::stop(const std::string&) 
@@ -232,22 +219,6 @@ void prefixdb::stop(const std::string&)
   
   if ( _impl )
     _impl->close();
-  
-  /*
-  DEBUG_LOG_BEGIN("stop prefixdb timers")
-  if ( _backup_timer )
-  {
-    _backup_timer->cancel();
-    _backup_timer->wait();
-  }
-  
-  if (_restore_timer)
-  {
-    _restore_timer->cancel();
-    _restore_timer->cancel();
-  }
-  DEBUG_LOG_END("stop prefixdb timers")
-  */
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)
@@ -288,16 +259,6 @@ void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)
 void prefixdb::range( request::range::ptr req, response::range::handler cb)
 {
   _impl->range( std::move(req), std::move(cb) );
-}
-
-void prefixdb::backup( request::backup::ptr req, response::backup::handler cb)
-{
-  _impl->backup( std::move(req), std::move(cb) );
-}
-
-void prefixdb::restore( request::restore::ptr req, response::restore::handler cb)
-{
-  _impl->restore( std::move(req), std::move(cb) );
 }
 
 void prefixdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)

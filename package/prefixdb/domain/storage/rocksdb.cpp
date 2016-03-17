@@ -21,25 +21,31 @@ namespace {
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
 }
 
-rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db, restore_db_type* rdb)
+rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db)
   : _name(name)
   , _conf(conf)
   , _db(db)
-  , _rdb(rdb)
+  , _timer_id(-1)
+  
 {
  }
 
 void rocksdb::start( ) 
 {
-  ::iow::io::timer_options topt;
-  topt.start_time = _conf.slave.start_time;
-  topt.delay_ms = 1000; /*_conf.slave.pull_timeout_ms;*/
-  topt.expires_from_now = true;
+  //::iow::io::timer_options topt;
+  //topt.start_time = _conf.slave.start_time;
+  //topt.delay_ms = 1000; /*_conf.slave.pull_timeout_ms;*/
+  //topt.expires_from_now = true;
   
+  if ( _conf.slave.master!=nullptr && _conf.slave.enabled )
+  {
+    create_slave_timer_();
+  }
   // if ( _conf.slave.enabled )
   // if ( _conf.path == "./rocksdb2")
  
  
+  /*
   if ( auto master = _conf.slave.master )
   {
     if ( _conf.slave.enabled )
@@ -95,6 +101,9 @@ void rocksdb::start( )
       _conf.slave.timer->start(hdl, topt);
     }
   }
+  */
+  
+  
   /*else
   {
     DEBUG_LOG_MESSAGE("rocksdb::start slave disabled " << _conf.slave.target   )
@@ -108,10 +117,94 @@ void rocksdb::set_master(std::shared_ptr<iprefixdb> master)
   _master = master;
 }
 */
+
+void rocksdb::create_slave_timer_()
+{
+  auto preq = std::make_shared<request::get_updates_since>();
+  preq->seq = 0;
+  preq->prefix  = this->_name;
+  preq->limit = this->_conf.slave.log_limit_per_req;
+
+  std::string value;
+  ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
+  if ( status.ok() )
+  {
+    preq->seq = *( reinterpret_cast<const size_t*>( value.data() ) );
+  }
+  else
+  {
+    DEBUG_LOG_MESSAGE("Get ~slave-last-sequence-number~ : " << status.ToString() )
+  }
+  DEBUG_LOG_MESSAGE("request get_updates_since seq=" << preq->seq )
+
+  std::weak_ptr<iprefixdb> wmaster = _master;
+  std::weak_ptr<rocksdb> wthis = this->shared_from_this();
+  _conf.slave.timer->create_timer(
+    _conf.slave.start_time,
+    std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
+    [wmaster, wthis, preq]( timer_handler handler )
+    {
+      if (auto pthis = wthis.lock() )
+      {
+        pthis->query_updates_since_( wmaster, std::move(handler), preq );
+      }
+      else
+      {
+        handler(false);
+      }
+    }
+  );
+}
+
+void rocksdb::query_updates_since_(std::weak_ptr<iprefixdb> wmaster, timer_handler handler, request_since_ptr preq)
+{
+  auto req = std::make_unique<request::get_updates_since>(*preq);
+  std::weak_ptr<rocksdb> wthis = this->shared_from_this();
+  if ( auto pmaster = wmaster.lock() )
+  {
+    pmaster->get_updates_since( std::move(req), [wmaster, handler, wthis, preq](response::get_updates_since::ptr res)
+    {
+      if (auto pthis = wthis.lock() )
+      {
+        pthis->result_handler_updates_since_(wmaster, handler, preq, std::move(res));
+      }
+    });
+  }
+}
+
+void rocksdb::result_handler_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq, response::get_updates_since::ptr res)
+{
+  DEBUG_LOG_BEGIN("response get_updates_since res->seq_first=" << res->seq_first << " seq_last=" << res->seq_last << " seq_final=" << res->seq_final )
+  bool fin = true;
+  if ( res->logs.size() )
+  {
+    size_t sn = res->seq_last + 1;
+    ::rocksdb::WriteBatch batch;
+    batch.Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+    for (const auto& log : res->logs )
+    {
+      batch.PutLogData( log );
+    }
+    this->_db->Write( ::rocksdb::WriteOptions(), &batch);
+    preq->seq = sn;
+    if ( res->seq_last != res->seq_final )
+    {
+      this->query_updates_since_(master, std::move(handler), preq);
+      fin = false;
+    }
+  }
+  
+  if (fin)
+  {
+    handler(true);
+  }
+  DEBUG_LOG_END("response get_updates_since " << res->logs.size() )
+}
+
+
 void rocksdb::close()
 {
   COMMON_LOG_MESSAGE("preffix DB close " << _name)
-  _rdb=nullptr;
   _db=nullptr;
 }
 
@@ -384,6 +477,7 @@ void rocksdb::range( request::range::ptr req, response::range::handler cb)
 
 namespace {
 
+  /*
 inline bool backup_status_(const ::rocksdb::Status& s, const request::backup::ptr& req, const response::backup::handler& cb)
 {
   if ( s.ok() ) return true;
@@ -397,6 +491,7 @@ inline bool backup_status_(const ::rocksdb::Status& s, const request::backup::pt
   cb( std::move(res) );
   return false;
 }
+*/
 
 }
 
@@ -406,11 +501,11 @@ void rocksdb::prebackup_(bool /*compact_range*/)
   
 }
 
-void rocksdb::backup(bool compact_range)
+bool rocksdb::backup()
 {
   std::lock_guard<std::mutex> lk(_backup_mutex);
   
-  if ( compact_range )
+  if ( _conf.compact_before_backup )
   {
     DEBUG_LOG_BEGIN("CompactRange: " << _name )
     ::rocksdb::Status status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
@@ -447,7 +542,9 @@ void rocksdb::backup(bool compact_range)
   else
   {
     COMMON_LOG_MESSAGE("PurgeOldBackups(5) ERROR for " << _name << ": " << status.ToString() )
+    return false;
   }
+  return true;
 }
 
 namespace 
@@ -509,7 +606,7 @@ namespace
       else
       {
         // Found file: Copy
-        fs::copy_file( current, destination / current.filename());
+        ::boost::filesystem::copy( current, destination / current.filename());
       }
     }
     catch(const fs::filesystem_error& e)
@@ -528,53 +625,24 @@ namespace
   }
 }
 
-void rocksdb::archive(std::string suffix)
+bool rocksdb::archive(std::string path)
 {
-  DEBUG_LOG_MESSAGE("================== " << suffix << " ==========================")
+  DEBUG_LOG_MESSAGE("================== " << path << " ==========================")
   std::lock_guard<std::mutex> lk(_backup_mutex);
   if ( _conf.archive_path.empty() )
-    return;
-  std::string path = _conf.archive_path + suffix + _name;
-  //std::string path = suffix + _name;
+    return false;
+  path += "/" + _name;
 
   COMMON_LOG_MESSAGE("Archive for '" << _name << " from " << _conf.backup_path << " ' to " << path)
   std::string error;
   if ( !copy_dir( _conf.backup_path, path, error ) )
   {
     DOMAIN_LOG_ERROR("Archive for '" << _name << "' fail. " << error );
+    return true;
   }
+  return false;
 }
 
-void rocksdb::backup( request::backup::ptr /*req*/, response::backup::handler cb) 
-{
-  if (cb!=nullptr)
-    cb(nullptr);
-  /*
-  if ( req->compact_range )
-  {
-    ::rocksdb::Status status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
-    DEBUG_LOG_MESSAGE("CompactRange: " << status.ToString() )
-  }
-  ::rocksdb::Status status = _db->CreateNewBackup();
-  DEBUG_LOG_MESSAGE("CreateNewBackup: " << status.ToString() )
-  if ( cb != nullptr )
-  {
-    auto res = std::make_unique<response::backup>();
-    res->status = status.ok() ? common_status::OK : common_status::WriteError;
-    cb( std::move(res) );
-  }
-  */
-  /*
-  typedef ::rocksdb::BackupEngine backup_engine;
-  backup_engine* engine;
-  ::rocksdb::BackupableDBOptions opt(req->path);
-  ::rocksdb::Status s = ::rocksdb::BackupEngine::Open( ::rocksdb::Env::Default(), opt, &engine);
-  if ( !backup_status_(s, req, cb) )
-    return;
-  std::unique_ptr<backup_engine> ptr(engine);
-  ptr->CreateNewBackup( _db.get() );
-  */
-}
 
 rocksdb_restore::rocksdb_restore(std::string name, const rocksdb_config conf, restore_db_type* rdb)
   : _name(name)
@@ -586,14 +654,6 @@ rocksdb_restore::rocksdb_restore(std::string name, const rocksdb_config conf, re
 bool rocksdb_restore::restore() 
 {
   COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore_path )
-  /*
-  ::boost::filesystem::copy(
-    _conf.restore_path + "/shared", 
-    _conf.path + "/", 
-    ::boost::filesystem::copy_option::overwrite_if_exists, 
-    ec
-  );
-  */
   ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
   COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
   if ( status.ok() )
@@ -618,131 +678,9 @@ bool rocksdb_restore::restore()
     COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
     if ( status.ok() )
       return true;
-
   }
-  /*
-  ::boost::filesystem::directory_iterator itr(_conf.restore_path + "/shared");
-  for( ;itr!=::boost::filesystem::directory_iterator(); ++itr )
-  {
-    ::boost::filesystem::path p = *itr;
-    std::string to = _conf.path + "/" + p.filename().native();
-    DEBUG_LOG_MESSAGE("Copy from " << p << " to " << to );
-    ::boost::system::error_code ec;
-    
-    ::boost::filesystem::copy_file( *itr, to , ec);
-    if ( ec )
-    {
-      COMMON_LOG_END("Restore FAIL: " << ec.message() );
-      return false;
-    }
-  }
-  */
   return false;
-
-  
 }
 
-/*
-static bool rocksdb::restore(std::string path, std::string backup, std::string archive)
-{
-  COMMON_LOG_BEGIN("Restore to " << path << " from " << restore_path )
-  ::rocksdb::BackupEngine* ptr;
-  Status s = ::rocksdb::BackupEngineReadOnly::Open( ::rocksdb::Env::Default(), ::rocksdb::BackupableDBOptions(backup), ptr);
-  COMMON_LOG_END("Restore to " << path << " " << status.ToString() )
-  std::unique_ptr< ::rocksdb::BackupEngine> backup_engine = ptr;
-  backup_engine->RestoreDBFromLatestBackup(backup, backup);
-  backup_engine = nullptr;
-}
-*/
-
-bool rocksdb::restore(std::string /*path*/) 
-{
-  COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore_path )
-  /*
-  ::boost::filesystem::copy(
-    _conf.restore_path + "/shared", 
-    _conf.path + "/", 
-    ::boost::filesystem::copy_option::overwrite_if_exists, 
-    ec
-  );
-  */
-  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
-  COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
-  if ( status.ok() )
-    return true;
-  
-    ::boost::filesystem::directory_iterator itr(_conf.restore_path + "/shared");
-  for( ;itr!=::boost::filesystem::directory_iterator(); ++itr )
-  {
-    ::boost::filesystem::path p = *itr;
-    std::string to = _conf.path + "/" + p.filename().native();
-    DEBUG_LOG_MESSAGE("Copy from " << p << " to " << to );
-    ::boost::system::error_code ec;
-    
-    ::boost::filesystem::copy_file( *itr, to , ec);
-    if ( ec )
-    {
-      COMMON_LOG_END("Restore FAIL: " << ec.message() );
-      return false;
-    }
-  }
-  return true;
-  /*
-  ::rocksdb::SequenceNumber seq_number = _db->GetLatestSequenceNumber();
-  std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
-  
-  ::rocksdb::Status status = _db->GetUpdatesSince(seq_number, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
-  
-  std::cout << "Replication " << status.ToString() << ": " << seq_number << std::endl;
-  while (iter->Valid() )
-  {
-    ::rocksdb::BatchResult batch = iter->GetBatch();
-    std::string ser = batch.writeBatchPtr->Data();
-    std::cout << "LOG sequence=" << batch.sequence << ":" << ser << std::endl;
-    iter->Next();
-  }
-  */
-  /*
-  virtual Status GetUpdatesSince(
-      SequenceNumber seq_number, unique_ptr<TransactionLogIterator>* iter,
-      const TransactionLogIterator::ReadOptions&
-          read_options = TransactionLogIterator::ReadOptions()) = 0;
-          */
-
-  //auto path = _conf.path;
-  /*
-  std::vector< ::rocksdb::BackupInfo > backup_info;
-  _rdb->GetBackupInfo(&backup_info);
-  for (const auto bi : backup_info)
-  {
-    ::rocksdb::Status status = _rdb->RestoreDBFromBackup( bi.backup_id, path, path, ::rocksdb::RestoreOptions());
-    DEBUG_LOG_MESSAGE("RestoreDBFromBackup (" <<bi.backup_id << "): "  << status.ToString() << " to " << path );
-    status = _rdb->DeleteBackup( bi.backup_id );
-    DEBUG_LOG_MESSAGE("DeleteBackup: " << status.ToString() )
-  }
-  */
-  
-  /*
-  DEBUG_LOG_BEGIN("RestoreDBFromLatestBackup... " )
-  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup(path, path);
-  DEBUG_LOG_END("RestoreDBFromLatestBackup: " << status.ToString() )
-  */
-  //status = _rdb->PurgeOldBackups(1);
-  //DEBUG_LOG_MESSAGE("PurgeOldBackups: " << status.ToString() )
-  
-}
-
-
-void rocksdb::restore( request::restore::ptr req, response::restore::handler cb) 
-{
-  ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup(req->path, req->path);
-  DEBUG_LOG_MESSAGE("RestoreDBFromLatestBackup: " << status.ToString() )
-  if ( cb != nullptr )
-  {
-    auto res = std::make_unique<response::restore>();
-    res->status = status.ok() ? common_status::OK : common_status::WriteError;
-    cb( std::move(res) );
-  }
-}
 
 }}

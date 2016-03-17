@@ -32,8 +32,6 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
-  virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
-  virtual void restore( request::restore::ptr req, response::restore::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
 
 private:

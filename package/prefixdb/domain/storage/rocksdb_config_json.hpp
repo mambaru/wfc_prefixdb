@@ -15,7 +15,6 @@ struct slave_config_json
   JSON_NAME(log_limit_per_req)
   JSON_NAME(enable_progress)
   JSON_NAME(expires_for_req)
-  
 
   typedef ::wfc::json::object<
     slave_config,
@@ -58,6 +57,7 @@ struct rocksdb_config_json
   JSON_NAME(ini)
   JSON_NAME(slave)
   JSON_NAME(master)
+  JSON_NAME(compact_before_backup)
 
   typedef ::wfc::json::object<
     rocksdb_config,
@@ -67,6 +67,7 @@ struct rocksdb_config_json
       ::wfc::json::member<n_backup_path,    rocksdb_config, std::string, &rocksdb_config::backup_path>,
       ::wfc::json::member<n_restore_path,    rocksdb_config, std::string, &rocksdb_config::restore_path>,
       ::wfc::json::member<n_archive_path,    rocksdb_config, std::string, &rocksdb_config::archive_path>,
+      ::wfc::json::member<n_compact_before_backup, rocksdb_config, bool, &rocksdb_config::compact_before_backup>,
       ::wfc::json::member<n_ini,     rocksdb_config, std::string, &rocksdb_config::ini>,
       ::wfc::json::member<n_slave,     rocksdb_config, slave_config, &rocksdb_config::slave, slave_config_json>,
       ::wfc::json::member<n_master,     rocksdb_config, master_config, &rocksdb_config::master, master_config_json>

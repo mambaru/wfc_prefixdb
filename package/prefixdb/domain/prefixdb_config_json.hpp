@@ -15,14 +15,13 @@ struct prefixdb_config_json
   JSON_NAME(backup_period_s)
   JSON_NAME(archive_time)
   JSON_NAME(archive_period_s)
-  JSON_NAME(compact_before_backup)
+  
   JSON_NAME(workflow)
   
   typedef wfc::json::object<
     prefixdb_config,
     ::wfc::json::member_list<
       ::wfc::json::base<multidb_config_json>,
-      ::wfc::json::member<n_compact_before_backup, prefixdb_config, bool, &prefixdb_config::compact_before_backup>,
       ::wfc::json::member<n_backup_period_s, prefixdb_config, time_t, &prefixdb_config::backup_period_s>,
       ::wfc::json::member<n_backup_time, prefixdb_config, std::string, &prefixdb_config::backup_time>,
       ::wfc::json::member<n_archive_period_s, prefixdb_config, time_t, &prefixdb_config::archive_period_s>,

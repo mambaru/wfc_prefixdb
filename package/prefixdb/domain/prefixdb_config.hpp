@@ -17,7 +17,6 @@ struct prefixdb_config: multidb_config
   
   time_t backup_period_s = 0;
   time_t archive_period_s = 0;
-  bool compact_before_backup = false;
   ::wfc::workflow_options workflow;
 };
 

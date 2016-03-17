@@ -312,7 +312,7 @@ void multidb::get_updates_since( request::get_updates_since::ptr req, response::
 }
 
 
-void multidb::backup(bool compact_range)
+bool multidb::backup()
 {
   if ( !::boost::filesystem::exists(_opt.backup_path) )
   {
@@ -321,51 +321,21 @@ void multidb::backup(bool compact_range)
     if (ec)
     {
       COMMON_LOG_ERROR("Create directory fail '" << _opt.backup_path << "'" << ec.message() );
-      return;
+      return true;
     }
   }
 
   auto prefixes = this->all_prefixes_();
-  
+  bool result = true;
   for ( const std::string& prefix: prefixes)
   {
     DEBUG_LOG_MESSAGE("Backup for: " << prefix << "..." )
     if ( auto db = this->prefix_(prefix, false) )
     {
-      db->backup( compact_range );
+      result = db->backup();
     }
   }
-}
-
-void multidb::backup( request::backup::ptr req, response::backup::handler cb) 
-{
-
-  // ТОDO: сделать отдельную ветку для ручного бэкапа
-  auto prefixes = std::move(req->prefixes);
-  if ( prefixes.empty() )
-    prefixes = this->all_prefixes_();
-  
-  for ( const std::string& prefix: prefixes)
-  {
-    DEBUG_LOG_MESSAGE("Backup for: " << prefix << "..." )
-    if ( auto db = this->prefix_(prefix, false) )
-    {
-      db->backup( 
-        std::make_unique<request::backup>(*req),
-        nullptr
-      );
-    }
-    else
-    {
-        // TODO: внести в массив статусов, если sync
-    }
-  }
-  
-  if ( cb != nullptr )
-  {
-    auto res = std::make_unique<response::backup>();
-    cb( std::move(res) );
-  }
+  return result;
 }
 
 std::string time_string()
@@ -378,44 +348,8 @@ std::string time_string()
   return std::string(buf);
 }
 
-void multidb::archive(std::string suffix)
-{
-  suffix += "/";
-  suffix += time_string();
-  suffix += "/";
-    
-  if ( !::boost::filesystem::exists(_opt.archive_path) )
-  {
-    ::boost::system::error_code ec;
-    ::boost::filesystem::create_directory(_opt.archive_path, ec);
-    if (ec)
-    {
-      COMMON_LOG_ERROR("Create directory fail '" << _opt.archive_path << "'" << ec.message() );
-      return;
-    }
-  }
 
-  ::boost::system::error_code ec;
-  if( !::boost::filesystem::create_directory( _opt.archive_path + suffix, ec) )
-  {
-    COMMON_LOG_ERROR("Create dir " << _opt.archive_path + suffix << " FAIL: " << ec.message() );
-    return;
-  }
-  
-  auto prefixes = this->all_prefixes_();
-  
-  for ( const std::string& prefix: prefixes)
-  {
-    DEBUG_LOG_MESSAGE("Archive for: " << prefix << "... " )
-    
-    if ( auto db = this->prefix_(prefix, false) )
-    {
-      db->archive(suffix);
-    }
-  }
-}
-
-bool multidb::restore( std::string /*path*/ )
+bool multidb::restore( )
 {
   if ( !::boost::filesystem::is_directory(this->_opt.restore_path) )
   {
@@ -458,58 +392,44 @@ bool multidb::restore( std::string /*path*/ )
     }
   }
   return result;
-    /*
-  this->preopen_(this->_opt.restore_path, true);
-  
-  auto prefixes = this->all_prefixes_();
-  
-  bool result = true;
-  for ( const std::string& prefix: prefixes)
+}
+
+
+
+bool multidb::archive(std::string path)
+{
+  if ( !::boost::filesystem::exists(path) )
   {
-    DEBUG_LOG_MESSAGE("Restore for: " << prefix << "... " << path << prefix )
-    if ( auto db = this->prefix_(prefix, true) )
+    ::boost::system::error_code ec;
+    ::boost::filesystem::create_directory(path, ec);
+    if (ec)
     {
-      result &= db->restore( path + prefix );
+      COMMON_LOG_ERROR("Create directory fail '" << path << "'" << ec.message() );
+      return false;
     }
   }
 
-  return result;
-  */
-}
-
-bool multidb::restore(std::string path, std::string backup, std::string archive)
-{
-  if ( !::boost::filesystem::is_directory(backup) )
+  path += "/" + time_string();
+  ::boost::system::error_code ec;
+  if( !::boost::filesystem::create_directory( path, ec) )
   {
-    DOMAIN_LOG_ERROR( "Restore FAIL: '" << backup << "' is not directory" )
+    COMMON_LOG_ERROR("Create dir " << path << " FAIL: " << ec.message() );
     return false;
   }
   
-  if ( ::boost::filesystem::exists( path ) )
+  auto prefixes = this->all_prefixes_();
+  bool result = true;
+  for ( const std::string& prefix: prefixes)
   {
-    ::boost::system::error_code ec;
-    std::string bakpath = path + "_" + time_string();
-    ::boost::filesystem::rename( path, bakpath, ec );
-    if ( ec )
-    {
-      DOMAIN_LOG_ERROR( "Rename old storage FAIL: '" << backup << "' -> '" << bakpath << "'" )
-      return false;
-    }
+    DEBUG_LOG_MESSAGE("Archive for: " << prefix << "... " )
     
-    ec.clear();
-    ::boost::filesystem::create_directory(path, ec);
-    if ( ec )
+    if ( auto db = this->prefix_(prefix, false) )
     {
-      DOMAIN_LOG_ERROR( "Create directory FAIL: '" << path << "'" )
-      return false;
+      result &= db->archive(path);
     }
   }
-
-  
+  return result;
 }
 
-void multidb::restore( request::restore::ptr /*req*/, response::restore::handler /*cb*/) 
-{
-}
 
 }}

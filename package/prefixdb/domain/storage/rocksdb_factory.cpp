@@ -152,9 +152,9 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
       rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
     
-    conf.slave.timer = std::make_shared< ::iow::io::timer >(_io);
+    //conf.slave.timer = std::make_shared< ::iow::io::timer >(_io);
     DEBUG_LOG_MESSAGE("New RocksDB " << dbname)
-    return std::make_shared< rocksdb >(dbname, conf, bdb, rdb);
+    return std::make_shared< rocksdb >(dbname, conf, bdb);
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

@@ -39,9 +39,11 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _add_, request::add_json,  response::add_json, iprefixdb, &iprefixdb::add>,
   wfc::jsonrpc::invoke_method< _packed_, request::packed_json,  response::packed_json, iprefixdb, &iprefixdb::packed>,
   wfc::jsonrpc::invoke_method< _range_, request::range_json,  response::range_json, iprefixdb, &iprefixdb::range>,
-  wfc::jsonrpc::invoke_method< _get_updates_since_, request::get_updates_since_json,  response::get_updates_since_json, iprefixdb, &iprefixdb::get_updates_since>,
+  wfc::jsonrpc::invoke_method< _get_updates_since_, request::get_updates_since_json,  response::get_updates_since_json, iprefixdb, &iprefixdb::get_updates_since>
+  /*,
   wfc::jsonrpc::invoke_method< _backup_, request::backup_json,  response::backup_json, iprefixdb, &iprefixdb::backup>,
   wfc::jsonrpc::invoke_method< _restore_, request::restore_json,  response::restore_json, iprefixdb, &iprefixdb::restore>
+  */
 >
 {
 };

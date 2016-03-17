@@ -3,7 +3,8 @@
 #include <string>
 #include <prefixdb/domain/storage/merge/merge_config.hpp>
 #include <prefixdb/iprefixdb.hpp>
-#include <iow/io/timer/timer.hpp>
+//#include <iow/io/timer/timer.hpp>
+#include <wfc/workflow.hpp>
 #include <memory>
 
 namespace wamba{ namespace prefixdb{
@@ -25,7 +26,7 @@ struct slave_config
   bool expires_for_req = true;
   
   std::shared_ptr<iprefixdb> master;
-  std::shared_ptr< ::iow::io::timer> timer;
+  std::shared_ptr< ::wfc::workflow > timer;
 };
 
 struct master_config
@@ -45,6 +46,7 @@ struct rocksdb_config: merge_config
   std::string restore_path  = "./prefixdb_backup";
   // архив бэкапов
   std::string archive_path  = "./prefixdb_archive";
+  bool compact_before_backup = false;
   
   slave_config slave;
   master_config master;

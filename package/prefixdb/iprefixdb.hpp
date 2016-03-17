@@ -9,8 +9,6 @@
 #include <prefixdb/api/add.hpp>
 #include <prefixdb/api/packed.hpp>
 #include <prefixdb/api/range.hpp>
-#include <prefixdb/api/backup.hpp>
-#include <prefixdb/api/restore.hpp>
 #include <prefixdb/api/get_updates_since.hpp>
 
 namespace wamba { namespace prefixdb {
@@ -26,8 +24,6 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void add( request::add::ptr req, response::add::handler cb) = 0;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) = 0;
   virtual void range( request::range::ptr req, response::range::handler cb) = 0;
-  virtual void backup( request::backup::ptr req, response::backup::handler cb) = 0;
-  virtual void restore( request::restore::ptr req, response::restore::handler cb) = 0;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) = 0;
 };
 

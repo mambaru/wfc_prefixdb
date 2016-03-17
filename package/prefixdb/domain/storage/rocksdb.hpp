@@ -20,9 +20,8 @@ class rocksdb
 {
 public:
   typedef ::rocksdb::BackupableDB db_type;
-  typedef ::rocksdb::RestoreBackupableDB restore_db_type;
 
-  rocksdb( std::string name, const rocksdb_config conf, db_type* db, restore_db_type* rdb);
+  rocksdb( std::string name, const rocksdb_config conf, db_type* db);
 
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -32,17 +31,13 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
-  virtual void backup( request::backup::ptr req, response::backup::handler cb) override;
-  virtual void restore( request::restore::ptr req, response::restore::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   
   virtual void start( ) override;
   virtual void close() override;
-  virtual void backup(bool compact_range) override;
-  virtual void archive(std::string suffix) override;
-  virtual bool restore(std::string path) override;
+  virtual bool backup() override;
+  virtual bool archive(std::string path) override;
 
-  //static bool restore(std::string path, std::string backup, std::string archive);
 private:
 
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
@@ -56,13 +51,20 @@ private:
 
   void prebackup_(bool compact_range);
   
+  typedef wfc::workflow::callback_timer_handler timer_handler;
+  typedef wfc::workflow::timer_id timer_id;
+  typedef std::shared_ptr< request::get_updates_since > request_since_ptr;
+  void create_slave_timer_();
+  void query_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq);
+  void result_handler_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq, response::get_updates_since::ptr res);
 private:
+  
   std::string _name;  
   const rocksdb_config _conf;
   std::unique_ptr<db_type> _db;
-  std::unique_ptr<restore_db_type> _rdb;
   std::shared_ptr<iprefixdb> _master;
   std::mutex _backup_mutex;
+  timer_id _timer_id;
 };
 
 class rocksdb_restore

@@ -97,6 +97,7 @@ public:
     this->template call< _get_updates_since_ >( std::move(req), cb, nullptr);
   }
 
+  /*
   virtual void backup(request::backup::ptr req, response::backup::handler cb ) override
   {
     this->template call< _backup_ >( std::move(req), cb, nullptr);
@@ -106,6 +107,7 @@ public:
   {
     this->template call< _restore_ >( std::move(req), cb, nullptr);
   }
+  */
 };
 
 }}}

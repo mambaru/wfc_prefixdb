@@ -1,11 +1,12 @@
 #pragma once
 
-#include <prefixdb/api/backup.hpp>
+#include <prefixdb/api/restore.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {
 
+  
 namespace request 
 {
   struct restore_json
