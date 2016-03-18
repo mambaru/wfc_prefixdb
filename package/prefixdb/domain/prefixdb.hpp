@@ -48,8 +48,8 @@ private:
   std::shared_ptr<impl> _impl;
 
   std::shared_ptr< ::wfc::workflow> _flow;
-  ::wfc::workflow::timer_id _backup_timer  = -1;
-  ::wfc::workflow::timer_id _archive_timer  = -1;
+  ::wfc::workflow::timer_id_t _backup_timer  = -1;
+  ::wfc::workflow::timer_id_t _archive_timer  = -1;
     /*
   timer_ptr _backup_timer;
   timer_ptr _restore_timer;

@@ -126,12 +126,14 @@ void prefixdb::reconfigure()
     callback(true);
   }, opt1);
   */
+  auto opt = this->options();
   if ( _flow == nullptr )
   {
-    _flow = std::make_shared< ::wfc::workflow >( this->global()->io_service );
+    _flow = ::wfc::workflow::create(opt.workflow_opt);
+    // _flow = std::make_shared< ::wfc::workflow >( this->global()->io_service );
   }
   
-  auto opt = this->options();
+  
   _flow->reconfigure( opt.workflow_opt );
   
   if ( _backup_timer != -1 ) _flow->release_timer(_backup_timer);
@@ -174,9 +176,8 @@ void prefixdb::reconfigure()
   {
     _impl = std::make_shared<impl>();
     auto factory = god::create("rocksdb", this->global()->io_service );
-  #warning TODO по деволту core, но надо сделать свой
+  
     opt.slave.timer = _flow;
-    
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
     DEBUG_LOG_MESSAGE("opt.slave.master = " << opt.slave.target)
 

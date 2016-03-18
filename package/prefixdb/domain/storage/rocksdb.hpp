@@ -52,7 +52,7 @@ private:
   void prebackup_(bool compact_range);
   
   typedef wfc::workflow::callback_timer_handler timer_handler;
-  typedef wfc::workflow::timer_id timer_id;
+  typedef wfc::workflow::timer_id_t timer_id_t;
   typedef std::shared_ptr< request::get_updates_since > request_since_ptr;
   void create_slave_timer_();
   void query_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq);
@@ -64,7 +64,7 @@ private:
   std::unique_ptr<db_type> _db;
   std::shared_ptr<iprefixdb> _master;
   std::mutex _backup_mutex;
-  timer_id _timer_id;
+  timer_id_t _timer_id;
 };
 
 class rocksdb_restore
