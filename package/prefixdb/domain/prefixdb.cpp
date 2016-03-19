@@ -81,6 +81,7 @@ void prefixdb::do_restore_()
 
 void prefixdb::start(const std::string&)
 {
+  
   if ( this->has_arg("restore") )  
   {
     auto opt = this->options();

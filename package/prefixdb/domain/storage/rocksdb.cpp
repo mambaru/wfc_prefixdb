@@ -51,9 +51,9 @@ void rocksdb::start( )
     std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
     _master,
     &iprefixdb::get_updates_since,
-    [](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
+    [this](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
     {
-      DEBUG_LOG_MESSAGE("Tick " << (res == nullptr) )
+      DEBUG_LOG_MESSAGE("Tick " << (res == nullptr) << " rocks STUB " << this->_name )
       if ( res == nullptr ) 
         return std::make_unique<request::get_updates_since>();
       else
