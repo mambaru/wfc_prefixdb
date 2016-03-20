@@ -25,7 +25,7 @@ rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db)
   : _name(name)
   , _conf(conf)
   , _db(db)
-  , _timer_id(-1)
+  , _slave_timer_id(-1)
   
 {
 }
@@ -38,28 +38,34 @@ void rocksdb::start( )
   //topt.delay_ms = 1000; /*_conf.slave.pull_timeout_ms;*/
   //topt.expires_from_now = true;
   
-  _master = _conf.slave.master;
+  //  _master = _conf.slave.master;
   if ( _conf.slave.master!=nullptr && _conf.slave.enabled )
   {
-    //create_slave_timer_();
+    this->create_slave_timer_();
   }
   
   
+  /*
+  auto preq = std::make_shared<request::get_updates_since>();
+  preq->seq = 0;
+  preq->prefix  = this->_name;
+  preq->limit = this->_conf.slave.log_limit_per_req;
   _timer_id = _conf.slave.timer->create_requester<request::get_updates_since, response::get_updates_since>
   (
     _conf.slave.start_time,
     std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
     _master,
     &iprefixdb::get_updates_since,
-    [this](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
+    [this, preq](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
     {
-      DEBUG_LOG_MESSAGE("Tick " << (res == nullptr) << " rocks STUB " << this->_name )
+            DEBUG_LOG_MESSAGE("Tick " << (res == nullptr) << " rocks STUB " << this->_name )
       if ( res == nullptr ) 
         return std::make_unique<request::get_updates_since>();
       else
         return nullptr;
+      
     }
-  );
+  );*/
   
   
 
@@ -139,9 +145,112 @@ void rocksdb::set_master(std::shared_ptr<iprefixdb> master)
   _master = master;
 }
 */
-
+namespace detail {
+  using namespace rocksdb;
+  struct Handler : public WriteBatch::Handler {                                                                                                                                              
+    std::stringstream seen;
+    virtual Status PutCF(uint32_t cf, const Slice& key,
+                         const Slice& value) override {
+      seen << "Put(" << cf << ", " << key.ToString() << ", " <<
+              value.size() << ")";
+      return Status::OK();
+    }
+    virtual Status MergeCF(uint32_t cf, const Slice& key,
+                           const Slice& value) override {
+      seen << "Merge(" << cf << ", " << key.ToString() << ", " <<
+              value.size() << ")";
+      return Status::OK();
+    }
+    virtual void LogData(const Slice& blob) override {
+      const char* beg = blob.data();
+      for (int i=0; i < blob.size(); i++ )
+      {
+        if ( beg[i] < 32 || beg[i] > 127 )
+          seen << int(beg[i]) << "|";
+        else
+          seen << beg[i] ;
+      }
+      seen << std::endl;
+      /*
+      seen << "src=" << int(*reinterpret_cast<const uint32_t*>(beg)) << std::endl
+           << "size=" << int(*reinterpret_cast<const uint32_t*>(beg + 2)) << std::endl
+           << "type=" << int(*reinterpret_cast<const uint8_t*>(beg + 6)) << std::endl
+           << "playload1=[" << std::string(beg + 10, beg + blob.size() - 10 ) << "]" << std::endl;
+      // seen << "LogData(" << blob.ToString() << ")";
+           */
+    }
+    virtual Status DeleteCF(uint32_t cf, const Slice& key) override {
+      seen << "Delete(" << cf << ", " << key.ToString() << ")";
+      return Status::OK();
+    }
+  };
+}
 void rocksdb::create_slave_timer_()
 {
+  auto preq = std::make_shared<request::get_updates_since>();
+  preq->seq = 0;
+  preq->prefix  = this->_name;
+  preq->limit = this->_conf.slave.log_limit_per_req;
+  
+  std::string value;
+  ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
+  if ( status.ok() )
+  {
+    preq->seq = *( reinterpret_cast<const size_t*>( value.data() ) );
+  }
+  else
+  {
+    DEBUG_LOG_MESSAGE("Get ~slave-last-sequence-number~ : " << status.ToString() )
+  }
+  DEBUG_LOG_MESSAGE("request get_updates_since seq=" << preq->seq )
+
+  _slave_timer_id = _conf.slave.timer->create_requester<request::get_updates_since, response::get_updates_since>
+  (
+    _conf.slave.start_time,
+    std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
+    _conf.slave.master,
+    &iprefixdb::get_updates_since,
+    [this, preq](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
+    {
+      if ( res == nullptr )
+        return std::make_unique<request::get_updates_since>(*preq);
+      
+      DEBUG_LOG_BEGIN("response get_updates_since size=" << res->logs.size() << " res->seq_first=" << res->seq_first << " seq_last=" << res->seq_last << " seq_final=" << res->seq_final )
+
+      if ( !res->logs.empty() )
+      {
+        size_t sn = res->seq_last + 1;
+        ::rocksdb::WriteBatch batch;
+        batch.Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+        for (const auto& log : res->logs )
+        {
+          batch.PutLogData( log );
+        }
+        
+        /*detail::Handler handler;
+        ::rocksdb::Status status1 = batch.Iterate(&handler);*/
+        ::rocksdb::Status status2 = this->_db->Write( ::rocksdb::WriteOptions(), &batch);
+        DEBUG_LOG_MESSAGE("WRITED " << status2.ToString() /*<< " " << status2.ToString()*/ )
+        //std::cout << std::endl << handler.seen.str() << std::endl;
+        {
+          std::string value;
+          ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "inc_test", &value);
+          DEBUG_LOG_MESSAGE("GET " << status.ToString() << " " << value << " " << res->logs.back() )
+
+        }
+        preq->seq = sn;
+        if ( res->seq_last != res->seq_final )
+        {
+          return std::make_unique<request::get_updates_since>(*preq);
+        }
+      }
+      return nullptr;
+    }
+  );
+
+  
+     
+  /*
   auto preq = std::make_shared<request::get_updates_since>();
   preq->seq = 0;
   preq->prefix  = this->_name;
@@ -180,6 +289,7 @@ void rocksdb::create_slave_timer_()
     }
   );
   DEBUG_LOG_MESSAGE("timer ready " << id << " ms " << std::chrono::milliseconds(_conf.slave.pull_timeout_ms).count() )
+  */
 }
 
 void rocksdb::query_updates_since_(std::weak_ptr<iprefixdb> wmaster, timer_handler handler, request_since_ptr preq)
@@ -403,6 +513,91 @@ void rocksdb::packed( request::packed::ptr req, response::packed::handler cb)
   this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );
 }
 
+
+namespace {
+
+  void tmp_trace_playload(const char *beg, const char *end);
+
+  void tmp_trace_put(const char *beg, const char *end)
+  {
+    const int offset = 1;
+    int size_key = int( *reinterpret_cast<const uint8_t*>(beg++) );
+    std::cout << "\tPut (" << size_key << ")" << std::string( beg, beg + size_key) << "=";
+    beg += size_key;
+    int size_val = int( *reinterpret_cast<const uint8_t*>(beg++) );
+    std::cout << "(" << size_val << ")" << std::string( beg, beg + size_val) << std::endl;
+    beg += size_val;
+    tmp_trace_playload(beg, end);
+  }
+
+  void tmp_trace_merge(const char *beg, const char *end)
+  {
+    const int offset = 1;
+    int size_key = int( *reinterpret_cast<const uint8_t*>(beg++) );
+    std::cout << "\tMerge " << std::string( beg, beg + size_key) << "=";
+    beg += size_key;
+    int size_val = int( *reinterpret_cast<const uint8_t*>(beg++) );
+    std::cout << std::string( beg, beg + size_val) << std::endl;
+    beg += size_val;
+    tmp_trace_playload(beg, end);
+  }
+
+  void tmp_trace_del(const char *beg, const char *end)
+  {
+    const int offset = 1;
+    int size_key = int( *reinterpret_cast<const uint8_t*>(beg++) );
+    std::cout << "\tDel " << std::string( beg, beg + size_key) << "!" << std::endl;
+    beg += size_key;
+    tmp_trace_playload(beg, end);
+  }
+
+  /*
+  void tmp_trace_playload_next(const char *beg, const char *end)
+  {
+    if (beg >= end) return;
+    const int offset = 1;
+    int size = int( *reinterpret_cast<const uint8_t*>(beg) );
+    std::cout << "\t" << "(" << "X" << "," << size << ") " 
+              << std::string( beg + offset, beg + offset + size)
+              << std::endl;
+    tmp_trace_playload_next(beg + offset + size, end);
+  }*/
+
+  void tmp_trace_playload(const char *beg, const char *end)
+  {
+    if (beg >= end) {
+      std::cout << "END" << std::endl;
+      return;
+    }
+    const int offset = 1;
+    int type = int( *reinterpret_cast<const uint8_t*>(beg+0) );
+    std::cout << "NEXT type=" << type << " size?=" << int( *reinterpret_cast<const uint16_t*>(beg) ) << std::endl;
+    beg += 1;
+    switch ( type )
+    {
+      case 0: tmp_trace_del(beg, end); break;
+      case 1: tmp_trace_put(beg, end); break;
+      case 2: tmp_trace_merge(beg, end); break;
+    }
+    /*std::cout << "\t" << "(" << type << "," << size << ") " 
+              << std::string( beg + offset, beg + offset + size)
+              << std::endl;
+    tmp_trace_playload_next(beg + offset + size, end);
+    */
+  }
+  
+  void tmp_tarce_log( const std::string& str)
+  {
+    const int offset = 12;
+    std::vector<char> data(str.begin(), str.end() );
+    const char *beg = data.data();
+    const char *end = beg + data.size();
+    std::cout << "LOG (" << str.size() << "," << offset << ") " << std::endl;
+    tmp_trace_playload(beg + offset, end);
+    std::cout << std::endl;
+  }
+}
+
 void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 
 {
   auto res = std::make_unique<response::get_updates_since>();
@@ -425,6 +620,23 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
           // Проверить это
           iter->Next();
           continue;
+        }
+        
+        {
+          // tmp
+          std::string str  = batch.writeBatchPtr->Data();
+          tmp_tarce_log(str);
+          /*const char *beg = str.c_str();
+          const char *end = beg + str.size();
+          std::cout << "Log " << int(end - beg) << ":";
+          for ( int i = 0;beg!=end && i!=13; ++beg, ++i)
+            std::cout << int(*beg) << ",";
+          std::cout << "|" << std::endl;
+          for ( int i = 0;beg!=end && i!=100; ++beg, ++i)
+            std::cout << *beg << "("<< int( *beg) << ")";
+          std::cout << std::endl;
+          */
+          
         }
         res->logs.push_back( batch.writeBatchPtr->Data() );
         cur_seq = batch.sequence;

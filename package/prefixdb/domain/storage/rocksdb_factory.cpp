@@ -142,14 +142,14 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
     ::rocksdb::BackupableDBOptions backup_opt( conf.backup_path );
     //backup_opt.destroy_old_data = true; //???? 
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
-    ::rocksdb::RestoreBackupableDB* rdb = nullptr;
+    //::rocksdb::RestoreBackupableDB* rdb = nullptr;
     if ( !conf.restore_path.empty() )
     {
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
       DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
       
       //restore_opt.destroy_old_data = true; //???? 
-      rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
+      //rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
     
     //conf.slave.timer = std::make_shared< ::iow::io::timer >(_io);

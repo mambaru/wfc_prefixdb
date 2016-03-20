@@ -62,9 +62,9 @@ private:
   std::string _name;  
   const rocksdb_config _conf;
   std::unique_ptr<db_type> _db;
-  std::shared_ptr<iprefixdb> _master;
+  //std::shared_ptr<iprefixdb> _master;
   std::mutex _backup_mutex;
-  timer_id_t _timer_id;
+  timer_id_t _slave_timer_id;
 };
 
 class rocksdb_restore
