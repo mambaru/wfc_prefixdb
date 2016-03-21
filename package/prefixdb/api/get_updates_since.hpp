@@ -25,7 +25,9 @@ namespace response
     size_t seq_first = 0;
     size_t seq_last = 0;
     size_t seq_final = 0;
-    std::vector< std::string > logs;
+    typedef std::vector<char> data_type;
+    typedef std::vector<data_type> logs_type;
+    logs_type logs;
     common_status status =  common_status::OK;
 
     typedef std::unique_ptr<get_updates_since> ptr;

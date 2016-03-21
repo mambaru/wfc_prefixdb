@@ -4,6 +4,7 @@
 #include <prefixdb/domain/storage/merge/merge.hpp>
 #include <prefixdb/domain/storage/iprefixdb_ex.hpp>
 #include <prefixdb/domain/storage/rocksdb_config.hpp>
+#include <prefixdb/domain/storage/since_reader.hpp>
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 
@@ -13,6 +14,7 @@
 namespace rocksdb{ class DB;}
 
 namespace wamba{ namespace prefixdb{
+  
  
 class rocksdb
   : public iprefixdb_ex
@@ -78,6 +80,7 @@ private:
   std::string _name;  
   const rocksdb_config _conf;
   std::unique_ptr<restore_db_type> _rdb;
+  since_reader _reader;
 };
 
 }}

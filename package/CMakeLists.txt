@@ -11,6 +11,7 @@ SET(
   prefixdb/domain/storage/multidb.cpp
   prefixdb/domain/storage/rocksdb_factory.cpp
   prefixdb/domain/storage/rocksdb.cpp
+  prefixdb/domain/storage/since_reader.cpp
   prefixdb/domain/storage/god.cpp
   prefixdb/domain/storage/merge/merge_operator.cpp
   prefixdb/domain/storage/aux/scan_dir.cpp

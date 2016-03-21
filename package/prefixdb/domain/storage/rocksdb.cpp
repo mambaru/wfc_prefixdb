@@ -224,7 +224,7 @@ void rocksdb::create_slave_timer_()
         batch.Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
         for (const auto& log : res->logs )
         {
-          batch.PutLogData( log );
+          batch.PutLogData( std::string(log.begin(), log.end()) );
         }
         
         /*detail::Handler handler;
@@ -235,8 +235,7 @@ void rocksdb::create_slave_timer_()
         {
           std::string value;
           ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "inc_test", &value);
-          DEBUG_LOG_MESSAGE("GET " << status.ToString() << " " << value << " " << res->logs.back() )
-
+          DEBUG_LOG_MESSAGE("GET " << status.ToString() << " " << value << " " << std::string(res->logs.back().begin(), res->logs.back().end() ) );
         }
         preq->seq = sn;
         if ( res->seq_last != res->seq_final )
@@ -327,7 +326,7 @@ void rocksdb::result_handler_updates_since_(std::weak_ptr<iprefixdb> master, tim
     batch.Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
     for (const auto& log : res->logs )
     {
-      batch.PutLogData( log );
+      batch.PutLogData( std::string( log.begin(), log.end()) );
     }
     this->_db->Write( ::rocksdb::WriteOptions(), &batch);
     preq->seq = sn;
@@ -638,7 +637,14 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
           */
           
         }
-        res->logs.push_back( batch.writeBatchPtr->Data() );
+        
+        const std::string& data = batch.writeBatchPtr->Data();
+        res->logs.push_back(  
+          response::get_updates_since::data_type(
+            data.begin(),
+            data.end()
+          )
+        );
         cur_seq = batch.sequence;
         //std::cout << "cur seq " << cur_seq << std::endl;
         if ( first )
