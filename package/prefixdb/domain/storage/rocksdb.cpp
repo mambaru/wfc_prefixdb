@@ -224,14 +224,11 @@ void rocksdb::create_slave_timer_()
         batch.Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
         for (const auto& log : res->logs )
         {
+          this->_reader.parse(log);
           batch.PutLogData( std::string(log.begin(), log.end()) );
         }
         
-        /*detail::Handler handler;
-        ::rocksdb::Status status1 = batch.Iterate(&handler);*/
         ::rocksdb::Status status2 = this->_db->Write( ::rocksdb::WriteOptions(), &batch);
-        DEBUG_LOG_MESSAGE("WRITED " << status2.ToString() /*<< " " << status2.ToString()*/ )
-        //std::cout << std::endl << handler.seen.str() << std::endl;
         {
           std::string value;
           ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "inc_test", &value);
@@ -624,7 +621,7 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
         {
           // tmp
           std::string str  = batch.writeBatchPtr->Data();
-          tmp_tarce_log(str);
+          //tmp_tarce_log(str);
           /*const char *beg = str.c_str();
           const char *end = beg + str.size();
           std::cout << "Log " << int(end - beg) << ":";

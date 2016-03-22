@@ -67,6 +67,7 @@ private:
   //std::shared_ptr<iprefixdb> _master;
   std::mutex _backup_mutex;
   timer_id_t _slave_timer_id;
+  since_reader _reader;
 };
 
 class rocksdb_restore
@@ -80,7 +81,6 @@ private:
   std::string _name;  
   const rocksdb_config _conf;
   std::unique_ptr<restore_db_type> _rdb;
-  since_reader _reader;
 };
 
 }}
