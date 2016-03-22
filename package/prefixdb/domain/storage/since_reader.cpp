@@ -3,127 +3,85 @@
 #include "db/log_format.h"
 #include <iostream>
 #include <wfc/logger.hpp>
+#include <wfc/core/abort.hpp>
 
 namespace wamba{ namespace prefixdb {
 
-namespace{
-inline void get_size(const char ** beg, size_t& size, int n = 0)
+namespace 
 {
-  size_t cur = static_cast<size_t>( *reinterpret_cast<const uint8_t*>(*beg) );
-  (*beg)++;
-  DEBUG_LOG_MESSAGE( "CUR=" << cur)
-  
-  bool fin = ((cur >> 7) & 1) == 0;
-  
-  if ( !fin )
+  inline size_t get_size(const char** pbeg, const char* end)
   {
-    cur &= ~(1 << 7);
-    get_size(beg, size, n + 1);
-  }
-  if ( n > 0 )
-    cur <<= 7*n;
-  size |= cur;
-  DEBUG_LOG_MESSAGE( "BIG Size=" << size << " cur=" << cur <<  " n=" << n)
-  return;
+    if ( *pbeg == end ) return 0;
     
-  
-  
-  size_t tmp = cur;
-  
-  (*beg)++;
-  
-  //bool fin = ((cur >> 7) & 1) == 0;
-  
-  // Переносим младший бит в size
-  if ( n!=0 && (cur & 1) ) 
-    size |= 1 << ( (n-1)*8 + 8 - n );
-  
-  if ( !fin )
-    cur &= ~(1 << 7);
-  
-  // Перонсим байт в size
-  if ( n == 0 )
-  {
-    size = cur;
-  }
-  else
-  {
-    cur >>= 1;
-    cur <<= 8*n;
-    size |= cur;
-  }
-  
-  
-  if ( !fin ) {
-    DEBUG_LOG_MESSAGE( "NEXT Size=" << size << " cur=" << tmp << " n=" << n)
-    get_size( beg, size, n + 1);
-  }
-  
-  DEBUG_LOG_MESSAGE( "BIG Size=" << size << " cur=" << tmp<< " n=" << n)
-  if ( n != 0) abort();
-}
+    size_t size = 0;
+    bool fin = false;
+    for (int i=0; !fin && i<8; i++)
+    {
+      size_t cnk = static_cast<size_t>( *reinterpret_cast<const uint8_t*>(*pbeg) );
+      fin = ((cnk >> 7) & 1) == 0;
+      cnk &= ~(1 << 7);
+      cnk <<= 7*i;
+      size |= cnk;
+      (*pbeg)++;
+      if ( *pbeg == end && !fin) 
+        ::wfc_abort("prefixdb::since_reader::get_size log format error"); 
+    }
+    
+    //DEBUG_LOG_MESSAGE( "BIG Size=" << size << " count=" << i)
+    if (size !=14 )
+      abort();
 
-inline size_t get_size(const char ** beg)
-{
-  size_t size = 0;
-  get_size(beg, size);
-  DEBUG_LOG_MESSAGE( "BIG Size=" << size )
-  if (size > 127 )
-    abort();
-  return size;
-  /*
-  size_t size = static_cast<size_t>( *reinterpret_cast<const uint8_t*>(*beg) );
-  (*beg)++;
-  if ( size & 0xFF )
-  {
-    size &= ~(1 << 7);
-    size_t size2 = static_cast<size_t>( *reinterpret_cast<const uint8_t*>(*beg) );
-    if ( size2 & 1 ) size |= 1 << 7;
-    size2 >>= 1;
-    size2 &= ~(1 << 7);
-    size2 <<= 8;
-    size |= size2;
-    DEBUG_LOG_MESSAGE( "BIG Size=" << size )
-    abort();
+    return size;
   }
-  DEBUG_LOG_MESSAGE( "Get Size=" << size )
-  return size;
-  */
-}
+  
+  inline ::rocksdb::Slice get_item(const char** beg, const char* end)
+  {
+    size_t size = get_size(beg, end);
+    if ( *beg + size > end )
+      ::wfc_abort("prefixdb::since_reader::get_item size error"); 
+    return ::rocksdb::Slice(*beg, size);
+  }
+
+  inline ::rocksdb::Slice get_key(const char** beg, const char* end)
+  {
+    return get_item(beg, end);
+  }
+
+  inline ::rocksdb::Slice get_val(const char** beg, const char* end)
+  {
+    return get_item(beg, end);
+  }
+  
+  inline std::pair< ::rocksdb::Slice, ::rocksdb::Slice> get_pair(const char** beg, const char* end)
+  {
+    auto first  = get_key(beg, end);
+    auto second = get_key(beg, end);
+    return std::make_pair(first, second);
+  }
 }
   
 const char*  since_reader::read_put_(const char* beg, const char* end)
 {
-  //int size = int( *reinterpret_cast<const uint8_t*>(beg++) );
-  size_t size = get_size(&beg);
-  std::cout << "Put " << size << ":" << int(*beg) << ":" << std::string(beg, beg + size) << "=";
-  beg += size;
-  size = get_size(&beg);
-  std::cout << size << ":" << int(*beg) << ":" << std::string(beg, beg + size) ;
-  beg += size;
-  std::cout<< std::endl;
+  auto pair = get_pair( &beg, end);
+  this->_batch->Put( pair.first, pair.second );
   return beg;
 }
 
 const char*  since_reader::read_del_(const char* beg, const char* end)
 {
-  int size = get_size(&beg);
-  std::cout << "Del " << size << ":" << std::string(beg, beg + size) << std::endl;
-  return beg + size;
+  auto key = get_key( &beg, end);
+  this->_batch->Delete( key );
+  return beg;
 }
 
 const char*  since_reader::read_merge_(const char* beg, const char* end)
 {
-  int size = get_size(&beg);
-  std::cout << "Merge " << size << ":" << int(*beg) << ":" << std::string(beg, beg + size) << "=";
-  beg += size;
-  size = get_size(&beg);
-  std::cout << size << ":" << int(*beg) << ":" << std::string(beg, beg + size) ;
-  beg += size;
-  std::cout<< std::endl;
+  auto pair = get_pair( &beg, end);
+  this->_batch->Merge( pair.first, pair.second );
+  return beg;
 }
 
-const char*  since_reader::read_item_(const char* beg, const char* end)
+const char*  since_reader::read_op_(const char* beg, const char* end)
 {
   if (beg > end) 
     abort();
@@ -141,15 +99,8 @@ const char*  since_reader::read_item_(const char* beg, const char* end)
       beg = read_merge_(beg, end); 
       break;
     default:
-      beg--;
-      std::cout << "UNKNOWN TYPE size=" << std::distance(beg, end)  << ": "  << int(*(beg-1)) << "," << int(*beg) << "," << int(beg[1]) << std::endl;
-      for ( size_t i = 0; i != std::distance(beg, end); i++)
-        std::cout << int(beg[i]) << " ";
-      std::cout << std::endl;
-      for ( size_t i = 0; i != std::distance(beg, end); i++)
-        std::cout << char(beg[i]);
-      std::cout << std::endl;
       beg = end;
+      ::wfc_abort("prefixdb::since_reader::read_item_ unknown operation"); 
   };
   
   if ( beg==end )
@@ -169,12 +120,7 @@ unsigned int since_reader::read_record_(const char *beg, const char *end)
   std::cout << "| " << std::distance(beg,end) << ":";
   std::cout << std::endl;
   beg += head;
-  while ( beg = this->read_item_(beg, end) );
-  /*
-  for ( beg+=head ; beg!=end; ++beg)
-    std::cout << *beg;
-  std::cout << std::endl;
-  */
+  while ( beg = this->read_op_(beg, end) );
   return type;
 }
 

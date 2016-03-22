@@ -52,7 +52,7 @@ public:
 private:
   size_t parse_();
   unsigned int read_record_(const char* beg, const char* end);
-  const char*  read_item_(const char* beg, const char* end);
+  const char*  read_op_(const char* beg, const char* end);
   const char*  read_put_(const char* beg, const char* end);
   const char*  read_del_(const char* beg, const char* end);
   const char*  read_merge_(const char* beg, const char* end);
