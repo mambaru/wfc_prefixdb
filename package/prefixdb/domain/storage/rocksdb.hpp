@@ -26,6 +26,7 @@ public:
   rocksdb( std::string name, const rocksdb_config conf, db_type* db);
 
   virtual void set( request::set::ptr req, response::set::handler cb) override;
+  virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
   virtual void del( request::del::ptr req, response::del::handler cb) override;
@@ -34,6 +35,7 @@ public:
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
+  virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   
   virtual void start( ) override;
   virtual void close() override;
@@ -51,14 +53,14 @@ private:
   template<typename Res, typename Batch, typename ReqPtr, typename Callback>
   void write_batch_(Batch& batch, ReqPtr req, Callback cb);
 
-  void prebackup_(bool compact_range);
+  
   
   typedef wfc::workflow::callback_timer_handler timer_handler;
   typedef wfc::workflow::timer_id_t timer_id_t;
   typedef std::shared_ptr< request::get_updates_since > request_since_ptr;
   void create_slave_timer_();
-  void query_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq);
-  void result_handler_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq, response::get_updates_since::ptr res);
+ // void query_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq);
+ // void result_handler_updates_since_(std::weak_ptr<iprefixdb> master, timer_handler handler, request_since_ptr preq, response::get_updates_since::ptr res);
 private:
   
   std::string _name;  

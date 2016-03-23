@@ -46,7 +46,7 @@ namespace response
         ::wfc::json::member<n_seq_first, get_updates_since, size_t, &get_updates_since::seq_first>,
         ::wfc::json::member<n_seq_last, get_updates_since, size_t, &get_updates_since::seq_last>,
         ::wfc::json::member<n_seq_final, get_updates_since, size_t, &get_updates_since::seq_final>,
-        ::wfc::json::member<n_logs, get_updates_since, get_updates_since::logs_type, &get_updates_since::logs, ::wfc::json::array_of_binary >,
+        ::wfc::json::member<n_logs, get_updates_since, get_updates_since::logs_type, &get_updates_since::logs, ::wfc::json::array_of_strings<16> >,
         ::wfc::json::member<n_status, get_updates_since, common_status, &get_updates_since::status, common_status_json>
       >
     > type;

@@ -2,7 +2,8 @@
 #include "since_reader.hpp"
 #include "db/log_format.h"
 #include <iostream>
-#include <wfc/logger.hpp>
+#include <prefixdb/logger.hpp>
+#include <wfc/memory.hpp>
 #include <wfc/core/abort.hpp>
 
 namespace wamba{ namespace prefixdb {
@@ -26,11 +27,6 @@ namespace
       if ( *pbeg == end && !fin) 
         ::wfc_abort("prefixdb::since_reader::get_size log format error"); 
     }
-    
-    //DEBUG_LOG_MESSAGE( "BIG Size=" << size << " count=" << i)
-    if (size !=14 )
-      abort();
-
     return size;
   }
   
@@ -39,12 +35,17 @@ namespace
     size_t size = get_size(beg, end);
     if ( *beg + size > end )
       ::wfc_abort("prefixdb::since_reader::get_item size error"); 
-    return ::rocksdb::Slice(*beg, size);
+    ::rocksdb::Slice res(*beg, size);
+    *beg += size;
+    return res;
   }
 
   inline ::rocksdb::Slice get_key(const char** beg, const char* end)
   {
-    return get_item(beg, end);
+    ::rocksdb::Slice res = get_item(beg, end);
+    if ( 0 == res.compare("~slave-last-sequence-number~") )
+      return ::rocksdb::Slice();
+    return res;
   }
 
   inline ::rocksdb::Slice get_val(const char** beg, const char* end)
@@ -55,29 +56,69 @@ namespace
   inline std::pair< ::rocksdb::Slice, ::rocksdb::Slice> get_pair(const char** beg, const char* end)
   {
     auto first  = get_key(beg, end);
-    auto second = get_key(beg, end);
+    auto second = get_val(beg, end);
     return std::make_pair(first, second);
   }
+}
+
+namespace{
+inline std::string s4l( ::rocksdb::Slice s)
+{
+  // Slice for log
+  if ( s.size() < 84 )
+    return s.ToString();
+  
+  std::string res;
+  res.append(s.data(), s.data() + 40);
+  res += "...";
+  res.append(s.data() + s.size() - 40, s.data() + s.size());
+  return res;
+}
 }
   
 const char*  since_reader::read_put_(const char* beg, const char* end)
 {
   auto pair = get_pair( &beg, end);
-  this->_batch->Put( pair.first, pair.second );
+  
+  if ( !pair.first.empty() )
+  {
+    this->_batch->Put( pair.first, pair.second );
+    PREFIXDB_LOG_REPLI(_log, "Put " << s4l(pair.first) << "=" << s4l(pair.second) )
+  }
+  else
+  {
+    PREFIXDB_LOG_ERROR("Replication Put");
+  }
   return beg;
 }
 
 const char*  since_reader::read_del_(const char* beg, const char* end)
 {
   auto key = get_key( &beg, end);
-  this->_batch->Delete( key );
+  if ( !key.empty() )
+  {
+    this->_batch->Delete( key );
+    PREFIXDB_LOG_REPLI(_log, "Delete " << s4l(key) )
+  }
+  else
+  {
+    PREFIXDB_LOG_ERROR("Replication Delete");
+  }
   return beg;
 }
 
 const char*  since_reader::read_merge_(const char* beg, const char* end)
 {
   auto pair = get_pair( &beg, end);
-  this->_batch->Merge( pair.first, pair.second );
+  if ( !pair.first.empty() )
+  {
+    this->_batch->Merge( pair.first, pair.second );
+    PREFIXDB_LOG_REPLI(_log, "Merge " << s4l(pair.first) << "=" << s4l(pair.second) )
+  }
+  else
+  {
+    PREFIXDB_LOG_ERROR("Replication Merge");
+  }
   return beg;
 }
 
@@ -101,6 +142,8 @@ const char*  since_reader::read_op_(const char* beg, const char* end)
     default:
       beg = end;
       ::wfc_abort("prefixdb::since_reader::read_item_ unknown operation"); 
+      abort();
+      return nullptr;
   };
   
   if ( beg==end )
@@ -113,26 +156,28 @@ const char*  since_reader::read_op_(const char* beg, const char* end)
 
 unsigned int since_reader::read_record_(const char *beg, const char *end)
 {
-  const unsigned int type = beg[4];
+  _seq_number = *reinterpret_cast<const uint32_t *>(beg);
+  const unsigned int type = beg[8];
   size_t head = 12;
-  for (int i =0 ; i < head; ++i)
+  for (size_t i =0 ; i < head; ++i)
     std::cout << int(beg[i]) << " ";
   std::cout << "| " << std::distance(beg,end) << ":";
   std::cout << std::endl;
   beg += head;
-  while ( beg = this->read_op_(beg, end) );
+  while ( nullptr != (beg = this->read_op_(beg, end)) );
   return type;
 }
 
 size_t since_reader::parse_()
 {
+  if ( _batch == nullptr )
+    _batch = std::make_unique<batch_type>();
   const char *beg = &(_buffer[0]);
   const char *end = beg + _buffer.size();
   
   const unsigned int record_type = read_record_(beg, end);
   switch ( record_type )
   {
-  // Zero is reserved for preallocated files
     case ::rocksdb::log::kZeroType:
       std::cout << "kZeroType" << std::endl;
       break;
@@ -163,7 +208,6 @@ size_t since_reader::parse_()
 
     default:
     {
-      
     }
   }
   return std::distance(beg, end);
@@ -187,15 +231,10 @@ bool since_reader::parse(const data_type& data)
   return _status != status::Error;
 }
 
-since_reader::item_info since_reader::pop()
+since_reader::batch_ptr since_reader::detach()
 {
-  item_info itm = std::move(_item_list.front());
-  _item_list.pop_front();
-  return std::move(itm);
-}
-
-since_reader::batch_ptr since_reader::pop_batch()
-{
+  if ( _batch == nullptr )
+    return std::make_unique<batch_type>();
   return std::move(_batch);
 }
 
@@ -206,36 +245,13 @@ const since_reader::data_type& since_reader::buffer() const
 
 size_t since_reader::size() const
 {
-  size_t res = 0;
-  for (const auto& v : _item_list )
-  {
-    res += sizeof( v );
-    res += v.key.size();
-    res += v.value.size();
-  }
-  res += _buffer.size();
-  return res;
-}
-
-size_t since_reader::count() const
-{
-  return _item_list.size();
-}
-
-bool since_reader::empty() const
-{
-  return _item_list.empty();
-}
-
-bool since_reader::buffer_empty() const
-{
-  return _buffer.empty();
-}
-
-size_t since_reader::buffer_size() const
-{
   return _buffer.size();
 }
 
+
+bool since_reader::empty() const
+{
+  return _buffer.empty();
+}
 
 }}

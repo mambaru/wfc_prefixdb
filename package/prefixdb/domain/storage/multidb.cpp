@@ -62,7 +62,18 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
+    if ( _slave_timer_id!=0 )
+    {
+      _opt.slave.timer->release_timer(_slave_timer_id);
+      _slave_timer_id = 0;
+    }
   }
+  
+  if ( _opt.slave.master!=nullptr && _opt.slave.enabled )
+  {
+    this->create_slave_timer_();
+  }
+
   
   if ( !::boost::filesystem::exists(opt.path) )
   {
@@ -197,6 +208,21 @@ void multidb::set( request::set::ptr req, response::set::handler cb)
   }
 }
 
+void multidb::setnx( request::setnx::ptr req, response::setnx::handler cb)
+{
+  if ( !check_fields_<response::setnx>(req, cb) ) return;
+
+  if ( auto db = this->prefix_(req->prefix, true) )
+  {
+    db->setnx( std::move(req), std::move(cb) );
+  } 
+  else 
+  {
+    create_prefix_fail<response::setnx>( std::move(req), std::move(cb) );
+  }
+}
+
+
 void multidb::get( request::get::ptr req, response::get::handler cb)
 {
   if ( notify_ban(req, cb) ) return;
@@ -311,6 +337,13 @@ void multidb::get_updates_since( request::get_updates_since::ptr req, response::
   }  
 }
 
+void multidb::get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb)
+{
+  if ( notify_ban(req, cb) ) return;
+  auto res = std::make_unique<response::get_all_prefixes>();
+  res->prefixes = this->all_prefixes_();
+  cb(std::move(res));
+}
 
 bool multidb::backup()
 {
@@ -431,5 +464,27 @@ bool multidb::archive(std::string path)
   return result;
 }
 
+void multidb::create_slave_timer_()
+{
+  _slave_timer_id = _opt.slave.timer->create_requester<request::get_all_prefixes, response::get_all_prefixes>
+  (
+    _opt.slave.start_time,
+    std::chrono::milliseconds(_opt.slave.pull_timeout_ms),
+    _opt.slave.master,
+    &iprefixdb::get_all_prefixes,
+    [this](response::get_all_prefixes::ptr res) -> request::get_all_prefixes::ptr
+    {
+      if ( res == nullptr )
+        return std::make_unique<request::get_all_prefixes>();
+      
+      for (auto pref: res->prefixes)
+        this->prefix_(pref, true);
+      
+      return nullptr;
+    }
+  );
+
+  
+}
 
 }}

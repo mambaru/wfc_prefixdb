@@ -3,6 +3,7 @@
 #include <prefixdb/iprefixdb.hpp>
 #include <prefixdb/api/get_json.hpp>
 #include <prefixdb/api/set_json.hpp>
+#include <prefixdb/api/setnx_json.hpp>
 #include <prefixdb/api/has_json.hpp>
 #include <prefixdb/api/del_json.hpp>
 #include <prefixdb/api/inc_json.hpp>
@@ -10,14 +11,14 @@
 #include <prefixdb/api/packed_json.hpp>
 #include <prefixdb/api/range_json.hpp>
 #include <prefixdb/api/get_updates_since_json.hpp>
-#include <prefixdb/api/backup_json.hpp>
-#include <prefixdb/api/restore_json.hpp>
+#include <prefixdb/api/get_all_prefixes_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace service{
 
 JSONRPC_TAG(get)
 JSONRPC_TAG(set)
+JSONRPC_TAG(setnx)
 JSONRPC_TAG(has)
 JSONRPC_TAG(del)
 JSONRPC_TAG(inc)
@@ -25,8 +26,8 @@ JSONRPC_TAG(add)
 JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
 JSONRPC_TAG(get_updates_since)
-JSONRPC_TAG(backup)
-JSONRPC_TAG(restore)
+JSONRPC_TAG(get_all_prefixes)
+
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -37,13 +38,11 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _del_, request::del_json,  response::del_json, iprefixdb, &iprefixdb::del>,
   wfc::jsonrpc::invoke_method< _inc_, request::inc_json,  response::inc_json, iprefixdb, &iprefixdb::inc>,
   wfc::jsonrpc::invoke_method< _add_, request::add_json,  response::add_json, iprefixdb, &iprefixdb::add>,
+  wfc::jsonrpc::invoke_method< _setnx_, request::setnx_json,  response::setnx_json, iprefixdb, &iprefixdb::setnx>,
   wfc::jsonrpc::invoke_method< _packed_, request::packed_json,  response::packed_json, iprefixdb, &iprefixdb::packed>,
   wfc::jsonrpc::invoke_method< _range_, request::range_json,  response::range_json, iprefixdb, &iprefixdb::range>,
-  wfc::jsonrpc::invoke_method< _get_updates_since_, request::get_updates_since_json,  response::get_updates_since_json, iprefixdb, &iprefixdb::get_updates_since>
-  /*,
-  wfc::jsonrpc::invoke_method< _backup_, request::backup_json,  response::backup_json, iprefixdb, &iprefixdb::backup>,
-  wfc::jsonrpc::invoke_method< _restore_, request::restore_json,  response::restore_json, iprefixdb, &iprefixdb::restore>
-  */
+  wfc::jsonrpc::invoke_method< _get_updates_since_, request::get_updates_since_json,  response::get_updates_since_json, iprefixdb, &iprefixdb::get_updates_since>,
+  wfc::jsonrpc::invoke_method< _get_all_prefixes_, request::get_all_prefixes_json,  response::get_all_prefixes_json, iprefixdb, &iprefixdb::get_all_prefixes>
 >
 {
 };

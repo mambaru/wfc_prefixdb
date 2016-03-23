@@ -20,6 +20,7 @@ class multidb
 public:
   bool reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory);
   virtual void set( request::set::ptr req, response::set::handler cb) override;
+  virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
   virtual void has( request::has::ptr req, response::has::handler cb) override;
   virtual void del( request::del::ptr req, response::del::handler cb) override;
@@ -28,7 +29,8 @@ public:
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
-
+  virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
+  
   virtual void start() override;
   virtual void close() override;
   virtual bool backup() override;
@@ -47,8 +49,13 @@ private:
   bool check_prefix_(const ReqPtr& req, const Callback& cb);
 
   std::vector< std::string > all_prefixes_();
+  
+  void create_slave_timer_();
+
 private:
   std::shared_ptr<ifactory> _factory;
+  typedef wfc::workflow::timer_id_t timer_id_t;
+  timer_id_t _slave_timer_id = 0;
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;

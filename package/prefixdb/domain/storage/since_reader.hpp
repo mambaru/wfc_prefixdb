@@ -12,6 +12,7 @@ class since_reader
 {
 public:
   typedef std::vector<char> data_type;
+  /*
   enum class item_type
   {
     None  = -1,
@@ -19,6 +20,7 @@ public:
     Put   = 1,
     Merge = 2
   };
+  */
   
   enum class status
   {
@@ -26,6 +28,7 @@ public:
     Ready = 1
   };
   
+  /*
   struct item_info
   {
     item_type type = item_type::None;
@@ -33,22 +36,21 @@ public:
     data_type value;
   };
   typedef std::deque<item_info> item_list;
+  */
   typedef ::rocksdb::WriteBatch batch_type;
   typedef std::unique_ptr<batch_type> batch_ptr;
   
+  void enable_log() { _log = true;}
+  void disable_log() { _log = false;}
   // сборс состояний после ошибки
   void reset();
   // @return false if has errors. see message() for details
   bool parse(const data_type& data);
-  item_info pop();
-  batch_ptr pop_batch();
+  batch_ptr detach();
   const data_type& buffer() const;
   size_t size() const;
-  size_t count() const;
   bool empty() const;
-  bool buffer_empty() const;
-  size_t buffer_size() const;
-  
+  uint16_t get_seq_number() const { return _seq_number;}
 private:
   size_t parse_();
   unsigned int read_record_(const char* beg, const char* end);
@@ -58,9 +60,10 @@ private:
   const char*  read_merge_(const char* beg, const char* end);
 private:
   status _status = status::Ready;
-  item_list _item_list;
+  uint16_t _seq_number = 0;
   data_type _buffer;
   batch_ptr _batch;
+  bool _log = true; // TODO: выключить
 };
  
 }}

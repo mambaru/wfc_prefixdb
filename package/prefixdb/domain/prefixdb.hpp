@@ -30,9 +30,11 @@ public:
   virtual void del( request::del::ptr req, response::del::handler cb) override;
   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
   virtual void add( request::add::ptr req, response::add::handler cb) override;
+  virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
+  virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
 
 private:
   /*

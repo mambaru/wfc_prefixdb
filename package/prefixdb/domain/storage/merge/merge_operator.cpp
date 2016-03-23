@@ -71,9 +71,6 @@ namespace helper{
     if (slice==nullptr) return false;
     return unserialize<J>(obj, *slice);
   }
-
-  
-  
 }
   
 merge_operator::merge_operator()
@@ -91,7 +88,7 @@ bool merge_operator::FullMerge(
     const slice_type* value,
     const operand_list& operands,
     std::string* result,
-    logger_type* logger) const
+    logger_type* /*logger*/) const
 try
 {
   if ( operands.empty() )
@@ -106,6 +103,9 @@ try
   {
     if ( helper::unserialize<merge_json>(mrg, operands[i]) )
     {
+      if ( mrg.mode == merge_mode::setnx && mode!=merge_mode::none )
+        continue;
+      
       if ( mode != mrg.mode )
       {
         // при i==0 или если сменился метод (тогда предыдущие не имеют смысла )
@@ -118,6 +118,9 @@ try
   
   switch( mode )
   {
+    case merge_mode::setnx:
+      this->setnx_(value, updates, *result ); 
+      break;
     case merge_mode::inc:
       this->inc_(value, updates, *result ); 
       break;
@@ -230,6 +233,20 @@ const char* merge_operator::Name() const
   return "PreffixDBMergeOperator";
 }
 
+void merge_operator::setnx_(const slice_type* value, const update_list& operands, std::string& result) const
+{
+  if ( value!=nullptr )
+  {
+    result = value->ToString();
+    return;
+  }
+  
+  if ( operands.empty() )
+    return;
+  
+  result = operands.front();
+}
+
 void merge_operator::inc_(const slice_type* value, const update_list& operands, std::string& result) const
 {
   typedef ::wfc::json::value<int64_t> int64json;
@@ -256,8 +273,6 @@ void merge_operator::inc_(const slice_type* value, const update_list& operands, 
 void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool exist) const
 {
   typedef ::wfc::json::value<int64_t> int64json;
-  typedef int64json::serializer intser;
-  
   inc_params params;
   if ( !helper::unserialize<inc_params_json>(params, oper) )
     return;

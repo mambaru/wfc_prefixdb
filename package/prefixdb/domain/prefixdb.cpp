@@ -237,6 +237,11 @@ void prefixdb::set( request::set::ptr req, response::set::handler cb)
   _impl->set( std::move(req), std::move(cb) );
 }
 
+void prefixdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
+{
+  _impl->setnx( std::move(req), std::move(cb) );
+}
+
 void prefixdb::get( request::get::ptr req, response::get::handler cb)
 {
   _impl->get( std::move(req), std::move(cb) );
@@ -275,6 +280,11 @@ void prefixdb::range( request::range::ptr req, response::range::handler cb)
 void prefixdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
 {
   _impl->get_updates_since( std::move(req), std::move(cb) );  
+}
+
+void prefixdb::get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb)
+{
+  _impl->get_all_prefixes( std::move(req), std::move(cb) );  
 }
 
 }}

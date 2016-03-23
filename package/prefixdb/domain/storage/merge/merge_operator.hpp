@@ -24,27 +24,9 @@ public:
   merge_operator();
   void reconfigure(const merge_config& config);
   
-  /*
-  virtual bool Merge(const slice_type& key,
-                     const slice_type* existing_value,
-                     const slice_type& value,
-                     std::string* new_value,
-                     ::rocksdb::Logger* logger) const override;
-                     */
  
   virtual const char* Name() const override;
  
-  /*
-  virtual bool PartialMerge(
-    const slice_type& key,
-    const slice_type& left_operand,
-    const slice_type& right_operand,
-    std::string* new_value,
-    logger_type* logger) const override {
-      return false;
-    }
-    */
-    
   virtual bool FullMerge(
     const slice_type& key,
     const slice_type* value,
@@ -52,12 +34,8 @@ public:
     std::string* result,
     logger_type* logger) const override;
 private:
-  /*
-  void inc_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
-  void add_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
-  void packed_(std::string& out, std::string&& upd, const char* beg, const char* end ) const;
-  */
 
+  void setnx_(const slice_type* value, const update_list& operands, std::string& result) const;
   void inc_(const slice_type* value, const update_list& operands, std::string& result) const;
   void inc_operand_(const std::string& operand, int64_t& num, bool exist) const;
 

@@ -9,7 +9,8 @@ enum class merge_mode
   none,
   inc,
   add,
-  packed
+  packed,
+  setnx
 };
 
 struct merge
