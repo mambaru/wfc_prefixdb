@@ -172,42 +172,6 @@ size_t since_reader::parse_()
   
   /*const unsigned int record_type =*/ 
   this->read_record_(beg, end);
-  /*
-  switch ( record_type )
-  {
-    case ::rocksdb::log::kZeroType:
-      std::cout << "kZeroType" << std::endl;
-      break;
-    case ::rocksdb::log::kFullType:
-      std::cout << "kFullType" << std::endl;
-      break;
-    case ::rocksdb::log::kFirstType:
-      std::cout << "kFirstType" << std::endl;
-      break;
-    case ::rocksdb::log::kMiddleType:
-      std::cout << "kMiddleType" << std::endl;
-      break;
-    case ::rocksdb::log::kLastType:
-      std::cout << "kLastType" << std::endl;
-      break;
-    case ::rocksdb::log::kRecyclableFullType:
-      std::cout << "kRecyclableFullType" << std::endl;
-      break;
-    case ::rocksdb::log::kRecyclableFirstType:
-      std::cout << "kRecyclableFirstType" << std::endl;
-      break;
-    case ::rocksdb::log::kRecyclableMiddleType:
-      std::cout << "kRecyclableMiddleType" << std::endl;
-      break;
-    case ::rocksdb::log::kRecyclableLastType:
-      std::cout << "kRecyclableLastType" << std::endl;
-      break;
-
-    default:
-    {
-    }
-    
-  }*/
   return std::distance(beg, end);
 }
 

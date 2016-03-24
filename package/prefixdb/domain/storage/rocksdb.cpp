@@ -345,8 +345,22 @@ void rocksdb::create_slave_timer_()
       
       *pdiff = res->seq_final - res->seq_first ;
 
+      auto count = res->seq_first;
       for (const auto& log : res->logs )
-        this->_reader.parse( decode64(log.begin(), log.end()) );
+      {
+        try
+        {
+          auto binlog = decode64(log.begin(), log.end());
+          ++count;
+          this->_reader.parse( binlog );
+        }
+        catch(...)
+        {
+          res->seq_last = count;
+          PREFIXDB_LOG_ERROR("attempt to decode a value not in base64 char set: [" << log << "]" )
+          break;
+        }
+      }
 
       auto batch = _reader.detach();
       size_t sn = res->seq_last + 1;
@@ -533,7 +547,7 @@ namespace
       {
         // Found file: Copy
         ::boost::system::error_code ec;
-        ::boost::filesystem::copy( current, destination / current.filename(), ec);
+        ::boost::filesystem::copy_file( current, destination / current.filename(), ec);
         if (ec)
         {
           // TODO: Ошибка
