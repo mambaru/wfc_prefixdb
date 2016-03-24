@@ -148,7 +148,6 @@ const char*  since_reader::read_op_(const char* beg, const char* end)
   
   if ( beg==end )
   {
-    std::cout << "end" << std::endl;
     return nullptr;
   }
   return beg!=end ? beg : nullptr;
@@ -159,10 +158,6 @@ unsigned int since_reader::read_record_(const char *beg, const char *end)
   _seq_number = *reinterpret_cast<const uint32_t *>(beg);
   const unsigned int type = beg[8];
   size_t head = 12;
-  for (size_t i =0 ; i < head; ++i)
-    std::cout << int(beg[i]) << " ";
-  std::cout << "| " << std::distance(beg,end) << ":";
-  std::cout << std::endl;
   beg += head;
   while ( nullptr != (beg = this->read_op_(beg, end)) );
   return type;
@@ -175,7 +170,9 @@ size_t since_reader::parse_()
   const char *beg = &(_buffer[0]);
   const char *end = beg + _buffer.size();
   
-  const unsigned int record_type = read_record_(beg, end);
+  /*const unsigned int record_type =*/ 
+  this->read_record_(beg, end);
+  /*
   switch ( record_type )
   {
     case ::rocksdb::log::kZeroType:
@@ -209,7 +206,8 @@ size_t since_reader::parse_()
     default:
     {
     }
-  }
+    
+  }*/
   return std::distance(beg, end);
 }
 

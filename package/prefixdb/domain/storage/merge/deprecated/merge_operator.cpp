@@ -24,7 +24,6 @@ bool merge_operator::Merge(const slice_type& key,
                      ::rocksdb::Logger* logger) const 
 {
   std::string skey = key.ToString();
-  std::cout << key.ToString() << std::endl;
   DEBUG_LOG_MESSAGE("merge_operator::Merge: " << key.ToString()  )
   operation op = *( reinterpret_cast<const operation*>(value.data()) );
   if ( op == operation::set)

@@ -63,7 +63,7 @@ private:
   uint16_t _seq_number = 0;
   data_type _buffer;
   batch_ptr _batch;
-  bool _log = true; // TODO: выключить
+  bool _log = false; // TODO: выключить
 };
  
 }}

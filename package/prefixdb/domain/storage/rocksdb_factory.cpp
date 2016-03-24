@@ -123,7 +123,6 @@ ifactory::prefixdb_ptr rocksdb_factory::create(std::string dbname, bool create_i
   if ( !conf.restore_path.empty() ) conf.restore_path = _context->config.restore_path + "/" + dbname;
   
 
-  //std::cout << "----===========#################33333333----->" << conf.path << std::endl;
   
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;

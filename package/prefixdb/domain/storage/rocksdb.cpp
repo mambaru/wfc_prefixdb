@@ -3,16 +3,18 @@
 #include "merge/merge.hpp"
 #include "merge/merge_json.hpp"
 
-#include <wfc/logger.hpp>
+#include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
+#include <wfc/core/global.hpp>
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/iterator.h>
 #include <iomanip>
 #include <sstream>
 #include <ctime>
-#include <boost/filesystem.hpp>
+#include <chrono>
 
+#include <boost/filesystem.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
@@ -21,9 +23,26 @@
 
 namespace wamba{ namespace prefixdb {
 
-namespace {
+namespace 
+{
   inline std::string& get_key(std::string& key) {return key;}
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
+  
+  template<typename I>
+  inline std::vector<char> decode64(I beg, I end) 
+  {
+    using namespace boost::archive::iterators;
+    using iterator = transform_width< binary_from_base64<std::string::const_iterator>, 8, 6 >;
+    return std::vector<char>( iterator(beg), iterator(end) );
+  }
+
+  template<typename I>
+  inline std::string encode64(I beg, I end) 
+  {
+      using namespace boost::archive::iterators;
+      using iterator = base64_from_binary<transform_width< I, 6, 8>>;
+      return std::string( iterator( beg) , iterator(end) );
+  }
 }
 
 rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db)
@@ -44,88 +63,6 @@ void rocksdb::start( )
   }
 }
 
-namespace{
-  
-template<typename I>
-std::vector<char> decode64(I beg, I end) 
-{
-  using namespace boost::archive::iterators;
-  using iterator = transform_width< binary_from_base64<std::string::const_iterator>, 8, 6 >;
-  return std::vector<char>( iterator(beg), iterator(end) );
-    /*
-    return boost::algorithm::trim_right_copy_if(std::string(It(std::begin(val)), It(std::end(val))), [](char c) {
-        return c == '\0';
-    });*/
-}
-
-template<typename I>
-std::string encode64(I beg, I end) 
-{
-    using namespace boost::archive::iterators;
-    using iterator = base64_from_binary<transform_width< I, 6, 8>>;
-    return std::string( iterator( beg) , iterator(end) );
-    /*auto tmp = std::string(It(std::begin(val)), It(std::end(val)));
-    return tmp.append((3 - val.size() % 3) % 3, '=');
-    */
-}
-
-}
-
-void rocksdb::create_slave_timer_()
-{
-  auto preq = std::make_shared<request::get_updates_since>();
-  preq->seq = 0;
-  preq->prefix  = this->_name;
-  preq->limit = this->_conf.slave.log_limit_per_req;
-  
-  std::string value;
-  ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
-  if ( status.ok() )
-  {
-    preq->seq = *( reinterpret_cast<const size_t*>( value.data() ) );
-  }
-  else
-  {
-    DEBUG_LOG_MESSAGE("Get ~slave-last-sequence-number~ : " << status.ToString() )
-  }
-  DEBUG_LOG_MESSAGE("request get_updates_since seq=" << preq->seq )
-
-  _slave_timer_id = _conf.slave.timer->create_requester<request::get_updates_since, response::get_updates_since>
-  (
-    _conf.slave.start_time,
-    std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
-    _conf.slave.master,
-    &iprefixdb::get_updates_since,
-    [this, preq](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
-    {
-      if ( res == nullptr )
-      {
-        DEBUG_LOG_MESSAGE("NEW QUERY seq = " << preq->seq );
-        return std::make_unique<request::get_updates_since>(*preq);
-      }
-      
-      if ( res->logs.empty() )
-        return nullptr;
-
-      for (const auto& log : res->logs )
-        this->_reader.parse( decode64(log.begin(), log.end()) );
-
-      auto batch = _reader.detach();
-      size_t sn = res->seq_last + 1;
-      batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
-      this->_db->Write( ::rocksdb::WriteOptions(), batch.get() );
-
-      DEBUG_LOG_MESSAGE("SequenceNumber = " << this->_reader.get_seq_number() << " sn=" << sn << " buffer=" << _reader.size());
-      preq->seq = sn;
-      if ( res->seq_last == res->seq_final )
-        return nullptr;
-      
-      
-      DEBUG_LOG_MESSAGE("2 NEW QUERY seq = " << preq->seq );
-      return std::make_unique<request::get_updates_since>(*preq);
-    }
-  );
-}
 
 
 void rocksdb::close()
@@ -325,15 +262,8 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
         }
         
         const std::string& data = batch.writeBatchPtr->Data();
-        res->logs.push_back(  
-          /*response::get_updates_since::data_type*/
-          encode64(
-            data.begin(),
-            data.end()
-          )
-        );
+        res->logs.push_back( encode64(data.begin(), data.end() ) );
         cur_seq = batch.sequence;
-        //std::cout << "cur seq " << cur_seq << std::endl;
         if ( first )
         {
           DEBUG_LOG_MESSAGE("rocksdb::get_updates_since first_seq=" << batch.sequence)
@@ -348,6 +278,90 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
   res->seq_final = _db->GetLatestSequenceNumber();
   cb( std::move(res) );  
 }
+
+void rocksdb::create_slave_timer_()
+{
+  auto preq = std::make_shared<request::get_updates_since>();
+  preq->seq = 0;
+  preq->prefix  = this->_name;
+  preq->limit = this->_conf.slave.log_limit_per_req;
+  
+  std::string value;
+  ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
+  if ( status.ok() )
+  {
+    preq->seq = *( reinterpret_cast<const size_t*>( value.data() ) );
+  }
+  else
+  {
+    preq->seq = _db->GetLatestSequenceNumber() + 1;
+  }
+  DEBUG_LOG_MESSAGE("request get_updates_since seq=" << preq->seq )
+  auto pdiff = std::make_shared< std::atomic_size_t>(0);
+  if ( this->_conf.slave.wrn_log_diff_seq !=0 )
+  {
+    // TODO: сделать остановку таймера
+    auto maxdiff = this->_conf.slave.wrn_log_diff_seq;
+    _conf.slave.timer->create_timer(
+      std::chrono::seconds(1),
+      [pdiff, maxdiff]()->bool
+      {
+        if ( *pdiff > maxdiff )
+        {
+          PREFIXDB_LOG_WARNING("Slave replication too big difference " << *pdiff << "(max:" << maxdiff << ")");
+        }
+        return true;
+      }
+    );
+  }
+
+  _slave_timer_id = _conf.slave.timer->create_requester<request::get_updates_since, response::get_updates_since>
+  (
+    _conf.slave.start_time,
+    std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
+    _conf.slave.master,
+    &iprefixdb::get_updates_since,
+    [this, preq, pdiff](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
+    {
+      if ( res == nullptr )
+      {
+        DEBUG_LOG_MESSAGE("NEW QUERY seq = " << preq->seq );
+        return std::make_unique<request::get_updates_since>(*preq);
+      }
+      
+      if ( res->logs.empty() )
+        return nullptr;
+
+      if ( preq->seq!=0 && ( (res->seq_first - preq->seq) > this->_conf.slave.acceptable_loss_seq ) )
+      {
+        auto diff = res->seq_first - preq->seq;
+        if ( diff > this->_conf.slave.acceptable_loss_seq )
+        {
+          DOMAIN_LOG_FATAL("Slave not acceptable loss sequence: ")
+          ::wfc_abort("Slave replication error");
+          return nullptr;
+        }
+      }
+      
+      *pdiff = res->seq_final - res->seq_first ;
+
+      for (const auto& log : res->logs )
+        this->_reader.parse( decode64(log.begin(), log.end()) );
+
+      auto batch = _reader.detach();
+      size_t sn = res->seq_last + 1;
+      batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+      this->_db->Write( ::rocksdb::WriteOptions(), batch.get() );
+
+      preq->seq = sn;
+      if ( res->seq_last == res->seq_final )
+        return nullptr;
+      
+      return std::make_unique<request::get_updates_since>(*preq);
+    }
+  );
+}
+
 
 void rocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_all_prefixes::handler cb)
 {
@@ -518,7 +532,12 @@ namespace
       else
       {
         // Found file: Copy
-        ::boost::filesystem::copy( current, destination / current.filename());
+        ::boost::system::error_code ec;
+        ::boost::filesystem::copy( current, destination / current.filename(), ec);
+        if (ec)
+        {
+          // TODO: Ошибка
+        }
       }
     }
     catch(const fs::filesystem_error& e)
