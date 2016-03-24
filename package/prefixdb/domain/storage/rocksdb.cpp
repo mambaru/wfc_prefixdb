@@ -13,6 +13,7 @@
 #include <sstream>
 #include <ctime>
 #include <chrono>
+#include <string>
 
 #include <boost/filesystem.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
@@ -41,7 +42,9 @@ namespace
   {
       using namespace boost::archive::iterators;
       using iterator = base64_from_binary<transform_width< I, 6, 8>>;
-      return std::string( iterator( beg) , iterator(end) );
+      std::string res;
+      res.assign(iterator( beg) , iterator(end));
+      return res.append((3 - std::distance(beg,end) % 3) % 3, '=');
   }
 }
 
@@ -287,10 +290,19 @@ void rocksdb::create_slave_timer_()
   preq->limit = this->_conf.slave.log_limit_per_req;
   
   std::string value;
+  if ( _name == "test" )
+  {
+              ::rocksdb::WriteOptions wo;
+          wo.sync = true;
+
+    _db->Delete(wo, "~slave-last-sequence-number~");
+  }
+  
   ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
   if ( status.ok() )
   {
     preq->seq = *( reinterpret_cast<const size_t*>( value.data() ) );
+    COMMON_LOG_MESSAGE(_name << " ~slave-last-sequence-number~ " << value )
   }
   else
   {
@@ -332,13 +344,17 @@ void rocksdb::create_slave_timer_()
       if ( res->logs.empty() )
         return nullptr;
 
-      if ( preq->seq!=0 && ( (res->seq_first - preq->seq) > this->_conf.slave.acceptable_loss_seq ) )
+      if ( preq->seq!=0  )
       {
         auto diff = res->seq_first - preq->seq;
         if ( diff > this->_conf.slave.acceptable_loss_seq )
         {
-          DOMAIN_LOG_FATAL("Slave not acceptable loss sequence: ")
+          ::rocksdb::WriteOptions wo;
+          wo.sync = true;
+          _db->Delete(wo, "~slave-last-sequence-number~");// временно
+          DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
           ::wfc_abort("Slave replication error");
+          abort();
           return nullptr;
         }
       }
@@ -356,7 +372,8 @@ void rocksdb::create_slave_timer_()
         }
         catch(...)
         {
-          res->seq_last = count;
+          res->seq_last = count - 1;
+          this->_reader.reset();
           PREFIXDB_LOG_ERROR("attempt to decode a value not in base64 char set: [" << log << "]" )
           break;
         }
@@ -365,6 +382,7 @@ void rocksdb::create_slave_timer_()
       auto batch = _reader.detach();
       size_t sn = res->seq_last + 1;
       batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+      COMMON_LOG_MESSAGE(_name << " PUT ~slave-last-sequence-number~ " << sn ) 
       this->_db->Write( ::rocksdb::WriteOptions(), batch.get() );
 
       preq->seq = sn;
