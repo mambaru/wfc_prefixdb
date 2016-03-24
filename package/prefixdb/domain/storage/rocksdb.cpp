@@ -19,6 +19,9 @@
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/archive/iterators/insert_linebreaks.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+
 #include <boost/algorithm/string.hpp>
 
 
@@ -29,23 +32,27 @@ namespace
   inline std::string& get_key(std::string& key) {return key;}
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
   
-  template<typename I>
-  inline std::vector<char> decode64(I beg, I end) 
+  template<typename I, typename Out >
+  inline Out encode64(I beg, I end, Out out)
   {
     using namespace boost::archive::iterators;
-    using iterator = transform_width< binary_from_base64<std::string::const_iterator>, 8, 6 >;
-    return std::vector<char>( iterator(beg), iterator(end) );
+    typedef insert_linebreaks<base64_from_binary<transform_width<I, 6, 8> >, 72 > iterator;
+    out = std::copy( iterator(beg), iterator(end), out);
+    return std::fill_n( out, (3-std::distance(beg,end)%3)%3, '=');
   }
 
-  template<typename I>
-  inline std::string encode64(I beg, I end) 
+  // костыль для старого буста: tail - хвост который нужно отрезать в результате, модификация интервала
+  template<typename I, typename Out >
+  inline Out decode64(I beg, I end, Out out, size_t& tail)
   {
-      using namespace boost::archive::iterators;
-      using iterator = base64_from_binary<transform_width< I, 6, 8>>;
-      std::string res;
-      res.assign(iterator( beg) , iterator(end));
-      return res.append((3 - std::distance(beg,end) % 3) % 3, '=');
+    using namespace boost::archive::iterators;
+    typedef transform_width<binary_from_base64< remove_whitespace<I> >, 8, 6> iterator;
+    std::reverse_iterator<I> rend(end);
+    for ( tail=0; tail < 2 && *rend == '='; ++tail, ++rend, *(end-tail)='A' );
+    std::cout<<std::string(beg, end)<< std::endl;
+    return std::copy( iterator(beg), iterator(end), out);
   }
+  
 }
 
 rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db)
@@ -265,7 +272,10 @@ void rocksdb::get_updates_since( request::get_updates_since::ptr req, response::
         }
         
         const std::string& data = batch.writeBatchPtr->Data();
-        res->logs.push_back( encode64(data.begin(), data.end() ) );
+        std::string log64;
+        log64.reserve(512);
+        encode64(data.begin(), data.end(), std::inserter(log64, log64.end()) );
+        res->logs.push_back( log64 );
         cur_seq = batch.sequence;
         if ( first )
         {
@@ -362,11 +372,16 @@ void rocksdb::create_slave_timer_()
       *pdiff = res->seq_final - res->seq_first ;
 
       auto count = res->seq_first;
-      for (const auto& log : res->logs )
+      for (auto& log : res->logs )
       {
         try
         {
-          auto binlog = decode64(log.begin(), log.end());
+          std::vector<char> binlog;
+          binlog.reserve(512);
+          size_t tail = 0;
+          // decode64 модифицирует log (костыль для строго буста)
+          decode64(log.begin(), log.end(), std::inserter(binlog,binlog.end()), tail );
+          binlog.resize( binlog.size() - tail);
           ++count;
           this->_reader.parse( binlog );
         }
