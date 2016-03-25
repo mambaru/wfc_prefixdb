@@ -14,7 +14,6 @@ std::vector<std::string> scan_dir(std::string path, bool& fail)
   dir = opendir(path.c_str());
   if (!dir) 
   {
-    // perror("diropen");
     fail = true;
     return result;
   };

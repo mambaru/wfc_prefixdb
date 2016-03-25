@@ -300,13 +300,6 @@ void rocksdb::create_slave_timer_()
   preq->limit = this->_conf.slave.log_limit_per_req;
   
   std::string value;
-  if ( _name == "test" )
-  {
-              ::rocksdb::WriteOptions wo;
-          wo.sync = true;
-
-    _db->Delete(wo, "~slave-last-sequence-number~");
-  }
   
   ::rocksdb::Status status = this->_db->Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
   if ( status.ok() )
@@ -347,7 +340,6 @@ void rocksdb::create_slave_timer_()
     {
       if ( res == nullptr )
       {
-        DEBUG_LOG_MESSAGE("NEW QUERY seq = " << preq->seq );
         return std::make_unique<request::get_updates_since>(*preq);
       }
       
@@ -361,10 +353,8 @@ void rocksdb::create_slave_timer_()
         {
           ::rocksdb::WriteOptions wo;
           wo.sync = true;
-          _db->Delete(wo, "~slave-last-sequence-number~");// временно
           DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
           ::wfc_abort("Slave replication error");
-          abort();
           return nullptr;
         }
       }
