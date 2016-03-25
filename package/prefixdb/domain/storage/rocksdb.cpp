@@ -49,7 +49,6 @@ namespace
     typedef transform_width<binary_from_base64< remove_whitespace<I> >, 8, 6> iterator;
     std::reverse_iterator<I> rend(end);
     for ( tail=0; tail < 2 && *rend == '='; ++tail, ++rend, *(end-tail)='A' );
-    std::cout<<std::string(beg, end)<< std::endl;
     return std::copy( iterator(beg), iterator(end), out);
   }
   
@@ -60,6 +59,8 @@ rocksdb::rocksdb( std::string name, const rocksdb_config conf,  db_type* db)
   , _conf(conf)
   , _db(db)
   , _slave_timer_id(-1)
+  , _seq_log_timer_id(-1)
+  , _wrn_log_timer_id(-1)
   
 {
 }
@@ -312,12 +313,13 @@ void rocksdb::create_slave_timer_()
     preq->seq = _db->GetLatestSequenceNumber() + 1;
   }
   DEBUG_LOG_MESSAGE("request get_updates_since seq=" << preq->seq )
-  auto pdiff = std::make_shared< std::atomic_size_t>(0);
+  
+  auto pdiff = std::make_shared< std::atomic_size_t>(0);  
+  _wrn_log_timer_id = _conf.slave.timer->release_timer(_wrn_log_timer_id);
   if ( this->_conf.slave.wrn_log_diff_seq !=0 )
   {
-    // TODO: сделать остановку таймера
     auto maxdiff = this->_conf.slave.wrn_log_diff_seq;
-    _conf.slave.timer->create_timer(
+    _wrn_log_timer_id = _conf.slave.timer->create_timer(
       std::chrono::seconds(1),
       [pdiff, maxdiff]()->bool
       {
@@ -329,14 +331,41 @@ void rocksdb::create_slave_timer_()
       }
     );
   }
+  
+  _seq_log_timer_id = _conf.slave.timer->release_timer(_seq_log_timer_id);
+  auto update_counter = std::make_shared< std::atomic<size_t> >(0);
+  if ( this->_conf.slave.seq_log_timeout_ms != 0 )
+  {
+    auto last_update_time = std::make_shared< std::atomic<time_t> >( time(0) );
+    _seq_log_timer_id = _conf.slave.timer->create_timer(
+      std::chrono::milliseconds( this->_conf.slave.seq_log_timeout_ms ),
+      [this, preq, last_update_time, update_counter]()->bool
+      {
+        time_t diff = time(0) - *last_update_time;
+        if ( *update_counter == 0)
+        {
+          PREFIXDB_LOG_MESSAGE("No updates for " << this->_name << " in the last " << diff << " seconds. Next seq №" << preq->seq );
+        }
+        else
+        {
+          PREFIXDB_LOG_MESSAGE( diff << " updates for " << this->_name << " in the last " << diff << " seconds. Next seq №" << preq->seq );
+          *last_update_time = time(0);
+          *update_counter = 0;
+        }
+        return true;
+      }
+    );
+    
+  }
 
+  _conf.slave.timer->release_timer(_slave_timer_id);
   _slave_timer_id = _conf.slave.timer->create_requester<request::get_updates_since, response::get_updates_since>
   (
     _conf.slave.start_time,
     std::chrono::milliseconds(_conf.slave.pull_timeout_ms),
     _conf.slave.master,
     &iprefixdb::get_updates_since,
-    [this, preq, pdiff](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
+    [this, preq, pdiff, update_counter](response::get_updates_since::ptr res) -> request::get_updates_since::ptr
     {
       if ( res == nullptr )
       {
@@ -374,6 +403,7 @@ void rocksdb::create_slave_timer_()
           binlog.resize( binlog.size() - tail);
           ++count;
           this->_reader.parse( binlog );
+          ++(*update_counter);
         }
         catch(...)
         {
@@ -387,7 +417,7 @@ void rocksdb::create_slave_timer_()
       auto batch = _reader.detach();
       size_t sn = res->seq_last + 1;
       batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
-      COMMON_LOG_MESSAGE(_name << " PUT ~slave-last-sequence-number~ " << sn ) 
+      //COMMON_LOG_MESSAGE(_name << " PUT ~slave-last-sequence-number~ " << sn ) 
       this->_db->Write( ::rocksdb::WriteOptions(), batch.get() );
 
       preq->seq = sn;

@@ -53,8 +53,6 @@ private:
   template<typename Res, typename Batch, typename ReqPtr, typename Callback>
   void write_batch_(Batch& batch, ReqPtr req, Callback cb);
 
-  
-  
   typedef wfc::workflow::callback_timer_handler timer_handler;
   typedef wfc::workflow::timer_id_t timer_id_t;
   typedef std::shared_ptr< request::get_updates_since > request_since_ptr;
@@ -69,6 +67,8 @@ private:
   //std::shared_ptr<iprefixdb> _master;
   std::mutex _backup_mutex;
   timer_id_t _slave_timer_id;
+  timer_id_t _seq_log_timer_id;
+  timer_id_t _wrn_log_timer_id;
   since_reader _reader;
 };
 
