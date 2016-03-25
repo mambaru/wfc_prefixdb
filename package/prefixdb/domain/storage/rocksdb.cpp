@@ -34,7 +34,9 @@ namespace
   {
     using namespace boost::archive::iterators;
     using iterator = transform_width< binary_from_base64<std::string::const_iterator>, 8, 6 >;
-    return std::vector<char>( iterator(beg), iterator(end) );
+    //return std::vector<char>( iterator(beg), iterator(end) );
+    
+    return ::boost::algorithm::trim_right_copy_if(std::vector<char>(iterator(beg), iterator(end)), [](char c) { return c == '\0'; });
   }
 
   template<typename I>
