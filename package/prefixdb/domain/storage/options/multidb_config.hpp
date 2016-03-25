@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <prefixdb/domain/storage/db_config.hpp>
+#include <prefixdb/domain/storage/options/db_config.hpp>
 
 namespace wamba{ namespace prefixdb{
   

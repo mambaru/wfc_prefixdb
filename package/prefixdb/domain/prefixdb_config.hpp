@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/domain/storage/multidb_config.hpp>
+#include <prefixdb/domain/storage/options/multidb_config.hpp>
 #include <wfc/workflow.hpp>
 #include <string>
 #include <vector>

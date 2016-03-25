@@ -2,7 +2,7 @@
 #include "wrocksdb_slave.hpp"
 #include "merge/merge.hpp"
 #include "merge/merge_json.hpp"
-#include "aux/base64.hpp"
+#include "../aux/base64.hpp"
 
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
@@ -368,14 +368,14 @@ bool wrocksdb::backup()
     COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
   }
   
-  status = _db->PurgeOldBackups(5);
+  status = _db->PurgeOldBackups( _conf.backup.depth );
   if ( status.ok() )
   {
     DEBUG_LOG_MESSAGE("PurgeOldBackups(5) for " << _name <<  ": " << status.ToString() )
   }
   else
   {
-    COMMON_LOG_MESSAGE("PurgeOldBackups(5) ERROR for " << _name << ": " << status.ToString() )
+    COMMON_LOG_MESSAGE("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
     return false;
   }
   return true;

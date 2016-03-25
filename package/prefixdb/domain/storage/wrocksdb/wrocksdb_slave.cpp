@@ -1,7 +1,7 @@
 
 #include "wrocksdb_slave.hpp"
 #include "since_reader.hpp"
-#include "aux/base64.hpp"
+#include "../aux/base64.hpp"
 
 #include <prefixdb/logger.hpp>
 #include <rocksdb/db.h>

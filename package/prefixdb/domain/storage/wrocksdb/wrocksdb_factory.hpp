@@ -2,7 +2,7 @@
 
 
 #include <prefixdb/iprefixdb.hpp>
-#include <prefixdb/domain/storage/db_config.hpp>
+#include <prefixdb/domain/storage/options/db_config.hpp>
 #include <prefixdb/domain/storage/ifactory.hpp>
 #include <memory>
 #include <mutex>

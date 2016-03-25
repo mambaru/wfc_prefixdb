@@ -1,9 +1,8 @@
 #pragma once
 
 #include <prefixdb/iprefixdb.hpp>
-#include <prefixdb/domain/storage/merge/merge.hpp>
 #include <prefixdb/domain/storage/iprefixdb_ex.hpp>
-#include <prefixdb/domain/storage/db_config.hpp>
+#include <prefixdb/domain/storage/options/db_config.hpp>
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 
