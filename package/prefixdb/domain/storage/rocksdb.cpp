@@ -341,14 +341,14 @@ void rocksdb::create_slave_timer_()
       std::chrono::milliseconds( this->_conf.slave.seq_log_timeout_ms ),
       [this, preq, last_update_time, update_counter]()->bool
       {
-        time_t diff = time(0) - *last_update_time;
+        time_t diff = time(0) - last_update_time->load();
         if ( *update_counter == 0)
         {
           PREFIXDB_LOG_MESSAGE("No updates for " << this->_name << " in the last " << diff << " seconds. Next seq №" << preq->seq );
         }
         else
         {
-          PREFIXDB_LOG_MESSAGE( diff << " updates for " << this->_name << " in the last " << diff << " seconds. Next seq №" << preq->seq );
+          PREFIXDB_LOG_MESSAGE( update_counter->load() << " updates for " << this->_name << " in the last " << diff << " seconds. Next seq №" << preq->seq );
           *last_update_time = time(0);
           *update_counter = 0;
         }
@@ -417,7 +417,7 @@ void rocksdb::create_slave_timer_()
       auto batch = _reader.detach();
       size_t sn = res->seq_last + 1;
       batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
-      //COMMON_LOG_MESSAGE(_name << " PUT ~slave-last-sequence-number~ " << sn ) 
+      // COMMON_LOG_MESSAGE(_name << " PUT ~slave-last-sequence-number~ " << sn ) 
       this->_db->Write( ::rocksdb::WriteOptions(), batch.get() );
 
       preq->seq = sn;
