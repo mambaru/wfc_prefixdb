@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/domain/prefixdb_config.hpp>
-#include <prefixdb/domain/storage/multidb.hpp>
+//#include <prefixdb/domain/storage/multidb.hpp>
 #include <prefixdb/iprefixdb.hpp>
 
 #include <wfc/domain_object.hpp>
@@ -11,11 +11,13 @@
 
 namespace wamba{ namespace prefixdb{
 
+class multidb;
+
 class prefixdb
   : public ::wfc::domain_object<iprefixdb, prefixdb_config>
   , public std::enable_shared_from_this< prefixdb >
 {
-  class impl;
+  // class impl;
 public:
   // domain_object
   virtual void start(const std::string&) override;
@@ -47,7 +49,7 @@ private:
   */
 
 private:
-  std::shared_ptr<impl> _impl;
+  std::shared_ptr<multidb> _impl;
 
   std::shared_ptr< ::wfc::workflow> _flow;
   ::wfc::workflow::timer_id_t _backup_timer  = -1;

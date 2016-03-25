@@ -1,4 +1,5 @@
 #include "prefixdb.hpp"
+#include <wfc/wfc_exit.hpp>
 #include <wfc/logger.hpp>
 #include <wfc/core/icore.hpp>
 #include <wfc/module/iinstance.hpp>
@@ -8,8 +9,9 @@
 
 namespace wamba{ namespace prefixdb {
   
+  /*
 class prefixdb::impl: public multidb
-{};
+{};*/
 
 
 /*
@@ -85,7 +87,13 @@ void prefixdb::start(const std::string&)
   if ( this->has_arg("restore") )  
   {
     auto opt = this->options();
-    auto db = std::make_shared<impl>();
+    if ( opt.restore.forbid )
+    {
+      ::wfc_exit_with_error("Restore forbidden in this configurations");
+      return;
+    }
+    
+    auto db = std::make_shared<multidb>();
     auto factory = god::create("rocksdb", this->global()->io_service );
     
     std::string path = this->get_arg("restore");
@@ -98,7 +106,7 @@ void prefixdb::start(const std::string&)
     COMMON_LOG_MESSAGE("Restore from " << opt.restore_path)
     if ( !db->restore() )
     {
-      wfc_abort("restore fail");
+      wfc_exit_with_error("restore fail");
       return;
     }
     db->close();
@@ -138,12 +146,12 @@ void prefixdb::reconfigure()
   _flow->reconfigure( opt.workflow_opt );
   
   if ( _backup_timer != -1 ) _flow->release_timer(_backup_timer);
-  if ( !opt.backup_path.empty() )
+  if ( opt.backup.enabled &&  !opt.backup.path.empty() )
   {
     std::weak_ptr<prefixdb> wthis = this->shared_from_this();
     _backup_timer = _flow->create_timer(
-      opt.backup_time,
-      std::chrono::seconds( opt.backup_period_s ),
+      opt.backup.start_time,
+      std::chrono::seconds( opt.backup.period_s ),
       [wthis]() {
         if (auto pthis = wthis.lock() )
         {
@@ -156,17 +164,17 @@ void prefixdb::reconfigure()
   }
   
   if ( _archive_timer != -1 ) _flow->release_timer(_archive_timer);
-  if ( !opt.archive_path.empty() )
+  if ( opt.archive.enabled && !opt.archive.path.empty() )
   {
     std::weak_ptr<prefixdb> wthis = this->shared_from_this();
     _archive_timer = _flow->create_timer(
-      opt.archive_time,
-      std::chrono::seconds( opt.archive_period_s ),
+      opt.archive.start_time,
+      std::chrono::seconds( opt.archive.period_s ),
       [wthis]() {
         DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
         if (auto pthis = wthis.lock() )
         {
-          pthis->_impl->archive( pthis->options().archive_path );
+          pthis->_impl->archive( pthis->options().archive.path );
           return true;
         }
         return false;
@@ -175,7 +183,7 @@ void prefixdb::reconfigure()
   }
   if ( _impl == nullptr )
   {
-    _impl = std::make_shared<impl>();
+    _impl = std::make_shared<multidb>();
     auto factory = god::create("rocksdb", this->global()->io_service );
   
     opt.slave.timer = _flow;
@@ -207,7 +215,7 @@ void prefixdb::reconfigure()
 
     if ( !_impl->reconfigure( opt, factory ) )
     {
-      wfc_abort("prefixdb open DB abort!");
+      wfc_exit_with_error("prefixdb open DB abort!");
     }
     
     for ( const std::string& name : stop_list )

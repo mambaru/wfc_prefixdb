@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <prefixdb/domain/storage/merge/merge_config.hpp>
+//#include <prefixdb/domain/storage/merge/merge_config.hpp>
 #include <prefixdb/iprefixdb.hpp>
 //#include <iow/io/timer/timer.hpp>
 #include <wfc/workflow.hpp>
@@ -33,27 +33,66 @@ struct slave_config
   std::shared_ptr< ::wfc::workflow > timer;
 };
 
-struct master_config
+struct backup_config
 {
+  bool enabled = false;
+  
+  // Путь к бэкапу базы данных для всех префиксов
+  std::string path   = "./prefixdb_backup";
+  
+  std::string start_time  = "04:00:00";
+  
+  time_t period_s = 0;
+  
+  // не реализовано
+  time_t start_delay_s = 0;
   
 };
 
-struct rocksdb_config: merge_config
+struct archive_config
 {
+  bool enabled = false;
+
+  // архив бэкапов
+  std::string path  = "./prefixdb_archive";
+
+  std::string start_time = "05:00:00";
+  
+  time_t period_s = 0;
+
+};
+
+// 
+struct restore_config
+{
+  // запретить востановление для данного конфига
+  bool forbid = false;
+
+  // архив бэкапов
+  std::string path  = "./prefixdb_archive";
+};
+
+struct db_config
+{
+  size_t packed_limit = 1000;
+  size_t array_limit  = 1000;
+
   // Путь к базе данных для всех префиксов
   std::string path = "./prefixdb";
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
   // Путь к бэкапу базы данных для всех префиксов
-  std::string backup_path   = "./prefixdb_backup";
+  // std::string backup_path   = "./prefixdb_backup";
   // Откуда востанавливаться в случае сбоя 
   std::string restore_path  = "./prefixdb_backup";
-  // архив бэкапов
-  std::string archive_path  = "./prefixdb_archive";
-  bool compact_before_backup = false;
+  
+  backup_config backup;
+  archive_config archive;
+  restore_config restore;
+  // bool compact_before_backup = false;
   
   slave_config slave;
-  master_config master;
+  //master_config master;
 };
 
 }}

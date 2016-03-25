@@ -9,8 +9,10 @@ SET(
   prefixdb/prefixdb_module.cpp
   prefixdb/domain/prefixdb.cpp
   prefixdb/domain/storage/multidb.cpp
-  prefixdb/domain/storage/rocksdb_factory.cpp
-  prefixdb/domain/storage/rocksdb.cpp
+  prefixdb/domain/storage/wrocksdb_factory.cpp
+  prefixdb/domain/storage/wrocksdb.cpp
+  prefixdb/domain/storage/wrocksdb_restore.cpp
+  prefixdb/domain/storage/wrocksdb_slave.cpp
   prefixdb/domain/storage/since_reader.cpp
   prefixdb/domain/storage/god.cpp
   prefixdb/domain/storage/merge/merge_operator.cpp

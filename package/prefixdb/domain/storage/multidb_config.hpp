@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include <prefixdb/domain/storage/rocksdb_config.hpp>
+#include <prefixdb/domain/storage/db_config.hpp>
 
 namespace wamba{ namespace prefixdb{
   
-struct multidb_config: rocksdb_config
+struct multidb_config: db_config
 {
   // максимальное количество ключей на запрос
   size_t keys_per_req = 100;

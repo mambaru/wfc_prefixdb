@@ -5,6 +5,7 @@
 
 namespace wamba{ namespace prefixdb{
 
+  /*
 struct merge_config_json
 {
   JSON_NAME(packed_limit)
@@ -23,6 +24,7 @@ struct merge_config_json
   typedef type::serializer serializer;
   typedef type::member_list member_list;
 };
+*/
 
 }}
 

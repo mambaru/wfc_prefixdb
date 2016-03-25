@@ -4,7 +4,7 @@
 #include <iostream>
 #include <prefixdb/logger.hpp>
 #include <wfc/memory.hpp>
-#include <wfc/core/abort.hpp>
+#include <wfc/wfc_exit.hpp>
 
 namespace wamba{ namespace prefixdb {
 
@@ -25,7 +25,7 @@ namespace
       size |= cnk;
       (*pbeg)++;
       if ( *pbeg == end && !fin) 
-        ::wfc_abort("prefixdb::since_reader::get_size log format error"); 
+        ::wfc_exit_with_error("prefixdb::since_reader::get_size log format error"); 
     }
     return size;
   }
@@ -34,7 +34,7 @@ namespace
   {
     size_t size = get_size(beg, end);
     if ( *beg + size > end )
-      ::wfc_abort("prefixdb::since_reader::get_item size error"); 
+      ::wfc_exit_with_error("prefixdb::since_reader::get_item size error"); 
     ::rocksdb::Slice res(*beg, size);
     *beg += size;
     return res;
@@ -125,7 +125,10 @@ const char*  since_reader::read_merge_(const char* beg, const char* end)
 const char*  since_reader::read_op_(const char* beg, const char* end)
 {
   if (beg > end) 
+  {
+    wfc_exit_with_error("Iterators error");
     abort();
+  }
   if (beg==end) return nullptr;
   int type = int( *reinterpret_cast<const uint8_t*>(beg++) );
   switch ( type )
@@ -141,8 +144,7 @@ const char*  since_reader::read_op_(const char* beg, const char* end)
       break;
     default:
       beg = end;
-      ::wfc_abort("prefixdb::since_reader::read_item_ unknown operation"); 
-      abort();
+      ::wfc_exit_with_error("prefixdb::since_reader::read_item_ unknown operation"); 
       return nullptr;
   };
   

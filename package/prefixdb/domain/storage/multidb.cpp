@@ -172,7 +172,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
   if ( _opt.max_prefixes!=0 && _db_map.size() >= _opt.max_prefixes )
     return nullptr;
   
-  if ( auto db = _factory->create(prefix, create_if_missing) )
+  if ( auto db = _factory->create_db(prefix, create_if_missing) )
   {
     COMMON_LOG_MESSAGE("Открыт новый префикс: " << prefix)
     _db_map.insert(itr, std::make_pair(prefix, db));
@@ -347,13 +347,13 @@ void multidb::get_all_prefixes( request::get_all_prefixes::ptr req, response::ge
 
 bool multidb::backup()
 {
-  if ( !::boost::filesystem::exists(_opt.backup_path) )
+  if ( !::boost::filesystem::exists(_opt.backup.path) )
   {
     ::boost::system::error_code ec;
-    ::boost::filesystem::create_directory(_opt.backup_path, ec);
+    ::boost::filesystem::create_directory(_opt.backup.path, ec);
     if (ec)
     {
-      COMMON_LOG_ERROR("Create directory fail '" << _opt.backup_path << "'" << ec.message() );
+      COMMON_LOG_ERROR("Create directory fail '" << _opt.backup.path << "'" << ec.message() );
       return true;
     }
   }
@@ -419,7 +419,7 @@ bool multidb::restore( )
   for ( const std::string& prefix: prefixes)
   {
     DOMAIN_LOG_MESSAGE("Востановление для " << prefix) 
-    if ( auto rocks_resor =  _factory->restore(prefix) )
+    if ( auto rocks_resor =  _factory->create_restore(prefix) )
     {
       result &= rocks_resor->restore();
     }

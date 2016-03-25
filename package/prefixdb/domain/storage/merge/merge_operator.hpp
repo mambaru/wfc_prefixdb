@@ -2,11 +2,11 @@
 
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/env.h>
-#include "merge_config.hpp"
 #include "packed.hpp"
 #include "packed_params.hpp"
 
 #include <deque>
+#include <atomic>
 
 namespace wamba{ namespace prefixdb{
   
@@ -21,10 +21,8 @@ public:
   typedef std::deque<std::string> operand_list;
   typedef std::vector<std::string> update_list;
   
-  merge_operator();
-  void reconfigure(const merge_config& config);
-  
- 
+  merge_operator(size_t array_limit, size_t packed_limit);
+  //void reconfigure(const merge_config& config);
   virtual const char* Name() const override;
  
   virtual bool FullMerge(
@@ -46,7 +44,9 @@ private:
   void packed_operand_(const std::string& operand, packed_t& pck) const;
   void packed_inc_(const packed_field_params& upd, std::string& result) const;
   //void packed_field_(const packed_field_params& upd, packed_field& field );
-  std::shared_ptr<merge_config> _config;
+  //std::shared_ptr<merge_config> _config;
+  std::atomic<size_t> _array_limit;
+  std::atomic<size_t> _packed_limit;
 };
 
 }}
