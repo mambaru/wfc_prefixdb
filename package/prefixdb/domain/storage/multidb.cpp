@@ -62,18 +62,21 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
+    /*
     if ( _slave_timer_id!=0 )
     {
       _opt.slave.timer->release_timer(_slave_timer_id);
       _slave_timer_id = 0;
     }
+    */
   }
   
+  /*
   if ( _opt.slave.master!=nullptr && _opt.slave.enabled )
   {
     this->create_slave_timer_();
   }
-
+  */
   
   if ( !::boost::filesystem::exists(opt.path) )
   {
@@ -464,6 +467,7 @@ bool multidb::archive(std::string path)
   return result;
 }
 
+/*
 void multidb::create_slave_timer_()
 {
   _slave_timer_id = _opt.slave.timer->create_requester<request::get_all_prefixes, response::get_all_prefixes>
@@ -482,9 +486,8 @@ void multidb::create_slave_timer_()
       
       return nullptr;
     }
-  );
-
-  
+  ); 
 }
+*/
 
 }}

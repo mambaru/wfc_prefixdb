@@ -50,12 +50,12 @@ private:
 
   std::vector< std::string > all_prefixes_();
   
-  void create_slave_timer_();
+  //void create_slave_timer_();
 
 private:
   std::shared_ptr<ifactory> _factory;
   typedef wfc::workflow::timer_id_t timer_id_t;
-  timer_id_t _slave_timer_id = 0;
+  // timer_id_t _slave_timer_id = 0;
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;
