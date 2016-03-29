@@ -38,6 +38,7 @@ private:
   std::atomic<size_t> _update_counter;
   std::atomic<std::ptrdiff_t> _current_differens;
   std::atomic<size_t> _last_sequence;
+  std::atomic<size_t> _lost_counter;
   
   timer_id_t _slave_timer_id = -1;
   timer_id_t _diff_timer_id = -1;

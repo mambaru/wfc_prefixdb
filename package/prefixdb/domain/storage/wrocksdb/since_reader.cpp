@@ -76,14 +76,17 @@ inline std::string s4l( ::rocksdb::Slice s)
 }
 }
   
-const char*  since_reader::read_put_(const char* beg, const char* end)
+const char*  since_reader::read_put_(const char* beg, const char* end, bool ignore)
 {
   auto pair = get_pair( &beg, end);
   
   if ( !pair.first.empty() )
   {
-    this->_batch->Put( pair.first, pair.second );
-    PREFIXDB_LOG_REPLI(_log, "Put " << s4l(pair.first) << "=" << s4l(pair.second) )
+    if ( !ignore )
+    {
+      this->_batch->Put( pair.first, pair.second );
+      PREFIXDB_LOG_REPLI(_log, "Put " << s4l(pair.first) << "=" << s4l(pair.second) )
+    }
   }
   else
   {
@@ -92,13 +95,16 @@ const char*  since_reader::read_put_(const char* beg, const char* end)
   return beg;
 }
 
-const char*  since_reader::read_del_(const char* beg, const char* end)
+const char*  since_reader::read_del_(const char* beg, const char* end, bool ignore)
 {
   auto key = get_key( &beg, end);
   if ( !key.empty() )
   {
-    this->_batch->Delete( key );
-    PREFIXDB_LOG_REPLI(_log, "Delete " << s4l(key) )
+    if ( !ignore )
+    {
+      this->_batch->Delete( key );
+      PREFIXDB_LOG_REPLI(_log, "Delete " << s4l(key) )
+    }
   }
   else
   {
@@ -107,13 +113,16 @@ const char*  since_reader::read_del_(const char* beg, const char* end)
   return beg;
 }
 
-const char*  since_reader::read_merge_(const char* beg, const char* end)
+const char*  since_reader::read_merge_(const char* beg, const char* end, bool ignore)
 {
   auto pair = get_pair( &beg, end);
   if ( !pair.first.empty() )
   {
-    this->_batch->Merge( pair.first, pair.second );
-    PREFIXDB_LOG_REPLI(_log, "Merge " << s4l(pair.first) << "=" << s4l(pair.second) )
+    if ( !ignore )
+    {
+      this->_batch->Merge( pair.first, pair.second );
+      PREFIXDB_LOG_REPLI(_log, "Merge " << s4l(pair.first) << "=" << s4l(pair.second) )
+    }
   }
   else
   {
@@ -122,7 +131,7 @@ const char*  since_reader::read_merge_(const char* beg, const char* end)
   return beg;
 }
 
-const char*  since_reader::read_op_(const char* beg, const char* end)
+const char*  since_reader::read_op_(const char* beg, const char* end, bool ignore)
 {
   if (beg > end) 
   {
@@ -134,13 +143,13 @@ const char*  since_reader::read_op_(const char* beg, const char* end)
   switch ( type )
   {
     case 0: 
-      beg = read_del_(beg, end); 
+      beg = read_del_(beg, end, ignore); 
       break;
     case 1: 
-      beg = read_put_(beg, end); 
+      beg = read_put_(beg, end, ignore); 
       break;
     case 2: 
-      beg = read_merge_(beg, end); 
+      beg = read_merge_(beg, end, ignore); 
       break;
     default:
       beg = end;
@@ -148,20 +157,24 @@ const char*  since_reader::read_op_(const char* beg, const char* end)
       return nullptr;
   };
   
+  return beg;
+  /*
   if ( beg==end )
   {
     return nullptr;
   }
   return beg!=end ? beg : nullptr;
+  */
 }
 
 unsigned int since_reader::read_record_(const char *beg, const char *end)
 {
-  _seq_number = *reinterpret_cast<const uint32_t *>(beg);
+  uint64_t sn = *reinterpret_cast<const uint64_t *>(beg);
   const unsigned int type = beg[8];
   size_t head = 12;
   beg += head;
-  while ( nullptr != (beg = this->read_op_(beg, end)) );
+  while ( nullptr != (beg = this->read_op_(beg, end, sn < _next_seq_number)) ) ++sn;
+  _next_seq_number = sn;
   return type;
 }
 

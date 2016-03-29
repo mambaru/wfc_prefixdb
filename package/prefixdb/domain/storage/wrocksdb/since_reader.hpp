@@ -50,17 +50,17 @@ public:
   const data_type& buffer() const;
   size_t size() const;
   bool empty() const;
-  uint16_t get_seq_number() const { return _seq_number;}
+  uint64_t get_next_seq_number() const { return _next_seq_number;}
 private:
   size_t parse_();
   unsigned int read_record_(const char* beg, const char* end);
-  const char*  read_op_(const char* beg, const char* end);
-  const char*  read_put_(const char* beg, const char* end);
-  const char*  read_del_(const char* beg, const char* end);
-  const char*  read_merge_(const char* beg, const char* end);
+  const char*  read_op_(const char* beg, const char* end, bool ignore);
+  const char*  read_put_(const char* beg, const char* end, bool ignore);
+  const char*  read_del_(const char* beg, const char* end, bool ignore);
+  const char*  read_merge_(const char* beg, const char* end, bool ignore);
 private:
   status _status = status::Ready;
-  uint16_t _seq_number = 0;
+  uint64_t _next_seq_number = 0;
   data_type _buffer;
   batch_ptr _batch;
   bool _log = false; // TODO: выключить

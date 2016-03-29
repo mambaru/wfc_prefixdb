@@ -37,6 +37,7 @@ void wrocksdb_slave::start()
   _update_counter  = 0;
   _current_differens  = 0;
   _last_sequence  = 0;
+  _lost_counter = 0;
 
   this->create_updates_requester_();
   this->create_diff_timer_();
@@ -104,10 +105,11 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
     else if ( diff > 0)
     {
       PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      _lost_counter += diff;
     } 
     else if ( diff < 0 )
     {
-      PREFIXDB_LOG_WARNING( _name << " re-entry sequences: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      PREFIXDB_LOG_DEBUG( _name << " re-entry sequences: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
   }
       
@@ -115,11 +117,15 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
 
   this->logs_parser_(res);
   auto batch = _log_parser->detach();
-  size_t sn = res->seq_last + 1;
+  //size_t sn = res->seq_last + 1;
+  size_t sn = _log_parser->get_next_seq_number();
+  _last_sequence = sn;
   batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
   this->_db.Write( ::rocksdb::WriteOptions(), batch.get() );
 
   preq->seq = sn;
+  
+  PREFIXDB_LOG_DEBUG("DNext preq->seq=" << preq->seq << " _last_sequence=" << _last_sequence )
   
   if ( res->seq_last == res->seq_final )
     return nullptr;
@@ -164,6 +170,11 @@ void wrocksdb_slave::create_diff_timer_()
         {
           PREFIXDB_LOG_WARNING("Slave replication too big difference " << this->_current_differens << "(wrn:" << this->_opt.wrn_log_diff_seq << ")");
         }
+        
+        if ( _lost_counter > 0)
+	{
+	  PREFIXDB_LOG_WARNING("Lost segments: " << _lost_counter)
+	}
         return true;
       }
     );
