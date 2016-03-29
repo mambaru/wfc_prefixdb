@@ -5,6 +5,7 @@ include_directories(.)
 
 SET(
   prefixdb_source_list
+  prefixdb/domain/storage/aux/scan_dir.cpp
   prefixdb_package.cpp
   prefixdb/prefixdb_module.cpp
   prefixdb/domain/prefixdb.cpp
@@ -17,10 +18,10 @@ SET(
   prefixdb/domain/storage/wrocksdb/merge/merge_operator.cpp
   prefixdb/domain/storage/god.cpp
   
-  prefixdb/domain/storage/aux/scan_dir.cpp
   prefixdb/domain/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp
+  prefixdb/domain/storage/aux/copy_dir.cpp
 )
 
 add_library(
@@ -31,7 +32,7 @@ add_library(
 link_directories(${CMAKE_SOURCE_DIR}/luajit-2.0/src)
 target_link_libraries(wfc_prefixdb rocksdb luajit )
 
-add_dependencies(wfc_prefixdb luajit20 facebook-rocksdb)
+add_dependencies(wfc_prefixdb luajit20 facebook-rocksdb )
 
 build_info(wfc_prefixdb prefixdb)
 

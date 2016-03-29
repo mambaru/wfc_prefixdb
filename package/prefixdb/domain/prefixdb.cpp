@@ -9,78 +9,6 @@
 
 namespace wamba{ namespace prefixdb {
   
-  /*
-class prefixdb::impl: public multidb
-{};*/
-
-
-/*
-template<typename Fun>
-void prefixdb::deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefixdb::* ifun)() )
-{
-  if ( period == 0 )
-    return;
-  
-  if ( timer == nullptr )
-  {
-    timer = std::make_unique<deadline_timer>(
-      this->global()->io_service,  
-      boost::posix_time::seconds( period ) 
-    );
-  }
-  else
-  {
-    
-    //timer->expires_at()
-    dfun();
-    //timer->expires_at( timer->expires_from_now() + ::boost::posix_time::seconds( period ) );
-    timer->expires_from_now( ::boost::posix_time::seconds( period ) );
-  }
-  
-  std::weak_ptr<prefixdb> wthis = this->shared_from_this();
-  timer->async_wait([wthis, ifun](const boost::system::error_code& )
-  {
-    if ( auto pthis = wthis.lock() )
-    {
-      prefixdb* p = pthis.get();
-      (p->*ifun)();
-    }
-  });
-}
-
-void prefixdb::do_backup_()
-{
-  std::weak_ptr<impl> wimpl = _impl;
-  bool compact = this->options().compact_before_backup;
-  auto backup = [wimpl, compact](){
-    if ( auto pimpl = wimpl.lock() )
-      pimpl->backup(compact);
-  };
-
-  this->deadline_(
-    this->options().backup_period_s,
-    this->_backup_timer,
-    backup,
-    &prefixdb::do_backup_
-  );
-}
-
-void prefixdb::do_restore_()
-{
-  std::weak_ptr<impl> wimpl = _impl;
-  auto restore = [wimpl](){
-    if ( auto pimpl = wimpl.lock() )
-      pimpl->restore();
-  };
-  this->deadline_(
-    this->options().restore_period_s,
-    this->_restore_timer,
-    restore,
-    &prefixdb::do_restore_
-  );
-}
-*/
-
 void prefixdb::start(const std::string&)
 {
   
@@ -124,22 +52,10 @@ void prefixdb::configure()
 
 void prefixdb::reconfigure()
 {
-  /*
-  ::iow::io::timer_options opt1;
-  opt1.start_time = "19:29:00";
-  opt1.delay_ms = 2222;
-  _timer = std::make_shared<timer_type>( this->global()->io_service);
-  DEBUG_LOG_MESSAGE("---------TIME--------" )
-  _timer->start([]( ::iow::io::timer::handler_callback callback){
-    DEBUG_LOG_MESSAGE("TIMER")
-    callback(true);
-  }, opt1);
-  */
   auto opt = this->options();
   if ( _flow == nullptr )
   {
     _flow = ::wfc::workflow::create(opt.workflow_opt);
-    // _flow = std::make_shared< ::wfc::workflow >( this->global()->io_service );
   }
   
   

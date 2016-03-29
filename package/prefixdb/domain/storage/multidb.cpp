@@ -62,22 +62,8 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
-    /*
-    if ( _slave_timer_id!=0 )
-    {
-      _opt.slave.timer->release_timer(_slave_timer_id);
-      _slave_timer_id = 0;
-    }
-    */
   }
-  
-  /*
-  if ( _opt.slave.master!=nullptr && _opt.slave.enabled )
-  {
-    this->create_slave_timer_();
-  }
-  */
-  
+    
   if ( !::boost::filesystem::exists(opt.path) )
   {
     ::boost::system::error_code ec;
@@ -466,28 +452,5 @@ bool multidb::archive(std::string path)
   }
   return result;
 }
-
-/*
-void multidb::create_slave_timer_()
-{
-  _slave_timer_id = _opt.slave.timer->create_requester<request::get_all_prefixes, response::get_all_prefixes>
-  (
-    _opt.slave.start_time,
-    std::chrono::milliseconds(_opt.slave.pull_timeout_ms),
-    _opt.slave.master,
-    &iprefixdb::get_all_prefixes,
-    [this](response::get_all_prefixes::ptr res) -> request::get_all_prefixes::ptr
-    {
-      if ( res == nullptr )
-        return std::make_unique<request::get_all_prefixes>();
-      
-      for (auto pref: res->prefixes)
-        this->prefix_(pref, true);
-      
-      return nullptr;
-    }
-  ); 
-}
-*/
 
 }}

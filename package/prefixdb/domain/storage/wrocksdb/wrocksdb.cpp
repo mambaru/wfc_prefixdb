@@ -16,10 +16,13 @@
 #include <chrono>
 #include <string>
 
+/*
 #include <boost/filesystem.hpp>
 
 #include <boost/algorithm/string.hpp>
+*/
 
+#include "../aux/copy_dir.hpp"
 
 
 namespace wamba{ namespace prefixdb {
@@ -234,23 +237,9 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
     {
       res->logs.reserve(req->limit);
       bool first = true;
-      while ( iter->Valid()  )
+      while ( iter->Valid() && req->limit-- )
       {
-	req->limit--;
         ::rocksdb::BatchResult batch = iter->GetBatch();
-	/*
-        if ( batch.sequence < req->seq )
-        {
-	  batch.sequence - это номер первой записи
-          DEBUG_LOG_MESSAGE("batch seq err " << batch.sequence << " < " << req->seq );
-          // Может быть меньше запрашиваемого
-          // Проверить это
-	  if ( req->limit == 0 )
-	    break;
-          iter->Next();
-          continue;
-        }
-        */
         
         const std::string& data = batch.writeBatchPtr->Data();
         std::string log64;
@@ -265,8 +254,6 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
           first = false;
         }
         
-	if ( req->limit == 0 )
-	  break;
         iter->Next();
       }
       res->seq_last  = cur_seq;
@@ -390,6 +377,7 @@ bool wrocksdb::backup()
   return true;
 }
 
+/*
 namespace 
 {
   inline bool copy_dir(
@@ -472,6 +460,7 @@ namespace
     return copy_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
   }
 }
+*/
 
 bool wrocksdb::archive(std::string path)
 {
