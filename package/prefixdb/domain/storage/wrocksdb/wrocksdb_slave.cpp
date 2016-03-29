@@ -88,7 +88,10 @@ void wrocksdb_slave::create_updates_requester_()
 request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
 {
   if ( res == nullptr )
+  {
+    COMMON_LOG_MESSAGE("DEBUG: New get_updates_since (убрать) ")
     return std::make_unique<request::get_updates_since>(*preq);
+  }
       
   if ( res->logs.empty() )
     return nullptr;
