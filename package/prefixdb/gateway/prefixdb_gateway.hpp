@@ -99,7 +99,13 @@ public:
 
   virtual void get_updates_since(request::get_updates_since::ptr req, response::get_updates_since::handler cb ) override
   {
-    this->template call< _get_updates_since_ >( std::move(req), cb, nullptr);
+    COMMON_LOG_MESSAGE("DEBUG: gateway::get_updates_since (убрать) ")
+    this->template call< _get_updates_since_ >( std::move(req), [cb](response::get_updates_since::ptr res)
+    {
+      COMMON_LOG_MESSAGE("DEBUG: gateway::get_updates_since (убрать) result " << (res!=nullptr))
+      cb( std::move(res) );
+    }, nullptr);
+    // this->template call< _get_updates_since_ >( std::move(req), cb, nullptr);
   }
 
   virtual void get_all_prefixes(request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb ) override
