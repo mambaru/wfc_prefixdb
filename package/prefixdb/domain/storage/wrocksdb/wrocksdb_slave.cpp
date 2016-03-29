@@ -94,12 +94,9 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
 
   if ( preq->seq!=0  )
   {
-    auto diff = res->seq_first - preq->seq;
+    auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
     if ( diff > this->_opt.acceptable_loss_seq )
     {
-      /*
-      ::rocksdb::WriteOptions wo;
-      wo.sync = true;*/
       DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
       ::wfc_exit_with_error("Slave replication error");
       return nullptr;
@@ -107,6 +104,10 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
     else if ( diff > 0)
     {
       PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+    } 
+    else if ( diff < 0 )
+    {
+      PREFIXDB_LOG_WARNING( _name << " re-entry sequences: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
   }
       

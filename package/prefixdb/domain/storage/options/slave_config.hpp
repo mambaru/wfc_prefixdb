@@ -25,9 +25,9 @@ struct slave_config
   // выдерживать интервал после каждого запроса. В противном случае, если не достигнут конец лога, следующий запрос
   bool expires_for_req = true;
   // допустимые потери последовательностей. При превышении этого значения демон завершает работу
-  size_t acceptable_loss_seq = 0;
+  std::ptrdiff_t acceptable_loss_seq = 0;
   // при каком отставании ругатся в логи
-  size_t wrn_log_diff_seq = 10000;
+  std::ptrdiff_t wrn_log_diff_seq = 10000;
   size_t seq_log_timeout_ms = 1000;
   std::shared_ptr<iprefixdb> master;
   std::shared_ptr< ::wfc::workflow > timer;

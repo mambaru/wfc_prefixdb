@@ -234,17 +234,23 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
     {
       res->logs.reserve(req->limit);
       bool first = true;
-      while ( iter->Valid() && req->limit-- )
+      while ( iter->Valid()  )
       {
+	req->limit--;
         ::rocksdb::BatchResult batch = iter->GetBatch();
+	/*
         if ( batch.sequence < req->seq )
         {
+	  batch.sequence - это номер первой записи
           DEBUG_LOG_MESSAGE("batch seq err " << batch.sequence << " < " << req->seq );
           // Может быть меньше запрашиваемого
           // Проверить это
+	  if ( req->limit == 0 )
+	    break;
           iter->Next();
           continue;
         }
+        */
         
         const std::string& data = batch.writeBatchPtr->Data();
         std::string log64;
@@ -258,6 +264,9 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
           res->seq_first = cur_seq;
           first = false;
         }
+        
+	if ( req->limit == 0 )
+	  break;
         iter->Next();
       }
       res->seq_last  = cur_seq;

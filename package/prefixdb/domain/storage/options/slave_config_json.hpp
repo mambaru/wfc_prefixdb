@@ -26,8 +26,8 @@ struct slave_config_json
       ::wfc::json::member<n_start_time,        slave_config, std::string, &slave_config::start_time>,
       ::wfc::json::member<n_pull_timeout_ms,   slave_config, time_t,      &slave_config::pull_timeout_ms>,
       ::wfc::json::member<n_log_limit_per_req, slave_config, size_t,      &slave_config::log_limit_per_req>,
-      ::wfc::json::member<n_acceptable_loss_seq, slave_config, size_t,    &slave_config::acceptable_loss_seq>,
-      ::wfc::json::member<n_wrn_log_diff_seq,  slave_config, size_t,       &slave_config::wrn_log_diff_seq>,
+      ::wfc::json::member<n_acceptable_loss_seq, slave_config, std::ptrdiff_t,    &slave_config::acceptable_loss_seq>,
+      ::wfc::json::member<n_wrn_log_diff_seq,  slave_config, std::ptrdiff_t,       &slave_config::wrn_log_diff_seq>,
       ::wfc::json::member<n_seq_log_timeout_ms,  slave_config, size_t,       &slave_config::seq_log_timeout_ms>,
       ::wfc::json::member<n_enable_progress,   slave_config, bool,        &slave_config::enable_progress>,
       ::wfc::json::member<n_expires_for_req,   slave_config, bool,        &slave_config::expires_for_req>

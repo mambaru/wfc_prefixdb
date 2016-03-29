@@ -36,7 +36,7 @@ private:
   
   std::atomic<time_t> _last_update_time;
   std::atomic<size_t> _update_counter;
-  std::atomic<size_t> _current_differens;
+  std::atomic<std::ptrdiff_t> _current_differens;
   std::atomic<size_t> _last_sequence;
   
   timer_id_t _slave_timer_id = -1;
