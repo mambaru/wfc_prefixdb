@@ -52,16 +52,17 @@ wrocksdb_factory::~wrocksdb_factory()
 
 wrocksdb_factory::wrocksdb_factory( ::iow::asio::io_service& io)
   : _io(io)
-  , _restore(false)
+ // , _restore(false)
 {
 }
 
-void wrocksdb_factory::initialize(const db_config& conf1, bool restore) 
+void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/) 
 {
   db_config conf = conf1;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
+  while ( !conf.detach_path.empty() && conf.detach_path.back()=='/' ) conf.path.pop_back();
   while ( !conf.backup.path.empty() && conf.backup.path.back()=='/' ) conf.backup.path.pop_back();
-  while ( !conf.restore_path.empty() && conf.restore_path.back()=='/' ) conf.restore_path.pop_back();
+  while ( !conf.restore.path.empty() && conf.restore.path.back()=='/' ) conf.restore.path.pop_back();
   while ( !conf.archive.path.empty() && conf.archive.path.back()=='/' ) conf.archive.path.pop_back();
   
   if ( !conf.path.empty() )
@@ -72,7 +73,7 @@ void wrocksdb_factory::initialize(const db_config& conf1, bool restore)
   }
     
   std::lock_guard<std::mutex> lk(_mutex);  
-  _restore = restore;
+  //_restore = restore;
   _context = std::make_shared<wrocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->config = conf;
@@ -118,8 +119,9 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   //_context->cdf[0].options.create_if_missing = create_if_missing;
   auto conf = _context->config;
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
+  if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
-  if ( !conf.restore_path.empty() ) conf.restore_path = _context->config.restore_path + "/" + dbname;
+  if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
   
 
   
@@ -141,9 +143,9 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     //backup_opt.destroy_old_data = true; //???? 
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
     //::rocksdb::RestoreBackupableDB* rdb = nullptr;
-    if ( !conf.restore_path.empty() )
+    if ( !conf.restore.path.empty() )
     {
-      ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
+      ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
       DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
       
       //restore_opt.destroy_old_data = true; //???? 
@@ -165,14 +167,14 @@ wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbnam
   //_context->options.env = _context->env;
   auto conf = _context->config;
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
-  if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
-  if ( !conf.restore_path.empty() ) conf.restore_path = _context->config.restore_path + "/" + dbname;
+//  if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
+  if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
 
   
   ::rocksdb::RestoreBackupableDB* rdb = nullptr;
-  if ( !conf.restore_path.empty() )
+  if ( !conf.restore.path.empty() )
   {
-    ::rocksdb::BackupableDBOptions restore_opt( conf.restore_path );
+    ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
     DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
     rdb = new ::rocksdb::RestoreBackupableDB( _context->env, restore_opt);
     return std::make_shared< wrocksdb_restore >(dbname, conf, rdb);

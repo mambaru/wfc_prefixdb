@@ -26,23 +26,23 @@ void prefixdb::start(const std::string&)
     
     std::string path = this->get_arg("restore");
     opt.preopen = false;
-    if ( !path.empty() )
-      opt.restore_path = path;
-    factory->initialize(opt, true);
+    /*if ( !path.empty() )
+      opt.restore_path = path;*/
+    factory->initialize(opt/*, true*/);
     db->reconfigure( opt, factory );
 
-    COMMON_LOG_MESSAGE("Restore from " << opt.restore_path)
+    //COMMON_LOG_MESSAGE("Restore from " << opt.restore_path)
     if ( !db->restore() )
     {
       wfc_exit_with_error("restore fail");
       return;
     }
-    db->close();
+    db->stop();
     ::wfc_exit();
     return;
   }
   this->reconfigure();
-  _flow->start();
+  
 }
 
 void prefixdb::configure() 
@@ -53,56 +53,13 @@ void prefixdb::configure()
 void prefixdb::reconfigure()
 {
   auto opt = this->options();
-  if ( _flow == nullptr )
-  {
-    _flow = ::wfc::workflow::create(opt.workflow_opt);
-  }
   
-  
-  _flow->reconfigure( opt.workflow_opt );
-  
-  if ( _backup_timer != -1 ) _flow->release_timer(_backup_timer);
-  if ( opt.backup.enabled &&  !opt.backup.path.empty() )
-  {
-    std::weak_ptr<prefixdb> wthis = this->shared_from_this();
-    _backup_timer = _flow->create_timer(
-      opt.backup.start_time,
-      std::chrono::seconds( opt.backup.period_s ),
-      [wthis]() {
-        if (auto pthis = wthis.lock() )
-        {
-          pthis->_impl->backup();
-          return true;
-        }
-        return false;
-      }
-    );
-  }
-  
-  if ( _archive_timer != -1 ) _flow->release_timer(_archive_timer);
-  if ( opt.archive.enabled && !opt.archive.path.empty() )
-  {
-    std::weak_ptr<prefixdb> wthis = this->shared_from_this();
-    _archive_timer = _flow->create_timer(
-      opt.archive.start_time,
-      std::chrono::seconds( opt.archive.period_s ),
-      [wthis]() {
-        DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
-        if (auto pthis = wthis.lock() )
-        {
-          pthis->_impl->archive( pthis->options().archive.path );
-          return true;
-        }
-        return false;
-      }
-    );
-  }
   if ( _impl == nullptr )
   {
     _impl = std::make_shared<multidb>();
     auto factory = god::create("rocksdb", this->global()->io_service );
   
-    opt.slave.timer = _flow;
+    
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
     DEBUG_LOG_MESSAGE("opt.slave.master = " << opt.slave.target)
 
@@ -112,7 +69,7 @@ void prefixdb::reconfigure()
       DEBUG_LOG_MESSAGE("slave target '" << opt.slave.target << "' enabled " << opt.slave.pull_timeout_ms << " " << opt.path )
       DEBUG_LOG_MESSAGE("-------------------------------------")
     }
-    factory->initialize(opt, false);
+    //factory->initialize(opt, false);
     _impl->reconfigure( opt, factory );
   }
   else
@@ -127,7 +84,7 @@ void prefixdb::reconfigure()
     }
     
     auto factory = god::create("rocksdb", this->global()->io_service );
-    factory->initialize(opt, false);
+    factory->initialize(opt/*, false*/);
 
     if ( !_impl->reconfigure( opt, factory ) )
     {
@@ -149,11 +106,9 @@ void prefixdb::reconfigure()
 
 void prefixdb::stop(const std::string&) 
 {
-  if ( _flow )
-    _flow->stop();
   
   if ( _impl )
-    _impl->close();
+    _impl->stop();
 }
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)
@@ -211,4 +166,8 @@ void prefixdb::get_all_prefixes( request::get_all_prefixes::ptr req, response::g
   _impl->get_all_prefixes( std::move(req), std::move(cb) );  
 }
 
+void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)
+{
+  _impl->detach_prefixes( std::move(req), std::move(cb) );  
+}
 }}

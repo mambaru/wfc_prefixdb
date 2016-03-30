@@ -18,6 +18,7 @@ struct slave_config
   
   // интервал запросов к мастеру в милисекундах 
   time_t pull_timeout_ms   = 1000;
+  time_t query_prefixes_timeout_ms = 2000;
   // ограничение на количество элементов в ответе на один запрос к мастеру
   size_t log_limit_per_req = 100;
   // отображать в логе процесс загрузки 

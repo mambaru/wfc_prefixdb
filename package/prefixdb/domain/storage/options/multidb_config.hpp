@@ -20,6 +20,7 @@ struct multidb_config: db_config
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
   
+  ::wfc::workflow_options workflow;
 };
 
 }}

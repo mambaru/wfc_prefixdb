@@ -81,11 +81,39 @@ namespace
     }
     return true;
   }
+
+  bool move_dir(
+    ::boost::filesystem::path const & source,
+    ::boost::filesystem::path const & destination,
+    std::string& message
+  )
+  try
+  {
+    if ( ::boost::filesystem::exists(destination) )
+      ::boost::filesystem::remove_all(destination);
+    
+    ::boost::filesystem::rename(source, destination);
+    return true;
+  }
+  catch(const ::boost::filesystem::filesystem_error& e)
+  {
+    std::stringstream ss;
+    ss << e.what() << '\n';
+    message = ss.str();
+    return false;
+  }
 }
+
+
 
 bool copy_dir(const std::string& from, const std::string& to, std::string& message)
 {
   return copy_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
+}
+
+bool move_dir(const std::string& from, const std::string& to, std::string& message)
+{
+  return move_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
 }
 
 }}

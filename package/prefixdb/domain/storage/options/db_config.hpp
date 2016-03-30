@@ -15,12 +15,13 @@ struct db_config
 
   // Путь к базе данных для всех префиксов
   std::string path = "./prefixdb";
+  std::string detach_path = "./prefixdb_detach";
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
   // Путь к бэкапу базы данных для всех префиксов
   // std::string backup_path   = "./prefixdb_backup";
   // Откуда востанавливаться в случае сбоя 
-  std::string restore_path  = "./prefixdb_backup";
+  //std::string restore_path  = "./prefixdb_backup";
   
   slave_config slave;
   backup_config backup;

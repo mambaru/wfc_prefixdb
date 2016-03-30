@@ -17,7 +17,7 @@ wrocksdb_restore::wrocksdb_restore(std::string name, const db_config conf, resto
 }
 bool wrocksdb_restore::restore() 
 {
-  COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore_path )
+  COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore.path )
   ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
   COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
   if ( status.ok() )

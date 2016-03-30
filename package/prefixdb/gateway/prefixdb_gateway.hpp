@@ -12,6 +12,7 @@
 #include <prefixdb/api/range_json.hpp>
 #include <prefixdb/api/get_updates_since_json.hpp>
 #include <prefixdb/api/get_all_prefixes_json.hpp>
+#include <prefixdb/api/detach_prefixes_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace gateway{
@@ -27,6 +28,7 @@ JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
 JSONRPC_TAG(get_updates_since)
 JSONRPC_TAG(get_all_prefixes)
+JSONRPC_TAG(detach_prefixes)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -41,7 +43,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _packed_, request::packed_json, response::packed_json>,
   wfc::jsonrpc::call_method< _range_, request::range_json, response::range_json>,
   wfc::jsonrpc::call_method< _get_updates_since_, request::get_updates_since_json, response::get_updates_since_json>,
-  wfc::jsonrpc::call_method< _get_all_prefixes_, request::get_all_prefixes_json, response::get_all_prefixes_json>
+  wfc::jsonrpc::call_method< _get_all_prefixes_, request::get_all_prefixes_json, response::get_all_prefixes_json>,
+  wfc::jsonrpc::call_method< _detach_prefixes_, request::detach_prefixes_json, response::detach_prefixes_json>
 >
 {
 };
@@ -107,6 +110,10 @@ public:
     this->template call< _get_all_prefixes_ >( std::move(req), cb, nullptr);
   }
 
+  virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)  override
+  {
+    this->template call< _detach_prefixes_ >( std::move(req), cb, nullptr);
+  }
 };
 
 }}}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/api/get_all_prefixes.hpp>
+#include <prefixdb/api/detach_prefixes.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
@@ -8,11 +8,16 @@ namespace wamba { namespace prefixdb {
 
 namespace request 
 {
-  struct get_all_prefixes_json
+  struct detach_prefixes_json
   {
+    JSON_NAME(prefixes)
+    JSON_NAME(deny_timeout_s)
+    
     typedef ::wfc::json::object<
-      get_all_prefixes,
+      detach_prefixes,
       ::wfc::json::member_list<
+        ::wfc::json::member<n_prefixes, detach_prefixes, detach_prefixes::prefix_list, &detach_prefixes::prefixes, wfc::json::array_of_strings<50> >,
+        ::wfc::json::member<n_prefixes, detach_prefixes, time_t, &detach_prefixes::deny_timeout_s >
       >
     > type;
     typedef type::target target;
@@ -23,16 +28,14 @@ namespace request
 
 namespace response
 {
-  struct get_all_prefixes_json
+  struct detach_prefixes_json
   {
-    JSON_NAME(prefixes)
     JSON_NAME(status)
 
     typedef ::wfc::json::object<
-      get_all_prefixes,
+      detach_prefixes,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefixes, get_all_prefixes, get_all_prefixes::prefix_list, &get_all_prefixes::prefixes, wfc::json::array_of_strings<50> >,
-        ::wfc::json::member<n_status, get_all_prefixes, common_status, &get_all_prefixes::status, common_status_json>
+        ::wfc::json::member<n_status, detach_prefixes, common_status, &detach_prefixes::status, common_status_json>
       >
     > type;
     typedef type::target target;

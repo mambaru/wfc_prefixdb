@@ -4,7 +4,7 @@
 namespace wamba{ namespace prefixdb { namespace{
   
 template<common_status Status, typename Res, typename ReqPtr, typename Callback>
-inline void send_error(const ReqPtr& req, const Callback& cb)
+inline bool send_error(const ReqPtr& req, const Callback& cb)
 {
   if ( cb!=nullptr )
   {
@@ -13,18 +13,19 @@ inline void send_error(const ReqPtr& req, const Callback& cb)
     res->status = Status;
     cb( std::move(res) );
   }
+  return false;
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
-inline void prefix_not_found(const ReqPtr& req, const Callback& cb)
+inline bool prefix_not_found(const ReqPtr& req, const Callback& cb)
 {
-  send_error<common_status::PrefixNotFound, Res>(std::move(req), std::move(cb) );
+  return send_error<common_status::PrefixNotFound, Res>(std::move(req), std::move(cb) );
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
-inline void create_prefix_fail(const ReqPtr& req, const Callback& cb)
+inline bool create_prefix_fail(const ReqPtr& req, const Callback& cb)
 {
-  send_error<common_status::CreatePrefixFail, Res>(std::move(req), std::move(cb) );
+  return send_error<common_status::CreatePrefixFail, Res>(std::move(req), std::move(cb) );
 }
 
 template<typename Req, typename Callback>

@@ -37,30 +37,10 @@ public:
   virtual void range( request::range::ptr req, response::range::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
-
-private:
-  /*
-  typedef boost::asio::deadline_timer deadline_timer;
-  typedef std::unique_ptr<deadline_timer> timer_ptr; 
-  void do_backup_();
-  void do_restore_();
-  template<typename Fun>
-  void deadline_(time_t period, timer_ptr& timer, Fun dfun, void (prefixdb::* ifun)() );
-  */
-
+  virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
 private:
   std::shared_ptr<multidb> _impl;
-
-  std::shared_ptr< ::wfc::workflow> _flow;
-  ::wfc::workflow::timer_id_t _backup_timer  = -1;
-  ::wfc::workflow::timer_id_t _archive_timer  = -1;
-    /*
-  timer_ptr _backup_timer;
-  timer_ptr _restore_timer;
-  typedef ::iow::io::timer timer_type;
-  typedef std::shared_ptr<timer_type> timer1_ptr;
-  timer1_ptr _timer;
-    */
+  
 };
 
 }}

@@ -37,14 +37,16 @@ public:
   
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
+  virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
   
   virtual void start( ) override;
-  virtual void close() override;
+  virtual void stop() override;
   virtual bool backup() override;
   virtual bool archive(std::string path) override;
 
 private:
 
+  void stop_();
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
   void merge_(ReqPtr req, Callback cb);
   
@@ -54,16 +56,17 @@ private:
   template<typename Res, typename Batch, typename ReqPtr, typename Callback>
   void write_batch_(Batch& batch, ReqPtr req, Callback cb);
 
+  /*
   typedef wfc::workflow::callback_timer_handler timer_handler;
   typedef wfc::workflow::timer_id_t timer_id_t;
   typedef std::shared_ptr< request::get_updates_since > request_since_ptr;
-
+  */
 private:
   
   std::string _name;  
   const db_config _conf;
-  std::unique_ptr<db_type> _db;
-  std::mutex _backup_mutex;
+  std::shared_ptr<db_type> _db1;
+  std::mutex _mutex;
   std::shared_ptr<wrocksdb_slave> _slave;
 };
 

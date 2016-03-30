@@ -38,7 +38,7 @@ namespace
 wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
   : _name(name)
   , _conf(conf)
-  , _db(db)
+  , _db1(db)
 {
   _slave = std::make_shared<wrocksdb_slave>(name, conf.slave, *db);
 }
@@ -46,17 +46,25 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
 
 void wrocksdb::start( ) 
 {
+  std::lock_guard<std::mutex> lk(_mutex);
   _slave->start();
 }
 
 
 
-void wrocksdb::close()
+void wrocksdb::stop_()
 {
-  COMMON_LOG_MESSAGE("preffix DB close " << _name)
+  PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
   _slave->stop();
   _slave = nullptr;
-  _db=nullptr;
+  _db1=nullptr;
+}
+
+void wrocksdb::stop()
+{
+  std::lock_guard<std::mutex> lk(_mutex);
+  this->stop_();
+  
 }
 
 
@@ -86,7 +94,10 @@ void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
   ::rocksdb::WriteOptions wo;
   wo.sync = req->sync;
   
-  ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
+  
+  ::rocksdb::Status status;
+  if ( auto db = _db1 ) status = db->Write( ::rocksdb::WriteOptions(), &batch);
+  else return;
 
   if ( cb == nullptr )
     return;
@@ -119,8 +130,9 @@ void wrocksdb::get_(ReqPtr req, Callback cb)
   // Забираем значения
   std::vector<std::string> resvals;
   resvals.reserve(keys.size());
-  std::vector< ::rocksdb::Status> status
-    = _db->MultiGet( ::rocksdb::ReadOptions(), keys, &resvals);
+  std::vector< ::rocksdb::Status> status;
+  if ( auto db = _db1 ) status = db->MultiGet( ::rocksdb::ReadOptions(), keys, &resvals);
+  else cb(nullptr);
 
   auto res = std::make_unique<response_type>();
   res->prefix = std::move(req->prefix);
@@ -175,6 +187,13 @@ void wrocksdb::has( request::has::ptr req, response::has::handler cb)
 
 void wrocksdb::del( request::del::ptr req, response::del::handler cb) 
 {
+  auto db = _db1;
+  if ( db == nullptr ) 
+  {
+    if (cb!=nullptr) cb(nullptr);
+    return;
+  }
+    
   ::rocksdb::WriteBatch batch;
   for ( auto& key : req->fields)
   {
@@ -183,7 +202,7 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
 
   if ( req->nores || cb==nullptr)
   {
-    ::rocksdb::Status status = _db->Write( ::rocksdb::WriteOptions(), &batch);
+    ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
     if ( cb!=nullptr )
     {
       auto res = std::make_unique<response::del>();
@@ -194,9 +213,9 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
   }
   else
   {
-    this->get_<response::del>( std::move(req), [this, &batch, &cb](response::del::ptr res)
+    this->get_<response::del>( std::move(req), [db, &batch, &cb](response::del::ptr res)
     {
-      ::rocksdb::Status status = this->_db->Write( ::rocksdb::WriteOptions(), &batch);
+      ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
       res->status = status.ok() ? common_status::OK : common_status::WriteError;
       cb( std::move(res) );
     });
@@ -226,10 +245,17 @@ void wrocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 
 {
+  auto db = _db1;
+  if ( db == nullptr ) 
+  {
+    if (cb!=nullptr) cb(nullptr);
+    return;
+  }
+
   auto res = std::make_unique<response::get_updates_since>();
   res->prefix = std::move(req->prefix);
   std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
-  ::rocksdb::Status status = _db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
+  ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
   ::rocksdb::SequenceNumber cur_seq=0;
   if ( status.ok() )
   {
@@ -259,7 +285,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
       res->seq_last  = cur_seq;
     }
   }
-  res->seq_final = _db->GetLatestSequenceNumber();
+  res->seq_final = db->GetLatestSequenceNumber();
   cb( std::move(res) );  
 }
 
@@ -272,9 +298,34 @@ void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_a
   cb(std::move(res));
 }
 
+void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response::detach_prefixes::handler cb)
+{
+  std::lock_guard<std::mutex> lk(_mutex);
+  this->stop_();
+  if ( !_conf.detach_path.empty() )
+  {
+    std::string errmsg;
+    if ( !move_dir( _conf.path, _conf.detach_path, errmsg ) )
+    {
+      PREFIXDB_LOG_ERROR("wrocksdb::detach_prefixes " << errmsg);
+    }
+  };
+  if ( cb != nullptr )
+  {
+    auto res = std::make_unique<response::detach_prefixes>();
+    cb( std::move(res) );
+  }
+}
 
 void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 {
+  auto db = _db1;
+  if ( db == nullptr ) 
+  {
+    if (cb!=nullptr) cb(nullptr);
+    return;
+  }
+
   DEBUG_LOG_MESSAGE("range from '" << req->from << " to '" << req->to )
   typedef ::rocksdb::Iterator iterator_type;
   typedef ::rocksdb::Slice slice_type;
@@ -286,7 +337,7 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
   res->fin = false;
   
   ::rocksdb::ReadOptions opt;
-  iterator_ptr itr(_db->NewIterator(opt));
+  iterator_ptr itr(db->NewIterator(opt));
   if ( itr != nullptr )
   {
     field_pair field;
@@ -331,7 +382,10 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 
 bool wrocksdb::backup()
 {
-  std::lock_guard<std::mutex> lk(_backup_mutex);
+  std::lock_guard<std::mutex> lk(_mutex);
+  auto db = _db1;
+  if ( db == nullptr ) return false;
+
   
   /*
   if ( _conf.compact_before_backup )
@@ -343,7 +397,7 @@ bool wrocksdb::backup()
   */
   
   {
-    ::rocksdb::Status status = _db->GarbageCollect();
+    ::rocksdb::Status status = db->GarbageCollect();
     if ( status.ok() )
     {
       DEBUG_LOG_MESSAGE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
@@ -354,7 +408,7 @@ bool wrocksdb::backup()
     }
   }
   
-  ::rocksdb::Status status = _db->CreateNewBackup();
+  ::rocksdb::Status status = db->CreateNewBackup();
   if ( status.ok() )
   {
     DEBUG_LOG_MESSAGE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
@@ -364,7 +418,7 @@ bool wrocksdb::backup()
     COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
   }
   
-  status = _db->PurgeOldBackups( _conf.backup.depth );
+  status = db->PurgeOldBackups( _conf.backup.depth );
   if ( status.ok() )
   {
     DEBUG_LOG_MESSAGE("PurgeOldBackups(5) for " << _name <<  ": " << status.ToString() )
@@ -465,7 +519,8 @@ namespace
 bool wrocksdb::archive(std::string path)
 {
   DEBUG_LOG_MESSAGE("================== " << path << " ==========================")
-  std::lock_guard<std::mutex> lk(_backup_mutex);
+  std::lock_guard<std::mutex> lk(_mutex);
+
   if ( _conf.archive.path.empty() )
     return false;
   path += "/" + _name;

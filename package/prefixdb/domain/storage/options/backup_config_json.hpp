@@ -21,7 +21,7 @@ struct backup_config_json
       ::wfc::json::member<n_period_s,      backup_config, time_t,      &backup_config::period_s>,
       ::wfc::json::member<n_start_delay_s, backup_config, time_t,      &backup_config::start_delay_s>,
       ::wfc::json::member<n_start_time,    backup_config, std::string, &backup_config::start_time>,
-      ::wfc::json::member<n_period_s,      backup_config, size_t,      &backup_config::depth>,
+      ::wfc::json::member<n_depth,      backup_config, size_t,      &backup_config::depth>,
       ::wfc::json::member<n_path,          backup_config, std::string, &backup_config::path>
     >
   > type;
