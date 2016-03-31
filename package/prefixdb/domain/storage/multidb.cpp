@@ -1,3 +1,5 @@
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+
 #include "multidb.hpp"
 #include "ifactory.hpp"
 #include "god.hpp"
