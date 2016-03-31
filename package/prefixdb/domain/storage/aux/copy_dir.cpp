@@ -1,8 +1,8 @@
 #define BOOST_NO_CXX11_SCOPED_ENUMS
 
 #include <prefixdb/domain/storage/aux/copy_dir.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+#include <wfc/boost.hpp>
 #include <sstream>
        
 namespace wamba{ namespace prefixdb {

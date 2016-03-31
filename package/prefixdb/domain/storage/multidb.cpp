@@ -6,7 +6,7 @@
 #include "aux/multidb.hpp"
 #include "aux/scan_dir.hpp"
 #include <wfc/logger.hpp>
-#include <boost/filesystem.hpp>
+#include <wfc/boost.hpp>
 #include <prefixdb/logger.hpp>
 
 namespace wamba{ namespace prefixdb {
