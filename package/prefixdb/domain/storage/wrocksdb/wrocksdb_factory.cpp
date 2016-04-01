@@ -4,13 +4,15 @@
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
 #include <rocksdb/merge_operator.h>
+#include <rocksdb/wal_filter.h>
 #include <rocksdb/utilities/backupable_db.h>
 
+#include <prefixdb/logger.hpp>
 #include <memory>
 #include <iostream>
 #include <sys/stat.h>
-#include <wfc/logger.hpp>
 #include <list>
+#include <string>
 
 #include "wrocksdb.hpp"
 #include "wrocksdb_restore.hpp"
@@ -88,27 +90,36 @@ void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
   _context->cdf[0].options.merge_operator = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
   
 }
-/*
-void rocksdb_factory::initialize(std::string db_path, std::string backup_path, std::string restore_path, std::string ini_path) 
+
+class wall_filter
+  : public ::rocksdb::WalFilter
 {
-  std::lock_guard<std::mutex> lk(_mutex);
-#error убрать
-  _context = std::make_shared<rocksdb_factory::context>();
-  _context->env = ::rocksdb::Env::Default();
-  _context->path = db_path;
-  _context->backup_path = backup_path;
-  _context->restore_path = restore_path;
-  //_context->options.merge_operator = std::make_shared<merge_operator>();
-  auto status = ::rocksdb::LoadOptionsFromFile(ini_path, _context->env, &(_context->options), &(_context->cdf) );
-  if ( !status.ok() )
+  typedef ::rocksdb::WalFilter super;
+  
+public:
+  
+  wall_filter(const std::string& name)
+    : _name(name)
+  {}
+    
+  virtual super::WalProcessingOption LogRecord(const ::rocksdb::WriteBatch& batch,
+                                        ::rocksdb::WriteBatch* /*new_batch*/,
+                                        bool* batch_changed) const override
   {
-    DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
-    abort();
+      PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
+      *batch_changed = false;
+      return super::WalProcessingOption::kContinueProcessing;
   }
 
-  _context->cdf[0].options.merge_operator = std::make_shared<merge_operator>();
-}
-*/
+  // Returns a name that identifies this WAL filter.
+  // The name will be printed to LOG file on start up for diagnosis.
+  virtual const char* Name() const override
+  {
+    return _name.c_str();
+  }
+private:
+  std::string _name;
+};
 
 //::rocksdb::RestoreBackupableDB
 ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
@@ -116,6 +127,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
+  _context->options.wal_filter = new wall_filter(dbname);
   //_context->cdf[0].options.create_if_missing = create_if_missing;
   auto conf = _context->config;
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;

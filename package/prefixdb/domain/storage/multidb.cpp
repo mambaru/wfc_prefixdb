@@ -123,11 +123,33 @@ void multidb::configure_prefix_reqester_()
     {
       if ( res == nullptr )
         return std::make_unique<request::get_all_prefixes>();
-        
+
+      auto preflist = this->all_prefixes_();
+      std::set<std::string> prefset( preflist.begin(), preflist.end() );
       if ( res->status == common_status::OK)
       {
         for ( const auto& x : res->prefixes )
+        {
           this->prefix_(x, true);
+          prefset.erase(x);
+        }
+        
+        if ( !prefset.empty() )
+        {
+          auto preq = std::make_shared<request::detach_prefixes>();
+          preq->deny_timeout_s = 0;
+          preq->prefixes.reserve(prefset.size());
+          for ( auto& x : prefset )
+          {
+            preq->prefixes.push_back( std::move(x) );
+          }
+          
+          _flow->post([this, preq]
+          {
+            this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
+          });
+          
+        }
       }
       else if ( res != nullptr )
       {
@@ -269,6 +291,8 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
 
 std::vector< std::string > multidb::all_prefixes_()
 {
+  std::lock_guard<std::mutex> lk(_mutex);
+  
   std::vector< std::string > result;
   result.reserve( _db_map.size() );
   for (const auto& p : _db_map)
@@ -435,7 +459,7 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
         { 
           std::lock_guard<std::mutex> lk(this->_mutex);
           auto itr = this->_db_map.find(prefix);
-          if ( itr!= this->_db_map.end() && itr->second == nullptr )
+          if ( itr != this->_db_map.end() && itr->second == nullptr )
           {
             _db_map.erase(itr);
           }
