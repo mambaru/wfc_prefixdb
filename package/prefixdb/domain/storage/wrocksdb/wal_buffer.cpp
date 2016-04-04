@@ -62,10 +62,6 @@ bool wal_buffer::get_updates_since(uint64_t sequence_number, size_t limit, log_l
   if ( !this->may_exist(sequence_number) )
     return false;
   
-  /*
-  data_type sd(sizeof(uint64_t));
-  *reinterpret_cast<uint64_t*>( sd.data() ) = sequence_number;
-  */
   const char *pnum = reinterpret_cast<const char*>(&sequence_number);
   log_record rec(pnum, pnum + sizeof(sequence_number) );
   res.reserve(limit);
@@ -73,6 +69,25 @@ bool wal_buffer::get_updates_since(uint64_t sequence_number, size_t limit, log_l
   {
       return  left.get_sequence_number() < right.get_sequence_number();
   });
+  
+  if ( itr == _buffer->end() )
+    itr = (_buffer->rbegin() + 1).base();
+  
+  if ( sequence_number > itr->get_sequence_number() )
+  {
+    if ( itr != _buffer->begin() )
+      --itr;
+  }
+  
+  if ( sequence_number > itr->get_sequence_number() )
+    return false;
+ 
+  res.reserve(limit);
+  for (size_t i = 0; i!=limit && itr!=_buffer->end(); ++i, ++itr)
+  {
+    res.push_back( itr->log );
+  }
+  
   return true;
 }
 

@@ -96,11 +96,12 @@ class wall_filter
   : public ::rocksdb::WalFilter
 {
   typedef ::rocksdb::WalFilter super;
-  
+  typedef std::shared_ptr<wal_buffer> buffer_ptr;
 public:
   
-  wall_filter(const std::string& name)
+  wall_filter(const std::string& name, buffer_ptr buff)
     : _name(name)
+    , _buffer(buff)
   {}
     
   virtual super::WalProcessingOption LogRecord(const ::rocksdb::WriteBatch& batch,
@@ -108,6 +109,7 @@ public:
                                         bool* batch_changed) const override
   {
       PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
+      _buffer->add(batch.Data());
       *batch_changed = false;
       return super::WalProcessingOption::kContinueProcessing;
   }
@@ -120,6 +122,7 @@ public:
   }
 private:
   std::string _name;
+  buffer_ptr _buffer;
 };
 
 //::rocksdb::RestoreBackupableDB
@@ -128,9 +131,15 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
-  _context->options.wal_filter = new wall_filter(dbname);
-  //_context->cdf[0].options.create_if_missing = create_if_missing;
   auto conf = _context->config;
+  if ( conf.master.enabled )
+  {
+    auto buff = std::make_shared<wal_buffer>(dbname, conf.master.log_buffer_size);
+    conf.master.walbuf = buff;
+   _context->options.wal_filter = new wall_filter(dbname, buff);
+  }
+
+  
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
@@ -153,22 +162,13 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
     //backup_opt.destroy_old_data = true; //???? 
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
-    //::rocksdb::RestoreBackupableDB* rdb = nullptr;
     if ( !conf.restore.path.empty() )
     {
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
       DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
-      
-      //restore_opt.destroy_old_data = true; //???? 
-      //rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
     }
     
-    if ( conf.master.enabled )
-    {
-      conf.master.walbuf = std::make_shared<wal_buffer>(dbname, conf.master.log_buffer_size);
-    }
     
-    //conf.slave.timer = std::make_shared< ::iow::io::timer >(_io);
     DEBUG_LOG_MESSAGE("New RocksDB " << dbname)
     return std::make_shared< wrocksdb >(dbname, conf, bdb);
   }
