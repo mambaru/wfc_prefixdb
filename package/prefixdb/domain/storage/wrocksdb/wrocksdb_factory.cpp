@@ -17,6 +17,7 @@
 #include "wrocksdb.hpp"
 #include "wrocksdb_restore.hpp"
 #include "merge/merge_operator.hpp"
+#include "wal_buffer.hpp"
 
 namespace rocksdb
 {
@@ -135,8 +136,6 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
   
-
-  
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
@@ -162,6 +161,11 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       
       //restore_opt.destroy_old_data = true; //???? 
       //rdb = new ::rocksdb::RestoreBackupableDB( ::rocksdb::Env::Default(), restore_opt);
+    }
+    
+    if ( conf.master.enabled )
+    {
+      conf.master.walbuf = std::make_shared<wal_buffer>(dbname, conf.master.log_buffer_size);
     }
     
     //conf.slave.timer = std::make_shared< ::iow::io::timer >(_io);

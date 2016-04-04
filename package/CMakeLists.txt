@@ -15,6 +15,7 @@ SET(
   prefixdb/domain/storage/wrocksdb/wrocksdb_restore.cpp
   prefixdb/domain/storage/wrocksdb/wrocksdb_slave.cpp
   prefixdb/domain/storage/wrocksdb/since_reader.cpp
+  prefixdb/domain/storage/wrocksdb/wal_buffer.cpp
   prefixdb/domain/storage/wrocksdb/merge/merge_operator.cpp
   prefixdb/domain/storage/god.cpp
   

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <prefixdb/domain/storage/options/slave_config.hpp>
+#include <prefixdb/domain/storage/options/master_config.hpp>
 #include <prefixdb/domain/storage/options/backup_config.hpp>
 #include <prefixdb/domain/storage/options/archive_config.hpp>
 #include <prefixdb/domain/storage/options/restore_config.hpp>
@@ -23,6 +24,7 @@ struct db_config
   // Откуда востанавливаться в случае сбоя 
   //std::string restore_path  = "./prefixdb_backup";
   
+  master_config master;
   slave_config slave;
   backup_config backup;
   archive_config archive;

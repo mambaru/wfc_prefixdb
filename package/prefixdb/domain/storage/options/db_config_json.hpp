@@ -1,6 +1,7 @@
 #pragma once
 
 #include <prefixdb/domain/storage/options/db_config.hpp>
+#include <prefixdb/domain/storage/options/master_config_json.hpp>
 #include <prefixdb/domain/storage/options/slave_config_json.hpp>
 #include <prefixdb/domain/storage/options/backup_config_json.hpp>
 #include <prefixdb/domain/storage/options/archive_config_json.hpp>
@@ -16,7 +17,7 @@ struct db_config_json
   JSON_NAME(detach_path)
   JSON_NAME(ini)
   JSON_NAME(slave)
-  
+  JSON_NAME(master)
   JSON_NAME(packed_limit)
   JSON_NAME(array_limit)
   JSON_NAME(backup)
@@ -33,6 +34,7 @@ struct db_config_json
 
       ::wfc::json::member<n_ini,          db_config, std::string,    &db_config::ini>,
       ::wfc::json::member<n_slave,        db_config, slave_config,   &db_config::slave, slave_config_json>,
+      ::wfc::json::member<n_master,       db_config, master_config,  &db_config::master, master_config_json>,
       ::wfc::json::member<n_backup,       db_config, backup_config,  &db_config::backup, backup_config_json>,
       ::wfc::json::member<n_archive,      db_config, archive_config, &db_config::archive, archive_config_json>,
       ::wfc::json::member<n_restore,      db_config, restore_config, &db_config::restore, restore_config_json>
