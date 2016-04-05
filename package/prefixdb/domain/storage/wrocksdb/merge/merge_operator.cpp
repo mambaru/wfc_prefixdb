@@ -14,7 +14,7 @@
 #include "packed.hpp"
 #include "packed_json.hpp"
 
-#include <wfc/logger.hpp>
+#include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
 #include <algorithm>
 
@@ -80,6 +80,10 @@ merge_operator::merge_operator(size_t array_limit, size_t packed_limit)
   _packed_limit = packed_limit;
 }
 
+void merge_operator::set_handler( compact_handler handler)
+{
+  _handler = handler;
+}
 
 bool merge_operator::FullMerge(
     const slice_type& key,
@@ -99,7 +103,7 @@ try
   updates.reserve(operands.size());
   for (size_t i = 0; i < operands.size(); ++i)
   {
-    if ( helper::unserialize<merge_json>(mrg, operands[i], false), false )
+    if ( helper::unserialize<merge_json>(mrg, operands[i], false) )
     {
       if ( mrg.mode == merge_mode::setnx && mode!=merge_mode::none )
         continue;
@@ -111,6 +115,10 @@ try
         mode = mrg.mode;
       }
       updates.push_back( std::move(mrg.raw) );
+    }
+    else
+    {
+      PREFIXDB_LOG_WARNING("Invalid merge operator: " << operands[i] )
     }
   } 
   
@@ -128,17 +136,25 @@ try
     case merge_mode::packed:
       this->packed_(value, updates, *result); 
       break;
-    default: 
-      COMMON_LOG_MESSAGE("merge_operator::Merge: Invalid method merge: " << updates[0]  )
+    default:
+      if ( !updates.empty() )
+      {
+        COMMON_LOG_MESSAGE("merge_operator::Merge: Invalid method merge: " << updates[0]  )
+      }
       if ( value!=nullptr )
         *result = value->ToString();
       else
         *result="\"\"";
       COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << *result  )
   }
-  DEBUG_LOG_MESSAGE("Merge save: " 
+  
+  if ( updates.size() > 5 && _handler!=nullptr )
+    _handler(key.ToString());
+    
+  
+  DEBUG_LOG_MESSAGE("Merge save '" << key.ToString() << "': " 
     << "\nValue: "   << (value ? value->ToString() : "nullptr")
-    << "\nOperand[0]: " << updates[0]
+    << "\nOperand[0]: " << std::string( updates.empty()? std::string("<<empty>>") :  std::string(updates[0]) )
     << "\nsize: " << updates.size()
     << "\nResult: " << *result)
   return true;
@@ -252,7 +268,7 @@ void merge_operator::inc_(const slice_type* value, const update_list& operands, 
   int64_t num = 0;
   bool exist = true;
   // Десериализуем текущий объект
-  if ( !helper::unserialize<int64json>(num, value, false), true )
+  if ( !helper::unserialize<int64json>(num, value, true)  )
   {
     num = 0;
     exist = false;

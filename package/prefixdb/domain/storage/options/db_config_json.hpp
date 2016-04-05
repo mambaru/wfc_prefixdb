@@ -23,6 +23,7 @@ struct db_config_json
   JSON_NAME(backup)
   JSON_NAME(archive)
   JSON_NAME(restore)
+  JSON_NAME(workflow)
 
   typedef ::wfc::json::object<
     db_config,
@@ -37,7 +38,8 @@ struct db_config_json
       ::wfc::json::member<n_master,       db_config, master_config,  &db_config::master, master_config_json>,
       ::wfc::json::member<n_backup,       db_config, backup_config,  &db_config::backup, backup_config_json>,
       ::wfc::json::member<n_archive,      db_config, archive_config, &db_config::archive, archive_config_json>,
-      ::wfc::json::member<n_restore,      db_config, restore_config, &db_config::restore, restore_config_json>
+      ::wfc::json::member<n_restore,      db_config, restore_config, &db_config::restore, restore_config_json>,
+      ::wfc::json::member<n_workflow, db_config, ::wfc::workflow_options, &db_config::workflow, ::wfc::workflow_options_json>
     >
   > type;
 

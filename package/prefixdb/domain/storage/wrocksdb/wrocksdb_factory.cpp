@@ -88,7 +88,7 @@ void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
     abort();
   }
 
-  _context->cdf[0].options.merge_operator = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
+  
   
 }
 
@@ -138,6 +138,13 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     conf.master.walbuf = buff;
    _context->options.wal_filter = new wall_filter(dbname, buff);
   }
+  else
+  {
+    _context->options.wal_filter = nullptr;
+  }
+  
+  auto merge = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
+  _context->cdf[0].options.merge_operator = merge;
 
   
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
@@ -168,9 +175,13 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
     }
     
+    auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, bdb);
+    /*merge->set_handler([pwrdb](const std::string& key) {
+      pwrdb->compact(key);
+    });*/
     
     DEBUG_LOG_MESSAGE("New RocksDB " << dbname)
-    return std::make_shared< wrocksdb >(dbname, conf, bdb);
+    return pwrdb;
   }
 
   DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());

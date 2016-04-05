@@ -1,5 +1,7 @@
 #include "wal_buffer.hpp"
 #include <iow/workflow/rrqueue.hpp>
+#include <prefixdb/logger.hpp>
+
 namespace wamba{ namespace prefixdb {
 
 struct log_record
@@ -10,6 +12,11 @@ struct log_record
   log_record(Beg beg, End end): log(beg, end){}
   
   uint64_t get_sequence_number() const
+  {
+    return log_record::get_sequence_number(log);
+  }
+  
+  static uint64_t get_sequence_number(const data_type& log)
   {
     return *reinterpret_cast<const uint64_t*>( &(log[0]) );
   }
@@ -27,6 +34,12 @@ wal_buffer::wal_buffer( const std::string& name, size_t size)
 {
   _buffer = std::make_shared<impl>(size);
 }
+
+uint64_t wal_buffer::get_sequence_number(const data_type& log)
+{
+  return log_record::get_sequence_number(log);
+}
+
 
 void wal_buffer::add(const std::string& log)
 {
@@ -60,7 +73,10 @@ bool wal_buffer::may_exist(uint64_t sequence_number) const
 bool wal_buffer::get_updates_since(uint64_t sequence_number, size_t limit, log_list& res )
 {
   if ( !this->may_exist(sequence_number) )
+  {
+    PREFIXDB_LOG_DEBUG("wal_buffer::get_updates_since not ready for " << sequence_number << " [" << this->get_first_number() << "," << this->get_last_number() << "]" )
     return false;
+  }
   
   const char *pnum = reinterpret_cast<const char*>(&sequence_number);
   log_record rec(pnum, pnum + sizeof(sequence_number) );
@@ -88,7 +104,8 @@ bool wal_buffer::get_updates_since(uint64_t sequence_number, size_t limit, log_l
     res.push_back( itr->log );
   }
   
-  return true;
+  PREFIXDB_LOG_DEBUG("wal_buffer::get_updates_since " << res.size() );
+  return !res.empty();
 }
 
 

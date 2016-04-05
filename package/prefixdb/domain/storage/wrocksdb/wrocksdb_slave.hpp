@@ -43,6 +43,8 @@ private:
   timer_id_t _slave_timer_id = -1;
   timer_id_t _diff_timer_id = -1;
   timer_id_t _seq_timer_id = -1;
+  
+  std::shared_ptr< ::wfc::workflow> _workflow;
 };
  
 

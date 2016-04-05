@@ -39,6 +39,8 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
     _slave = std::make_shared<wrocksdb_slave>(name, conf.slave, *db);
   if ( conf.master.enabled )
     _wal_buffer = conf.master.walbuf;
+  
+  _flow = conf.workflow_ptr;
 }
 
 
@@ -257,8 +259,25 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   
   {
     std::lock_guard<std::mutex> lk(_mutex);
-    if ( _wal_buffer && _wal_buffer->may_exist(req->seq) )
+    wal_buffer::log_list logs;
+    if ( _wal_buffer && _wal_buffer->get_updates_since(req->seq, req->limit, logs) )
     {
+      if ( !logs.empty() )
+      {
+        ready = true;
+        res->seq_first =  wal_buffer::get_sequence_number(logs.front());
+        res->seq_last =  wal_buffer::get_sequence_number(logs.back());
+        res->logs.reserve( logs.size() );
+        std::transform( logs.begin(), logs.end(), std::back_inserter(res->logs), 
+                        []( const wal_buffer::data_type data) -> std::string
+                        {
+                          std::string log64;
+                          log64.reserve(data.size() + data.size()/3);
+                          encode64(data.begin(), data.end(), std::inserter(log64, log64.end()) );
+                          return std::move(log64);
+                        }
+        );
+      }
     }
   }
   
@@ -546,5 +565,26 @@ bool wrocksdb::archive(std::string path)
   return false;
 }
 
+void wrocksdb::compact(const std::string& key)
+{
+  std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
+  _flow->post([wthis, key]()
+  {
+    if ( auto pthis = wthis.lock() )
+    {
+      ::rocksdb::Slice skey(key);
+      ::rocksdb::Slice skey2(key+"~");
+      ::rocksdb::CompactRangeOptions opt;
+      opt.exclusive_manual_compaction = true;
+      ::rocksdb::Status status = pthis->_db1->CompactRange( opt, &skey, &skey);
+      if ( !status.ok())
+      {
+        PREFIXDB_LOG_ERROR("wrocksdb::compact(" << key << "): " << status.ToString() )
+      }
+      
+      PREFIXDB_LOG_DEBUG("wrocksdb::compact: " << key << " " <<  status.ToString())
+    }
+  });
+}
 
 }}

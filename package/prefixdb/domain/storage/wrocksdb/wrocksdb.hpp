@@ -44,6 +44,7 @@ public:
   virtual bool backup() override;
   virtual bool archive(std::string path) override;
 
+  void compact(const std::string& key);
 private:
 
   void stop_();
@@ -69,6 +70,7 @@ private:
   std::mutex _mutex;
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr<wal_buffer> _wal_buffer;
+  std::shared_ptr< ::wfc::workflow> _flow;
 };
 
 

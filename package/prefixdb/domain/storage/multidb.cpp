@@ -176,6 +176,7 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
       _flow->start();
     }
     else _flow->reconfigure( opt.workflow );
+    _opt.workflow_ptr = _flow;
     _opt.slave.timer = _flow;
     _factory->initialize(_opt/*, false*/);
     this->configure_backup_timer_();

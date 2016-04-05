@@ -20,8 +20,12 @@ public:
   typedef ::rocksdb::Logger logger_type;
   typedef std::deque<std::string> operand_list;
   typedef std::vector<std::string> update_list;
+  typedef std::function< void(const std::string& key)> compact_handler;
   
-  merge_operator(size_t array_limit, size_t packed_limit);
+  merge_operator(size_t array_limit, size_t packed_limit );
+  
+  void set_handler( compact_handler );
+  
   //void reconfigure(const merge_config& config);
   virtual const char* Name() const override;
  
@@ -47,6 +51,7 @@ private:
   //std::shared_ptr<merge_config> _config;
   std::atomic<size_t> _array_limit;
   std::atomic<size_t> _packed_limit;
+  compact_handler _handler;
 };
 
 }}
