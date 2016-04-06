@@ -587,4 +587,30 @@ void wrocksdb::compact(const std::string& key)
   });
 }
 
+void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
+{
+  auto res = std::make_unique<response::delay_background>();
+  PREFIXDB_LOG_DEBUG("wrocksdb::delay_background: " << req->delay_timeout_s )
+  ::rocksdb::Status status = _db1->PauseBackgroundWork();
+  if ( status.ok() )
+  {
+    bool force = req->force;
+    _flow->post( std::chrono::seconds(req->delay_timeout_s), [this, force]()
+    {
+      while ( this->_db1->ContinueBackgroundWork().ok() && force )
+        PREFIXDB_LOG_DEBUG("wrocksdb::delay_background: ContinueBackgroundWork " );
+    } );
+  }
+  else
+  {
+    res->status = common_status::OtherError;
+  }
+  
+  if ( cb != nullptr ) 
+    cb( std::move(res) );  
+}
+
+
+
+
 }}

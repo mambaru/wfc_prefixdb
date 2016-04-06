@@ -13,6 +13,9 @@
 #include <prefixdb/api/get_updates_since_json.hpp>
 #include <prefixdb/api/get_all_prefixes_json.hpp>
 #include <prefixdb/api/detach_prefixes_json.hpp>
+#include <prefixdb/api/delay_background_json.hpp>
+
+
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace service{
@@ -29,6 +32,8 @@ JSONRPC_TAG(range)
 JSONRPC_TAG(get_updates_since)
 JSONRPC_TAG(get_all_prefixes)
 JSONRPC_TAG(detach_prefixes)
+JSONRPC_TAG(delay_background)
+
 
 
 struct method_list: wfc::jsonrpc::method_list
@@ -45,7 +50,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _range_, request::range_json,  response::range_json, iprefixdb, &iprefixdb::range>,
   wfc::jsonrpc::invoke_method< _get_updates_since_, request::get_updates_since_json,  response::get_updates_since_json, iprefixdb, &iprefixdb::get_updates_since>,
   wfc::jsonrpc::invoke_method< _get_all_prefixes_, request::get_all_prefixes_json,  response::get_all_prefixes_json, iprefixdb, &iprefixdb::get_all_prefixes>,
-  wfc::jsonrpc::invoke_method< _detach_prefixes_, request::detach_prefixes_json,  response::detach_prefixes_json, iprefixdb, &iprefixdb::detach_prefixes>
+  wfc::jsonrpc::invoke_method< _detach_prefixes_, request::detach_prefixes_json,  response::detach_prefixes_json, iprefixdb, &iprefixdb::detach_prefixes>,
+  wfc::jsonrpc::invoke_method< _delay_background_, request::delay_background_json,  response::delay_background_json, iprefixdb, &iprefixdb::delay_background>
 >
 {
 };

@@ -15,10 +15,10 @@ struct common_status_json
   JSON_NAME(SomeFieldFail)
   JSON_NAME(PrefixNotFound)
   JSON_NAME(TooManyKeys)
-  
   JSON_NAME(KeyLengthExceeded)
   JSON_NAME(ValueLengthExceeded)
   JSON_NAME(PrefixLengthExceeded)
+  JSON_NAME(OtherError)
   
   typedef ::wfc::json::enumerator<
     common_status,
@@ -34,7 +34,8 @@ struct common_status_json
         ::wfc::json::enum_value<n_TooManyKeys, common_status, common_status::TooManyKeys>,
         ::wfc::json::enum_value<n_KeyLengthExceeded, common_status, common_status::KeyLengthExceeded>,
         ::wfc::json::enum_value<n_ValueLengthExceeded, common_status, common_status::ValueLengthExceeded>,
-        ::wfc::json::enum_value<n_PrefixLengthExceeded, common_status, common_status::PrefixLengthExceeded>
+        ::wfc::json::enum_value<n_PrefixLengthExceeded, common_status, common_status::PrefixLengthExceeded>,
+        ::wfc::json::enum_value<n_OtherError, common_status, common_status::OtherError>
         /*, ::wfc::json::enum_value<n_TooManyPrefixes, common_status, common_status::TooManyPrefixes>*/
     >
   > type;

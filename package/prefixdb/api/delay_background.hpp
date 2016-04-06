@@ -14,6 +14,7 @@ namespace request
     // Пустой список - все префиксы
     prefix_list prefixes;
     time_t delay_timeout_s = 600;
+    bool force = false;
     typedef std::unique_ptr<delay_background> ptr;
   };
 }

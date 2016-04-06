@@ -618,4 +618,24 @@ bool multidb::archive(std::string path)
   return result;
 }
 
+void multidb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb)
+{
+  auto prefixes = std::move(req->prefixes);
+
+  if ( prefixes.empty() )
+    prefixes = this->all_prefixes_();
+
+  for ( const std::string& prefix: prefixes)
+  {
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      db->delay_background( std::make_unique<request::delay_background>(*req), nullptr );
+    }
+  }
+  
+  if ( cb != nullptr )
+    cb(std::make_unique<response::delay_background>());
+
+}
+
 }}

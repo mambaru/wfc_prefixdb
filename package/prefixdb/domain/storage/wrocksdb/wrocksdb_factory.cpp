@@ -156,6 +156,9 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
   auto status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
+#warning
+  db->PauseBackgroundWork();
+  
   if ( status.ok() ) {
     assert(handles.size() == 1);
     // i can delete the handle since DBImpl is always holding a reference to
@@ -174,6 +177,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
       DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
     }
+    
     
     auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, bdb);
     /*merge->set_handler([pwrdb](const std::string& key) {

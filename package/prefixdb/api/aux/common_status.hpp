@@ -15,7 +15,8 @@ enum class common_status
   TooManyKeys,     // Слишком много ключей в запросе 
   KeyLengthExceeded,
   ValueLengthExceeded,
-  PrefixLengthExceeded
+  PrefixLengthExceeded, 
+  OtherError
 };
 
 }}

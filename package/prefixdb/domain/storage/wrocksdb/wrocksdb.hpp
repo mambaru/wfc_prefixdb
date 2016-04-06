@@ -38,6 +38,7 @@ public:
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
+  virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   
   virtual void start( ) override;
   virtual void stop() override;
@@ -57,11 +58,6 @@ private:
   template<typename Res, typename Batch, typename ReqPtr, typename Callback>
   void write_batch_(Batch& batch, ReqPtr req, Callback cb);
 
-  /*
-  typedef wfc::workflow::callback_timer_handler timer_handler;
-  typedef wfc::workflow::timer_id_t timer_id_t;
-  typedef std::shared_ptr< request::get_updates_since > request_since_ptr;
-  */
 private:
   
   std::string _name;  
@@ -71,6 +67,11 @@ private:
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr<wal_buffer> _wal_buffer;
   std::shared_ptr< ::wfc::workflow> _flow;
+
+  /*
+  typedef wfc::workflow::timer_id_t timer_id_t;
+  timer_id_t _delay_background_id = -1;
+  */
 };
 
 
