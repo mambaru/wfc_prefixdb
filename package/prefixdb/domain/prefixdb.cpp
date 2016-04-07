@@ -5,6 +5,7 @@
 #include <wfc/module/iinstance.hpp>
 #include "storage/multidb.hpp"
 #include "storage/god.hpp"
+#include "../service/prefixdb_cmd.hpp"
 #include <ctime>
 
 namespace wamba{ namespace prefixdb {
@@ -178,32 +179,7 @@ void prefixdb::delay_background( request::delay_background::ptr req, response::d
 
 void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, outgoing_handler_t handler)
 {
-  std::string result;
-  std::stringstream ss;
-  ss << std::string( d->begin(), d->end() );
-  std::string method;
-  ss >> method;
-  if ( method == "db" || method=="delay_background")
-  {
-    time_t delay_s = 0;
-    bool force = false;
-    ss >> delay_s;
-    ss >> force;
-    auto req = std::make_unique<request::delay_background>();
-    req->delay_timeout_s = delay_s;
-    req->force = force;
-    this->delay_background(std::move(req), [handler, delay_s, force](response::delay_background::ptr)
-    {
-      std::stringstream ss;
-      ss << "OK. Background delayed on " << delay_s << " seconds. force=" << force;
-      handler( ::iow::io::make(ss.str()) );
-    });
-  }
-  else
-  {
-    handler( ::iow::io::make("Unknown method") );
-  }
- 
+  service::prefixdb_cmd(this->shared_from_this(), std::move(d), handler);
 }
 
 }}

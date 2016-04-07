@@ -5,6 +5,7 @@
 #include "god.hpp"
 #include "aux/multidb.hpp"
 #include "aux/scan_dir.hpp"
+#include "aux/copy_dir.hpp"
 #include <wfc/logger.hpp>
 #include <wfc/boost.hpp>
 #include <prefixdb/logger.hpp>
@@ -99,7 +100,7 @@ void multidb::configure_archive_timer_()
         DEBUG_LOG_MESSAGE("---- ARCHIVE ----")
         if (auto pthis = wthis.lock() )
         {
-          pthis->archive( pthis->_opt.archive.path );
+          pthis->archive( /*pthis->_opt.archive.path*/ );
           return true;
         }
         return false;
@@ -583,8 +584,12 @@ bool multidb::restore( )
 
 
 
-bool multidb::archive(std::string path)
+bool multidb::archive(/*std::string*/ /*path*/)
 {
+  if ( !_opt.archive.enabled )
+    return false;
+  
+  auto path = _opt.archive.path;
   if ( !::boost::filesystem::exists(path) )
   {
     ::boost::system::error_code ec;
@@ -594,6 +599,22 @@ bool multidb::archive(std::string path)
       COMMON_LOG_ERROR("Create directory fail '" << path << "'" << ec.message() );
       return false;
     }
+  }
+  
+  bool fail = false;
+  auto dirs = scan_dir(path, fail);
+  if ( _opt.archive.depth <= dirs.size() )
+  {
+    std::sort(dirs.begin(), dirs.end() );
+    std::for_each( dirs.begin(), dirs.begin() + dirs.size() - _opt.archive.depth, [path](const std::string& name)
+    {
+      auto dir = path + '/' + name;
+      std::string message;
+      if ( !delete_dir(dir, message) )
+      {
+        PREFIXDB_LOG_ERROR("Delete old archive '" << path << "': " << message)
+      }
+    });
   }
 
   path += "/" + time_string();
@@ -615,6 +636,8 @@ bool multidb::archive(std::string path)
       result &= db->archive(path);
     }
   }
+  
+  
   return result;
 }
 

@@ -102,7 +102,21 @@ namespace
     message = ss.str();
     return false;
   }
+
+  bool delete_dir( const ::boost::filesystem::path& path, std::string& message )
+  {
+    boost::system::error_code ec;
+    ::boost::filesystem::remove_all(path, ec);
+    if (ec)
+    {
+      message = ec.message();
+      return false;
+    }
+    return ec;
+  }
+
 }
+
 
 
 
@@ -114,6 +128,11 @@ bool copy_dir(const std::string& from, const std::string& to, std::string& messa
 bool move_dir(const std::string& from, const std::string& to, std::string& message)
 {
   return move_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
+}
+
+bool delete_dir(const std::string& path, std::string& message)
+{
+  return delete_dir( ::boost::filesystem::path(path), message );
 }
 
 }}

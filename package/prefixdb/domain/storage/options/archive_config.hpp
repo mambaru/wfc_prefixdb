@@ -16,6 +16,7 @@ struct archive_config
   
   time_t period_s = 0;
 
+  size_t depth = 1;
 };
 
 }}

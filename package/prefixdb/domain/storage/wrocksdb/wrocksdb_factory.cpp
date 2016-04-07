@@ -19,6 +19,7 @@
 #include "merge/merge_operator.hpp"
 #include "wal_buffer.hpp"
 
+#include <wfc/wfc_exit.hpp>
 namespace rocksdb
 {
 
@@ -145,7 +146,6 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   
   auto merge = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
   _context->cdf[0].options.merge_operator = merge;
-
   
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
@@ -154,12 +154,34 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
-  
   auto status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
-#warning
-  db->PauseBackgroundWork();
   
-  if ( status.ok() ) {
+  if ( !status.ok() )
+  {
+    PREFIXDB_LOG_ERROR("::rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
+    if ( conf.auto_repair )
+    {
+      status = ::rocksdb::RepairDB(conf.path, _context->options );
+      PREFIXDB_LOG_MESSAGE("::rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
+      if ( status.ok() )
+      {
+        status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
+      }
+    }
+  }
+  
+  if ( !status.ok() )
+  {
+    if ( conf.abort_if_open_error )
+    {
+      wfc_exit_with_error("Can not open DB " + conf.path);
+    }
+    return nullptr;
+  }
+  
+  
+  if ( status.ok() ) 
+  {
     assert(handles.size() == 1);
     // i can delete the handle since DBImpl is always holding a reference to
     // default column family
@@ -170,7 +192,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     COMMON_LOG_MESSAGE("Backup path: " << conf.backup.path)
     ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
-    //backup_opt.destroy_old_data = true; //???? 
+
     auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
     if ( !conf.restore.path.empty() )
     {
@@ -180,9 +202,6 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     
     
     auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, bdb);
-    /*merge->set_handler([pwrdb](const std::string& key) {
-      pwrdb->compact(key);
-    });*/
     
     DEBUG_LOG_MESSAGE("New RocksDB " << dbname)
     return pwrdb;

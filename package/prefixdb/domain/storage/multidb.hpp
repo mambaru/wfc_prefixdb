@@ -12,8 +12,8 @@ namespace wamba{ namespace prefixdb{
 struct ifactory;
 
 class multidb
-  : public iprefixdb_ex
-  , public iprefixdb_restore
+  : public iprefixdb/*_ex
+  , public iprefixdb_restore*/
   , public std::enable_shared_from_this<multidb>
 {
   typedef std::shared_ptr<iprefixdb_ex> prefixdb_ptr;
@@ -34,11 +34,11 @@ public:
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   
-  virtual void start() override;
-  virtual void stop() override;
-  virtual bool backup() override;
-  virtual bool archive(std::string path) override;
-  virtual bool restore() override;
+  virtual void start() /*override*/;
+  virtual void stop() /*override*/;
+  virtual bool backup() /*override*/;
+  virtual bool archive(/*std::string path*/) /*override*/;
+  virtual bool restore() /*override*/;
   
 private:
   bool preopen_(std::string path, bool create_if_missing);

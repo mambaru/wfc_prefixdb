@@ -21,6 +21,7 @@ SET(
   
   prefixdb/domain/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
+  prefixdb/service/prefixdb_cmd.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp
   prefixdb/domain/storage/aux/copy_dir.cpp
 )
