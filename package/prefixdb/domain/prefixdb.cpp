@@ -172,9 +172,19 @@ void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::det
   _impl->detach_prefixes( std::move(req), std::move(cb) );  
 }
 
+void prefixdb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)
+{
+  _impl->attach_prefixes( std::move(req), std::move(cb) );  
+}
+
 void prefixdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
 {
   _impl->delay_background( std::move(req), std::move(cb) );  
+}
+
+void prefixdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) 
+{
+  _impl->continue_background( std::move(req), std::move(cb) );  
 }
 
 void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, outgoing_handler_t handler)

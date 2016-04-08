@@ -12,14 +12,14 @@ namespace request
   {
     JSON_NAME(prefixes)
     JSON_NAME(delay_timeout_s)
-    JSON_NAME(force)
+    JSON_NAME(contunue_force)
     
     typedef ::wfc::json::object<
       delay_background,
       ::wfc::json::member_list<
         ::wfc::json::member<n_prefixes, delay_background, delay_background::prefix_list, &delay_background::prefixes, wfc::json::array_of_strings<50> >,
         ::wfc::json::member<n_delay_timeout_s, delay_background, time_t, &delay_background::delay_timeout_s >,
-        ::wfc::json::member<n_force, delay_background, bool, &delay_background::force >
+        ::wfc::json::member<n_contunue_force, delay_background, bool, &delay_background::contunue_force >
       >
     > type;
     typedef type::target target;

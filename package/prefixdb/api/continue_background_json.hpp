@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/api/detach_prefixes.hpp>
+#include <prefixdb/api/continue_background.hpp>
 #include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/json.hpp>
 
@@ -8,16 +8,17 @@ namespace wamba { namespace prefixdb {
 
 namespace request 
 {
-  struct detach_prefixes_json
+  struct continue_background_json
   {
     JSON_NAME(prefixes)
-    JSON_NAME(deny_timeout_s)
+    JSON_NAME(background_id)
+    JSON_NAME(force)
     
     typedef ::wfc::json::object<
-      detach_prefixes,
+      continue_background,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefixes, detach_prefixes, detach_prefixes::prefix_list, &detach_prefixes::prefixes, wfc::json::array_of_strings<50> >,
-        ::wfc::json::member<n_deny_timeout_s, detach_prefixes, time_t, &detach_prefixes::deny_timeout_s >
+        ::wfc::json::member<n_prefixes, continue_background, continue_background::prefix_list, &continue_background::prefixes, wfc::json::array_of_strings<50> >,
+        ::wfc::json::member<n_force, continue_background, bool, &continue_background::force >
       >
     > type;
     typedef type::target target;
@@ -28,14 +29,14 @@ namespace request
 
 namespace response
 {
-  struct detach_prefixes_json
+  struct continue_background_json
   {
     JSON_NAME(status)
 
     typedef ::wfc::json::object<
-      detach_prefixes,
+      continue_background,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_status, detach_prefixes, common_status, &detach_prefixes::status, common_status_json>
+        ::wfc::json::member<n_status, continue_background, common_status, &continue_background::status, common_status_json>
       >
     > type;
     typedef type::target target;

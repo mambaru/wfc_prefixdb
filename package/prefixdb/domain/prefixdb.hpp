@@ -39,7 +39,9 @@ public:
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
+  virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
+  virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
   
   // iinterface
   virtual void perform_io(data_ptr d, io_id_t /*io_id*/, outgoing_handler_t handler) override;

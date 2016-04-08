@@ -436,6 +436,23 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
   }
 }
 
+void multidb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)
+{
+  if ( req_null(req, cb) ) return;
+  
+  for (const auto& prefix : req->prefixes )
+  {
+    std::lock_guard<std::mutex> lk(this->_mutex);
+    auto itr = this->_db_map.find(prefix);
+    if ( itr != this->_db_map.end() && itr->second == nullptr )
+    {
+      _db_map.erase(itr);
+      if ( req->opendb )
+        this->prefix_(prefix, false);
+    }
+  }
+}
+
 void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)
 {
   if ( req_null(req, cb) ) return;
@@ -643,6 +660,8 @@ bool multidb::archive(/*std::string*/ /*path*/)
 
 void multidb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb)
 {
+  if ( req_null(req, cb) ) return;
+  
   auto prefixes = std::move(req->prefixes);
 
   if ( prefixes.empty() )
@@ -658,7 +677,27 @@ void multidb::delay_background( request::delay_background::ptr req, response::de
   
   if ( cb != nullptr )
     cb(std::make_unique<response::delay_background>());
+}
 
+void multidb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb)
+{
+  if ( req_null(req, cb) ) return;
+  
+  auto prefixes = std::move(req->prefixes);
+
+  if ( prefixes.empty() )
+    prefixes = this->all_prefixes_();
+
+  for ( const std::string& prefix: prefixes)
+  {
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      db->continue_background( std::make_unique<request::continue_background>(*req), nullptr );
+    }
+  }
+  
+  if ( cb != nullptr )
+    cb(std::make_unique<response::continue_background>());
 }
 
 }}

@@ -26,8 +26,6 @@ namespace
 {
   inline std::string& get_key(std::string& key) {return key;}
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
-  
-  
 }
 
 wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
@@ -36,7 +34,7 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
   , _db1(db)
 {
   if ( conf.slave.enabled )
-    _slave = std::make_shared<wrocksdb_slave>(name, conf.slave, *db);
+    _slave = std::make_shared<wrocksdb_slave>(name, conf.path, conf.slave, *db);
   if ( conf.master.enabled )
     _wal_buffer = conf.master.walbuf;
   
@@ -313,9 +311,16 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
         }
         res->seq_last  = cur_seq;
       }
+      else
+      {
+        DEBUG_LOG_MESSAGE("rocksdb::get_updates_since iterator invalid" );
+        res->status = common_status::OtherError;
+      }
     }
   }
   res->seq_final = db->GetLatestSequenceNumber();
+  /*if ( res->seq_final < req->seq )
+    res->status = common_status::OtherError;*/
   cb( std::move(res) );  
 }
 
@@ -346,6 +351,12 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
     cb( std::move(res) );
   }
 }
+
+void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response::attach_prefixes::handler cb)
+{
+  if ( cb!=nullptr ) cb(nullptr);
+}
+
 
 void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 {
@@ -461,91 +472,6 @@ bool wrocksdb::backup()
   return true;
 }
 
-/*
-namespace 
-{
-  inline bool copy_dir(
-    boost::filesystem::path const & source,
-    boost::filesystem::path const & destination,
-    std::string& message
-  )
-  {
-    namespace fs = boost::filesystem;
-  
-    try
-    {
-      // Check whether the function call is valid
-      if( !fs::exists(source) || !fs::is_directory(source) )
-      {
-        std::stringstream ss;
-        ss << "Source directory " << source.string() << " does not exist or is not a directory." << '\n';
-        message = ss.str();
-        return false;
-      }
-      
-      if ( fs::exists(destination) )
-      {
-        std::stringstream ss;
-        ss << "Destination directory " << destination.string() << " already exists." << '\n';
-        message = ss.str();
-        return false;
-      }
-      
-      // Create the destination directory
-      if( !fs::create_directory(destination) )
-      {
-        std::stringstream ss;
-        ss << "Unable to create destination directory " << destination.string() << '\n';
-        message = ss.str();
-        return false;
-      }
-    }
-    catch(fs::filesystem_error const & e)
-    {
-      std::stringstream ss;
-      ss << e.what() << '\n';
-      message = ss.str();
-      return false;
-    }
-    
-    // Iterate through the source directory
-    for( fs::directory_iterator file(source); file != fs::directory_iterator(); ++file) try
-    {
-      fs::path current(file->path());
-      if( fs::is_directory(current) )
-      {
-        // Found directory: Recursion
-        if( !copy_dir(current, destination / current.filename(), message) )
-          return false;
-      }
-      else
-      {
-        // Found file: Copy
-        ::boost::system::error_code ec;
-        ::boost::filesystem::copy_file( current, destination / current.filename(), ec);
-        if (ec)
-        {
-          // TODO: Ошибка
-        }
-      }
-    }
-    catch(const fs::filesystem_error& e)
-    {
-      std::stringstream ss;
-      ss << e.what() << '\n';
-      message = ss.str();
-      return false;
-    }
-    return true;
-  }
-
-  inline bool copy_dir(const std::string& from, const std::string& to, std::string& message)
-  {
-    return copy_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
-  }
-}
-*/
-
 bool wrocksdb::archive(std::string path)
 {
   DEBUG_LOG_MESSAGE("================== " << path << " ==========================")
@@ -594,7 +520,7 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
   ::rocksdb::Status status = _db1->PauseBackgroundWork();
   if ( status.ok() )
   {
-    bool force = req->force;
+    bool force = req->contunue_force;
     _flow->post( std::chrono::seconds(req->delay_timeout_s), [this, force]()
     {
       while ( this->_db1->ContinueBackgroundWork().ok() && force )
@@ -610,6 +536,13 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
     cb( std::move(res) );  
 }
 
+void wrocksdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) 
+{
+  auto res = std::make_unique<response::continue_background>();
+  while ( this->_db1->ContinueBackgroundWork().ok() && req->force );
+  if ( cb != nullptr ) 
+    cb( std::move(res) );  
+}
 
 
 

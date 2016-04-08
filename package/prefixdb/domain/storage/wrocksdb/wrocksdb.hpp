@@ -38,7 +38,9 @@ public:
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
+  virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
+  virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
   
   virtual void start( ) override;
   virtual void stop() override;
@@ -46,9 +48,11 @@ public:
   virtual bool archive(std::string path) override;
 
   void compact(const std::string& key);
+
 private:
 
   void stop_();
+  
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
   void merge_(ReqPtr req, Callback cb);
   
@@ -67,11 +71,6 @@ private:
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr<wal_buffer> _wal_buffer;
   std::shared_ptr< ::wfc::workflow> _flow;
-
-  /*
-  typedef wfc::workflow::timer_id_t timer_id_t;
-  timer_id_t _delay_background_id = -1;
-  */
 };
 
 

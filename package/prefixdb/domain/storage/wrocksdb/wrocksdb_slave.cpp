@@ -9,13 +9,14 @@
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <ctime>
-
+#include <fstream>
 
 
 namespace wamba{ namespace prefixdb {
 
-wrocksdb_slave::wrocksdb_slave(std::string name, const slave_config opt, db_type& db)
+wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_config& opt, db_type& db)
   : _name(name)
+  , _path(path)
   , _opt(opt)
   , _db(db)
 {
@@ -61,6 +62,22 @@ void wrocksdb_slave::create_updates_requester_()
   preq->prefix  = _name;
   preq->limit = _opt.log_limit_per_req;
   
+  uint64_t seq = this->read_sequence_number_();
+  
+  if ( seq == static_cast<uint64_t>(-1) )
+  {
+    wfc_exit_with_error("Invalid sequence number. Replication is not possible. You must synchronize the database.");
+  }
+  else if ( seq == 0)
+  {
+    preq->seq = _db.GetLatestSequenceNumber() + 1;
+  }
+  else
+  {
+    preq->seq = seq;
+  }
+  
+  /*
   std::string value;
   
   ::rocksdb::Status status = _db.Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
@@ -73,6 +90,7 @@ void wrocksdb_slave::create_updates_requester_()
   {
     preq->seq = _db.GetLatestSequenceNumber() + 1;
   }
+  */
 
   _opt.timer->release_timer(_slave_timer_id);
   _slave_timer_id = _opt.timer->create_requester<request::get_updates_since, response::get_updates_since>
@@ -89,7 +107,14 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
 {
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
-      
+
+  if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
+  {
+    ::wfc_exit_with_error("Slave replication error. Invalid master responce");
+    return nullptr;
+  }
+
+
   if ( res->logs.empty() )
     return nullptr;
 
@@ -118,10 +143,12 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
   this->logs_parser_(res);
   auto batch = _log_parser->detach();
   //size_t sn = res->seq_last + 1;
-  size_t sn = _log_parser->get_next_seq_number();
+  uint64_t sn = _log_parser->get_next_seq_number();
   _last_sequence = sn;
-  batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+  // batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+  this->write_sequence_number_(-1);
   this->_db.Write( ::rocksdb::WriteOptions(), batch.get() );
+  this->write_sequence_number_(sn);
 
   preq->seq = sn;
   
@@ -192,7 +219,7 @@ void wrocksdb_slave::create_seq_timer_()
       std::chrono::milliseconds( _opt.seq_log_timeout_ms ),
       [this, last_time]()->bool
       {
-        time_t span = time(0) - last_time->load();
+        time_t span = std::time(0) - last_time->load();
         if ( this->_update_counter == 0)
         {
           PREFIXDB_LOG_MESSAGE("No updates for '" << this->_name << "' in the last " << span << " seconds. Next seq №" << this->_last_sequence );
@@ -200,13 +227,30 @@ void wrocksdb_slave::create_seq_timer_()
         else
         {
           PREFIXDB_LOG_MESSAGE( this->_update_counter.load() << " updates for '" << this->_name << "' in the last " << span << " seconds. Next seq №" << this->_last_sequence );
-          last_time->store( time(0) );
+          last_time->store( std::time(0) );
           this->_update_counter = 0;
         }
         return true;
       }
     );
   }
+}
+
+void wrocksdb_slave::write_sequence_number_(uint64_t seq)
+{
+  auto path = _path + "/slave-sequence-number";
+  std::ofstream ofs(path);
+  ofs << seq;
+  ofs.flush();
+}
+
+uint64_t wrocksdb_slave::read_sequence_number_()
+{
+  uint64_t seq = 0;
+  auto path = _path + "/slave-sequence-number";
+  std::ifstream ofs(path);
+  ofs >> seq;
+  return seq;
 }
 
 }}

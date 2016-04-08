@@ -13,7 +13,9 @@
 #include <prefixdb/api/get_updates_since.hpp>
 #include <prefixdb/api/get_all_prefixes.hpp>
 #include <prefixdb/api/detach_prefixes.hpp>
+#include <prefixdb/api/attach_prefixes.hpp>
 #include <prefixdb/api/delay_background.hpp>
+#include <prefixdb/api/continue_background.hpp>
 
 namespace wamba { namespace prefixdb {
 
@@ -35,9 +37,13 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void range( request::range::ptr req, response::range::handler cb) = 0;
 
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) = 0;
-  virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) = 0;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) = 0;
+  
+  virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) = 0;
+  virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) = 0;
+  
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) = 0;
+  virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) = 0;
   
 };
 

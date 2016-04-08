@@ -16,20 +16,26 @@ class wrocksdb_slave
 public:
   typedef ::rocksdb::BackupableDB db_type;
   
-  wrocksdb_slave(std::string name, const slave_config opt, db_type& db);
+  wrocksdb_slave(std::string name, std::string path, const slave_config& opt, db_type& db);
   
   void start();
   
   void stop();
   
 private:
+  
   void create_updates_requester_();
+  
   request::get_updates_since::ptr updates_handler_(response::get_updates_since::ptr, std::shared_ptr<request::get_updates_since> preq);
+  
   void logs_parser_( response::get_updates_since::ptr& res);
   void create_diff_timer_();
   void create_seq_timer_();
+  void     write_sequence_number_(uint64_t seq);
+  uint64_t read_sequence_number_();
 private:
   std::string _name;
+  std::string _path;
   slave_config _opt;
   db_type& _db;
   std::shared_ptr<since_reader> _log_parser;

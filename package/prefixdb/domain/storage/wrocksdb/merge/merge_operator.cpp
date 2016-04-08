@@ -21,6 +21,7 @@
 namespace wamba{ namespace prefixdb{
 
 using parser = ::wfc::json::parser;
+
 namespace helper{
   
   inline const char* begin(const merge_operator::slice_type* existing_value)
@@ -181,67 +182,6 @@ catch(...)
   return true;
 }
 
-/*
-
-bool merge_operator::Merge(const slice_type& key,
-                     const slice_type* existing_value,
-                     const slice_type& value,
-                     std::string* new_value,
-                     ::rocksdb::Logger* logger) const 
-try
-{
-  merge upd;
-  helper::unserialize<merge_json>(upd, value);
-  
-  const char *beg = helper::begin(existing_value);
-  const char *end = helper::end(existing_value);
-  switch( upd.mode )
-  {
-    case merge_mode::inc:
-      this->inc_(*new_value, std::move(upd.raw), beg, end ); 
-      break;
-    case merge_mode::add:
-      this->add_(*new_value, std::move(upd.raw), beg, end ); 
-      break;
-    case merge_mode::packed:
-      this->packed_(*new_value, std::move(upd.raw), beg, end ); 
-      break;
-    default: 
-      COMMON_LOG_MESSAGE("merge_operator::Merge: Invalid method merge: " << value.ToString()  )
-      if ( beg!=end )
-        new_value->assign(beg, end );
-      else
-        *new_value="\"\"";
-      COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << *new_value  )
-  }
-  DEBUG_LOG_MESSAGE("Merge save: " 
-    << "\nValue: "   << (beg!=end ? std::string(beg, end) : "nullptr")
-    << "\nOperand: " << value.ToString()
-    << "\nResult: " << *new_value)
-  return true;
-}
-catch(std::exception e)
-{
-  if ( existing_value )
-    *new_value = existing_value->ToString();
-  
-  DOMAIN_LOG_ERROR("PreffixDB merge_operator::Merge exception: "<< e.what() << ": key=" 
-                  << key.ToString() << " existing=" << ( existing_value ? existing_value->ToString() : std::string("nullptr") )
-                  << " value=" << value.ToString() )
-  return true;
-}
-catch(...)
-{
-  if ( existing_value )
-    *new_value = existing_value->ToString();
-
-  DOMAIN_LOG_ERROR("PreffixDB merge_operator::Merge unhandled exception: key=" 
-                  << key.ToString() << " existing=" << ( existing_value ? existing_value->ToString() : "nullptr" )
-                  << " value=" << value.ToString() )
-  return true;
-}
-*/
-  
 const char* merge_operator::Name() const 
 {
   return "PreffixDBMergeOperator";
@@ -288,6 +228,7 @@ void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool ex
 {
   typedef ::wfc::json::value<int64_t> int64json;
   inc_params params;
+
   if ( !helper::unserialize<inc_params_json>(params, oper, false) )
     return;
   
@@ -302,7 +243,8 @@ void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool ex
       helper::unserialize<int64json>(num, params.val, false);
     }
   }
-  else if (parser::is_number( params.inc.begin(), params.inc.end()))
+  
+  if (parser::is_number( params.inc.begin(), params.inc.end()))
   {
     int64_t inc = 0;
     helper::unserialize<int64json>(inc, params.inc, false);
@@ -310,56 +252,6 @@ void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool ex
   }
 }
 
-/*
-void merge_operator::inc_(std::string& out, std::string&& upd, const char* beg, const char* end ) const
-{
-  ::wfc::json::value<int64_t>::serializer intser;
-
-  inc_params params;
-  
-  bool ready = false;
-  if ( parser::is_object(upd.begin(), upd.end()) )
-  {
-    try{
-      inc_params_json::serializer()( params, upd.begin(), upd.end() );
-      ready = true;
-    } catch(...) {}
-  }
-  
-  if ( !ready )
-  {
-    if (beg!=end) out.assign(beg, end);
-    return;
-  }
-  
-  if ( beg!=end 
-    && parser::is_number(beg, end)
-    && parser::is_number( params.inc.begin(), params.inc.end() )
-  )
-  { 
-    int64_t val = 0;
-    intser(val, beg, end);
-    
-    int64_t inc = 0;
-    intser(inc, params.inc.begin(), params.inc.end());
-    
-    val += inc;
-    intser(val, std::inserter(out, out.end()) );
-  }
-  else
-  {
-    if ( parser::is_number( params.val.begin(), params.val.end() ) )
-    {
-      out = std::move(params.val);
-    }
-    else
-    {
-      out = "0";
-    }
-  }
-}
-
-*/
 void merge_operator::add_(const slice_type* value, const update_list& operands, std::string& result) const
 {
   std::deque<std::string> arr;
@@ -408,77 +300,11 @@ void merge_operator::add_operand_(const std::string& oper, std::deque<std::strin
   }
 }
 
-/*
-void merge_operator::add_(std::string& out, std::string&& in, const char* beg, const char* end ) const
-{
-  add_params upd;
-  bool ready = false;
-  if ( parser::is_object(in.begin(), in.end()) )
-  {
-    try{
-      add_params_json::serializer()( upd, in.begin(), in.end() );
-    } catch(...) {};
-    ready = true;
-  }
-  
-  if ( !ready )
-  {
-    if (beg!=end) 
-    {
-      out.assign(beg, end);
-    }
-    return;
-  }
-  
-  if ( upd.lim == 0 )
-  {
-    out="[]";
-    return;
-  }
-  
-  std::vector<std::string> arr;
-  typedef ::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > arr_json;
-  
-  if (parser::is_array(beg, end) )
-  {
-    try{
-      arr_json::serializer()(arr, beg, end);
-    } catch(...) { }
-  }
-  
-  if ( parser::is_array(upd.arr.begin(), upd.arr.end()) )
-  {
-    try{
-      std::vector<std::string> tail;
-      tail.reserve(upd.lim);
-      arr_json::serializer()(tail, upd.arr.begin(), upd.arr.end());
-      arr.insert( arr.end(), tail.begin(), tail.end());
-      //arr.emplace_back(tail.begin(), tail.end());
-    } catch(...) { }
-  }
-  else
-  {
-    // Добавлем объект как он пришел
-    arr.push_back(upd.arr);
-  }
-  
-  if ( arr.size() > upd.lim )
-  {
-    size_t pos = arr.size() - upd.lim;
-    arr.erase( arr.begin(), arr.begin() + pos );
-  }
-  
-  out.reserve( upd.arr.size() + std::distance(beg, end) );
-  arr_json::serializer()(arr, std::inserter(out, out.end()));
-}
-*/
-// new
 void merge_operator::packed_(const slice_type* value, const update_list& operands, std::string& result) const
 {
   packed_t pck;
   
   // Десериализуем текущий объект
-  
   if ( !helper::unserialize<packed_json>(pck, value, false) )
   {
     // очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его
@@ -534,22 +360,24 @@ void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) con
       itr = pck.insert(itr, std::move(field) );
     }
 
-      if ( inc_ready )
-      { // если в inc число, то работаем как с числом и делаем инкремент
-        this->packed_inc_( u, itr->second );
-      }
-      else
-      {
-        itr->second = std::move(u.val);
-      }
+    if ( inc_ready )
+    { // если в inc число, то работаем как с числом и делаем инкремент
+      this->packed_inc_( u, itr->second );
     }
+    else
+    {
+      itr->second = std::move(u.val);
+    }
+  }
 }
 
 void merge_operator::packed_inc_(const packed_field_params& upd, std::string& result) const
 {
   ::wfc::json::value<int64_t>::serializer intser;
+  
   if ( !parser::is_number( result.begin(), result.end() ) )
-  { // если текущее значение не число, то берём из val
+  { 
+    // если текущее значение не число, то берём из val
     result = std::move( upd.val );
     if ( !parser::is_number( result.begin(), result.end() ) )
     { // если все равно не число

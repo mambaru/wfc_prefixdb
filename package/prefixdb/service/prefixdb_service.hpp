@@ -13,7 +13,9 @@
 #include <prefixdb/api/get_updates_since_json.hpp>
 #include <prefixdb/api/get_all_prefixes_json.hpp>
 #include <prefixdb/api/detach_prefixes_json.hpp>
+#include <prefixdb/api/attach_prefixes_json.hpp>
 #include <prefixdb/api/delay_background_json.hpp>
+#include <prefixdb/api/continue_background_json.hpp>
 
 
 #include <wfc/jsonrpc.hpp>
@@ -32,6 +34,8 @@ JSONRPC_TAG(range)
 JSONRPC_TAG(get_updates_since)
 JSONRPC_TAG(get_all_prefixes)
 JSONRPC_TAG(detach_prefixes)
+JSONRPC_TAG(attach_prefixes)
+JSONRPC_TAG(continue_background)
 JSONRPC_TAG(delay_background)
 
 
@@ -51,7 +55,9 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _get_updates_since_, request::get_updates_since_json,  response::get_updates_since_json, iprefixdb, &iprefixdb::get_updates_since>,
   wfc::jsonrpc::invoke_method< _get_all_prefixes_, request::get_all_prefixes_json,  response::get_all_prefixes_json, iprefixdb, &iprefixdb::get_all_prefixes>,
   wfc::jsonrpc::invoke_method< _detach_prefixes_, request::detach_prefixes_json,  response::detach_prefixes_json, iprefixdb, &iprefixdb::detach_prefixes>,
-  wfc::jsonrpc::invoke_method< _delay_background_, request::delay_background_json,  response::delay_background_json, iprefixdb, &iprefixdb::delay_background>
+  wfc::jsonrpc::invoke_method< _attach_prefixes_, request::attach_prefixes_json,  response::attach_prefixes_json, iprefixdb, &iprefixdb::attach_prefixes>,
+  wfc::jsonrpc::invoke_method< _delay_background_, request::delay_background_json,  response::delay_background_json, iprefixdb, &iprefixdb::delay_background>,
+  wfc::jsonrpc::invoke_method< _continue_background_, request::continue_background_json,  response::continue_background_json, iprefixdb, &iprefixdb::continue_background>
 >
 {
 };
