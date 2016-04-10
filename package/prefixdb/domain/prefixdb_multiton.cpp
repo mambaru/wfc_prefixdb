@@ -15,18 +15,23 @@
 
 namespace wamba{ namespace prefixdb{
 
-WFC_NAME2(prefixdb_component_name, "prefixdb")
+namespace {
+  
+WFC_NAME2(component_name, "prefixdb")
 
-class prefixdb_multiton::impl: public ::wfc::multiton<
-  prefixdb_component_name,
+class impl: public ::wfc::multiton<
+  component_name,
   ::wfc::instance<prefixdb>,
   prefixdb_config_json
 >
 {  
+  
 };
 
+}
+
 prefixdb_multiton::prefixdb_multiton():
-  ::wfc::component( std::make_shared<prefixdb_multiton::impl>() )
+  ::wfc::component( std::make_shared<impl>() )
 {
 }
 

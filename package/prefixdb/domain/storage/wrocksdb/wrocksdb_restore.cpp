@@ -25,18 +25,31 @@ bool wrocksdb_restore::restore()
   
   std::vector< ::rocksdb::BackupInfo > info;
   _rdb->GetBackupInfo( &info );
-  std::vector< ::rocksdb::BackupID > bads;
-  _rdb->GetCorruptedBackups(&bads);
-  if ( !bads.empty() )
+  std::vector< ::rocksdb::BackupID > bids;
+  _rdb->GetCorruptedBackups(&bids);
+  if ( !bids.empty() )
   {
     std::stringstream ss;
-    for (auto b : bads)
-      ss << b;
+    for (auto b : bids)
+      ss << b << ",";
     DOMAIN_LOG_ERROR("Есть поврежденные бэкапы " << ss.str());
   }
 
+  auto bid = _conf.restore.backup_id;
   for ( auto inf : info )
   {
+    if ( bid!=0 )
+    {
+      if ( bid < 0 )
+      {
+	bid++;
+	continue;
+      }
+      else if ( inf.backup_id < bid )
+      {
+	continue;
+      }
+    }
     COMMON_LOG_BEGIN("Restore from backup_id=" << inf.backup_id )
     ::rocksdb::Status status = _rdb->RestoreDBFromBackup( inf.backup_id, _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
     COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )

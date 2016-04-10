@@ -13,7 +13,7 @@ namespace wamba{ namespace prefixdb{
 class prefixdb_multiton
   : public ::wfc::component
 {
-  class impl;
+//  class impl;
 public:
   prefixdb_multiton();
 };

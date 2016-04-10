@@ -12,43 +12,12 @@ namespace wamba{ namespace prefixdb {
   
 void prefixdb::start(const std::string&)
 {
-  
-  if ( this->has_arg("restore") )  
-  {
-    auto opt = this->options();
-    if ( opt.restore.forbid )
-    {
-      ::wfc_exit_with_error("Restore forbidden in this configurations");
-      return;
-    }
-    
-    auto db = std::make_shared<multidb>();
-    auto factory = god::create("rocksdb", this->global()->io_service );
-    
-    std::string path = this->get_arg("restore");
-    opt.preopen = false;
-    /*if ( !path.empty() )
-      opt.restore_path = path;*/
-    factory->initialize(opt/*, true*/);
-    db->reconfigure( opt, factory );
-
-    //COMMON_LOG_MESSAGE("Restore from " << opt.restore_path)
-    if ( !db->restore() )
-    {
-      wfc_exit_with_error("restore fail");
-      return;
-    }
-    db->stop();
-    ::wfc_exit();
-    return;
-  }
+  if ( this->has_arg("restore") )  return this->restore_();
   this->reconfigure();
-  
 }
 
 void prefixdb::configure() 
 {
-  
 }
 
 void prefixdb::reconfigure()
@@ -190,6 +159,37 @@ void prefixdb::continue_background( request::continue_background::ptr req, respo
 void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, outgoing_handler_t handler)
 {
   service::prefixdb_cmd(this->shared_from_this(), std::move(d), handler);
+}
+
+void prefixdb::restore_()
+{
+  auto opt = this->options();
+  if ( opt.restore.forbid )
+  {
+    ::wfc_exit_with_error("Restore forbidden in this configurations");
+    return;
+  }
+  
+  auto db = std::make_shared<multidb>();
+  auto factory = god::create("rocksdb", this->global()->io_service );
+  
+  std::string path = this->get_arg("restore");
+  if ( !path.empty() )
+    opt.restore.path = path;
+  if ( this->has_arg("bid") )
+    opt.restore.backup_id = this->get_arg_t<uint64_t>("bid");
+  opt.preopen = false;
+  factory->initialize(opt);
+  db->reconfigure( opt, factory );
+  
+  if ( !db->restore() )
+  {
+    wfc_exit_with_error("restore fail");
+    return;
+  }
+  db->stop();
+  ::wfc_exit();
+  return; 
 }
 
 }}
