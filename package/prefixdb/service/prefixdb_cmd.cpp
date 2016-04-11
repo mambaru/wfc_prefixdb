@@ -142,6 +142,22 @@ namespace
     } );
   }
 
+  void inc_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  {
+    auto req = std::make_unique<request::inc>();
+    ss >> req->prefix;
+    req->fields.resize(1);
+    std::string val = 0;
+    ss >> val;
+    if ( ss ) { req->fields.back().first = val; ss >> val; }
+    if ( ss ) { req->fields.back().second = val; } 
+
+    db->inc( std::move(req), [handler](response::inc::ptr )
+    {
+      handler( ::iow::io::make("OK") );
+    } );
+  }
+
   void range_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
   {
     auto req = std::make_unique<request::range>();
@@ -162,7 +178,6 @@ namespace
       }
       oss << "OK";
       handler( ::iow::io::make(oss.str()) );
-
     } );
   }
 
@@ -179,6 +194,7 @@ namespace
     {"g", "get", "<<prefix>> <<key1>> [<<key2>> ....]", "Получить значения полей в указанном префиксе"}, 
     {"d", "del", "<<prefix>> <<key1>> [<<key2>> ....]", "Удалить поля в указанном префиксе"}, 
     {"s", "set", "<<prefix>> <<key>> <<value>>", "Изменить значение поля в указанном префиксе"},
+    {"i", "inc", "<<prefix>> <<key>> <<increment>> [<<default value>>]", "Инкрементировать значение поля для указанном префиксе"},
     {"r", "range", "<<prefix>> [from [to [offset [limit] ] ]]  ", "Получить значения полей в указанном префиксе по диапазону. Примеры:\n"
       "\tr test - получить первые 25 полей \n"
       "\tr test key1 - получить первые 25 полей начиная с key1 \n"
@@ -211,7 +227,6 @@ namespace
     res.resize(res.size() - 1);
     handler( ::iow::io::make( res) );
   }
-
 }
   
 void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d, ::wfc::iinterface::outgoing_handler_t handler)
@@ -249,6 +264,10 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   else if ( method == "s" || method=="set")
   {
     set_(db, ss, std::move(handler) );
+  }
+  else if ( method == "i" || method=="inc")
+  {
+    inc_(db, ss, std::move(handler) );
   }
   else if ( method == "d" || method=="del")
   {
