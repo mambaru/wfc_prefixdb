@@ -66,7 +66,7 @@ void wrocksdb_slave::create_updates_requester_()
   
   if ( seq == static_cast<uint64_t>(-1) )
   {
-    wfc_exit_with_error("Invalid sequence number. Replication is not possible. You must synchronize the database.");
+    wfc_exit_with_error( std::string("Invalid sequence number. Replication is not possible. You must synchronize the database. ") + this->_name);
   }
   else if ( seq == 0)
   {
@@ -110,7 +110,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
 
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    ::wfc_exit_with_error("Slave replication error. Invalid master responce");
+    ::wfc_exit_with_error( std::string("Slave replication error. Invalid master responce for '") + this->_name + "'" );
     return nullptr;
   }
 
@@ -123,18 +123,18 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
     auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
     if ( diff > this->_opt.acceptable_loss_seq )
     {
-      DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
+      DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence '" << this->_name << "': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
       ::wfc_exit_with_error("Slave replication error");
       return nullptr;
     }
     else if ( diff > 0)
     {
-      PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence '" << this->_name << "' : " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
       _lost_counter += diff;
     } 
     else if ( diff < 0 )
     {
-      PREFIXDB_LOG_DEBUG( _name << " re-entry sequences: " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      PREFIXDB_LOG_DEBUG( _name << " re-entry sequences'"<< this->_name<<"': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
   }
       
@@ -195,12 +195,12 @@ void wrocksdb_slave::create_diff_timer_()
       {
         if ( this->_current_differens > this->_opt.wrn_log_diff_seq )
         {
-          PREFIXDB_LOG_WARNING("Slave replication too big difference " << this->_current_differens << "(wrn:" << this->_opt.wrn_log_diff_seq << ")");
+          PREFIXDB_LOG_WARNING("Slave replication too big difference '" << this->_name << "': " << this->_current_differens << "(wrn:" << this->_opt.wrn_log_diff_seq << ")");
         }
         
         if ( _lost_counter > 0)
 	{
-	  PREFIXDB_LOG_WARNING("Lost segments: " << _lost_counter)
+	  PREFIXDB_LOG_WARNING("Lost segments '"<< this->_name<<"': " << _lost_counter)
 	}
         return true;
       }
