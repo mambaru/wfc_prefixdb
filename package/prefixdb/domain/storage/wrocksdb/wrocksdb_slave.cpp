@@ -110,7 +110,8 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
 
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    ::wfc_exit_with_error("Slave replication error. Invalid master responce");
+    DOMAIN_LOG_FATAL( _name << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final)
+    ::wfc_exit_with_error("Slave replication error. Invalid master responce or sequence number error");
     return nullptr;
   }
 

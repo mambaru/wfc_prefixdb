@@ -103,16 +103,24 @@ public:
   wall_filter(const std::string& name, buffer_ptr buff)
     : _name(name)
     , _buffer(buff)
+    , _log_time(0)
   {}
     
   virtual super::WalProcessingOption LogRecord(const ::rocksdb::WriteBatch& batch,
                                         ::rocksdb::WriteBatch* /*new_batch*/,
                                         bool* batch_changed) const override
   {
-      PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
-      _buffer->add(batch.Data());
-      *batch_changed = false;
-      return super::WalProcessingOption::kContinueProcessing;
+      // PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
+    
+    time_t now = time(0);
+    if ( _log_time < now )
+    {
+      _log_time = now;
+      PREFIXDB_LOG_MESSAGE( "WalFilter::LogRecord: current size=" << batch.GetDataSize() )
+    }
+    _buffer->add(batch.Data());
+    *batch_changed = false;
+    return super::WalProcessingOption::kContinueProcessing;
   }
 
   // Returns a name that identifies this WAL filter.
@@ -121,9 +129,11 @@ public:
   {
     return _name.c_str();
   }
+  
 private:
   std::string _name;
   buffer_ptr _buffer;
+  mutable std::atomic<time_t> _log_time;
 };
 
 //::rocksdb::RestoreBackupableDB
