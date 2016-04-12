@@ -4,7 +4,7 @@
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
 #include <rocksdb/merge_operator.h>
-#include <rocksdb/wal_filter.h>
+#include <rocksdb/compaction_filter.h>
 #include <rocksdb/utilities/backupable_db.h>
 
 #include <prefixdb/logger.hpp>
@@ -17,7 +17,7 @@
 #include "wrocksdb.hpp"
 #include "wrocksdb_restore.hpp"
 #include "merge/merge_operator.hpp"
-#include "wal_buffer.hpp"
+
 
 #include <wfc/wfc_exit.hpp>
 namespace rocksdb
@@ -93,8 +93,9 @@ void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
   
 }
 
+/*
 class wall_filter
-  : public ::rocksdb::WalFilter
+  : public ::rocksdb::CompactionFilter
 {
   typedef ::rocksdb::WalFilter super;
   typedef std::shared_ptr<wal_buffer> buffer_ptr;
@@ -105,12 +106,32 @@ public:
     , _buffer(buff)
     , _log_time(0)
   {}
+  
+  virtual bool Filter(int level,
+                      const ::rocksdb::Slice& key,
+                      const ::rocksdb::Slice& existing_value,
+                      std::string* new_value,
+                      bool* value_changed) const 
+  {
+    PREFIXDB_LOG_MESSAGE( "Filter level=" << level << " key=" << key.ToString() << " value=" << existing_value.ToString() );
+    *value_changed = false;
+    return false;
+  }
+
+  virtual bool FilterMergeOperand(int level, const ::rocksdb::Slice& key,
+                                  const ::rocksdb::Slice& operand) const {
+                                    
+    PREFIXDB_LOG_MESSAGE( "Filter Merge level=" << level << " key=" << key.ToString() << " operand=" << operand.ToString() );
+    return false;
+  }
+
     
+   
   virtual super::WalProcessingOption LogRecord(const ::rocksdb::WriteBatch& batch,
-                                        ::rocksdb::WriteBatch* /*new_batch*/,
+                                        ::rocksdb::WriteBatch* new_batch,
                                         bool* batch_changed) const override
   {
-      // PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
+      PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
     
     time_t now = time(0);
     if ( _log_time < now )
@@ -122,6 +143,7 @@ public:
     *batch_changed = false;
     return super::WalProcessingOption::kContinueProcessing;
   }
+  
 
   // Returns a name that identifies this WAL filter.
   // The name will be printed to LOG file on start up for diagnosis.
@@ -135,6 +157,7 @@ private:
   buffer_ptr _buffer;
   mutable std::atomic<time_t> _log_time;
 };
+*/
 
 //::rocksdb::RestoreBackupableDB
 ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
@@ -143,16 +166,18 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   auto conf = _context->config;
+  /*
   if ( conf.master.enabled )
   {
     auto buff = std::make_shared<wal_buffer>(dbname, conf.master.log_buffer_size);
     conf.master.walbuf = buff;
-   _context->options.wal_filter = new wall_filter(dbname, buff);
+   _context->options.compaction_filter = new wall_filter(dbname, buff);
   }
   else
   {
-    _context->options.wal_filter = nullptr;
+    _context->options.compaction_filter = nullptr;
   }
+  */
   
   auto merge = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
   _context->cdf[0].options.merge_operator = merge;

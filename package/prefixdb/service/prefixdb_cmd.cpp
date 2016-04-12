@@ -144,18 +144,27 @@ namespace
 
   void inc_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
   {
+    
     auto req = std::make_unique<request::inc>();
     ss >> req->prefix;
     req->fields.resize(1);
-    std::string val = 0;
-    ss >> val;
-    if ( ss ) { req->fields.back().first = val; ss >> val; }
+    std::string key = "null";
+    std::string inc = "null";
+    std::string val = "null";
+    ss >> key >> inc >> val;
+    std::stringstream param;
+    param << "{\"inc\":"<< inc << ",\"val\":" << val << "}";
+    req->fields.back().first = key;
+    req->fields.back().second = param.str();
+    /*if ( ss ) { req->fields.back().first = val; ss >> val; }
     if ( ss ) { req->fields.back().second = val; } 
+    */
 
     db->inc( std::move(req), [handler](response::inc::ptr )
     {
       handler( ::iow::io::make("OK") );
     } );
+    
   }
 
   void range_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)

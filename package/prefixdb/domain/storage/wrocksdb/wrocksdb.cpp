@@ -35,8 +35,9 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
 {
   if ( conf.slave.enabled )
     _slave = std::make_shared<wrocksdb_slave>(name, conf.path, conf.slave, *db);
-  if ( conf.master.enabled )
+  /*if ( conf.master.enabled )
     _wal_buffer = conf.master.walbuf;
+    */
   
   _flow = conf.workflow_ptr;
 }
@@ -255,6 +256,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
 
   bool ready = false;
   
+  /*
   {
     // std::lock_guard<std::mutex> lk(_mutex); -mt 
     wal_buffer::log_list logs;
@@ -278,6 +280,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
       }
     }
   }
+  */
   
   if ( !ready )
   {

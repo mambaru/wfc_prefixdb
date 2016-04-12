@@ -69,7 +69,7 @@ private:
   std::shared_ptr<db_type> _db1;
   std::mutex _mutex;
   std::shared_ptr<wrocksdb_slave> _slave;
-  std::shared_ptr<wal_buffer> _wal_buffer;
+  // std::shared_ptr<wal_buffer> _wal_buffer;
   std::shared_ptr< ::wfc::workflow> _flow;
 };
 
