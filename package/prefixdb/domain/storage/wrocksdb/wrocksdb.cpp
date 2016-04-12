@@ -256,7 +256,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   bool ready = false;
   
   {
-    std::lock_guard<std::mutex> lk(_mutex);
+    // std::lock_guard<std::mutex> lk(_mutex); -mt 
     wal_buffer::log_list logs;
     if ( _wal_buffer && _wal_buffer->get_updates_since(req->seq, req->limit, logs) )
     {
@@ -437,26 +437,14 @@ bool wrocksdb::backup()
   }
   */
   
-  {
-    ::rocksdb::Status status = db->GarbageCollect();
-    if ( status.ok() )
-    {
-      DEBUG_LOG_MESSAGE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
-    }
-    else
-    {
-      COMMON_LOG_MESSAGE( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
-    }
-  }
-  
-  ::rocksdb::Status status = db->CreateNewBackup();
+  ::rocksdb::Status status = db->GarbageCollect();
   if ( status.ok() )
   {
-    DEBUG_LOG_MESSAGE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
+    DEBUG_LOG_MESSAGE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
   }
   else
   {
-    COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
+    COMMON_LOG_MESSAGE( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
   }
   
   status = db->PurgeOldBackups( _conf.backup.depth );
@@ -469,6 +457,18 @@ bool wrocksdb::backup()
     COMMON_LOG_MESSAGE("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
     return false;
   }
+
+  
+  status = db->CreateNewBackup();
+  if ( status.ok() )
+  {
+    DEBUG_LOG_MESSAGE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
+  }
+  else
+  {
+    COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
+  }
+  
   return true;
 }
 
