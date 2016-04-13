@@ -355,9 +355,14 @@ void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) con
     // это инкремент или просто замена
     bool inc_ready = parser::is_number( u.inc.begin(), u.inc.end() );
     if ( !found )
+    {
+      field.second = u.val;
       itr = pck.insert(itr, std::move(field) );
+    }
+    /*
     if ( !parser::is_null( u.val.begin(), u.val.end()) ) 
       itr->second = std::move(u.val);
+    */
 
     if ( inc_ready )
       this->packed_inc_( u, itr->second );
@@ -385,17 +390,16 @@ void merge_operator::packed_inc_(const packed_field_params& upd, std::string& re
 {
   ::wfc::json::value<int64_t>::serializer intser;
   
-  /*if ( !parser::is_number( result.begin(), result.end() ) )
+  if ( !parser::is_number( result.begin(), result.end() ) )
   { 
     // если текущее значение не число, то берём из val
-    result = std::move( upd.val );
+    result = upd.val;
     if ( !parser::is_number( result.begin(), result.end() ) )
     { // если все равно не число
       result = "0";
     }
   }
-  */
-
+  
   int64_t val = 0;
   int64_t inc = 0;
   intser(val, result.begin(), result.end());
