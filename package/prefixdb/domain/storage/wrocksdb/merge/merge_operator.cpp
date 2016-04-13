@@ -359,30 +359,9 @@ void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) con
       field.second = u.val;
       itr = pck.insert(itr, std::move(field) );
     }
-    /*
-    if ( !parser::is_null( u.val.begin(), u.val.end()) ) 
-      itr->second = std::move(u.val);
-    */
 
     if ( inc_ready )
       this->packed_inc_( u, itr->second );
-    
-    /*
-    if ( !found )
-    { 
-      field.second = inc_ready ? "0" : "null" ;
-      itr = pck.insert(itr, std::move(field) );
-    }
-
-    if ( inc_ready )
-    { // если в inc число, то работаем как с числом и делаем инкремент
-      this->packed_inc_( u, itr->second );
-    }
-    else
-    {
-      itr->second = std::move(u.val);
-    }
-    */
   }
 }
 
