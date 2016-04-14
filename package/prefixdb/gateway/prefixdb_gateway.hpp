@@ -111,6 +111,8 @@ public:
 
   virtual void get_updates_since(request::get_updates_since::ptr req, response::get_updates_since::handler cb ) override
   {
+      IOW_LOG_DEBUG(" DEBUG: --- get_updates_since ---")
+
     this->template call< _get_updates_since_ >( std::move(req), cb, nullptr);
   }
 
