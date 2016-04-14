@@ -1,7 +1,6 @@
 #pragma once
 
 #include <prefixdb/domain/prefixdb_config.hpp>
-//#include <prefixdb/domain/storage/multidb.hpp>
 #include <prefixdb/iprefixdb.hpp>
 
 #include <wfc/domain_object.hpp>
@@ -17,9 +16,7 @@ class prefixdb
   : public ::wfc::domain_object<iprefixdb, prefixdb_config>
   , public std::enable_shared_from_this< prefixdb >
 {
-  // class impl;
 public:
-  
   // domain_object
   virtual void start(const std::string&) override;
   virtual void configure() override;

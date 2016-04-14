@@ -105,6 +105,8 @@ void wrocksdb_slave::create_updates_requester_()
 
 request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
 {
+  PREFIXDB_LOG_DEBUG("wrocksdb_slave::updates_handler_")
+  
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
 
@@ -114,7 +116,6 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
     ::wfc_exit_with_error( std::string("Slave replication error. Invalid master responce for '") + this->_name + "'" );
     return nullptr;
   }
-
 
   if ( res->logs.empty() )
     return nullptr;

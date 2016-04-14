@@ -254,80 +254,46 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   auto res = std::make_unique<response::get_updates_since>();
   res->prefix = std::move(req->prefix);
 
-  bool ready = false;
-  
-  /*
+  std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
+  ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
+  ::rocksdb::SequenceNumber cur_seq=0;
+  if ( status.ok() )
   {
-    // std::lock_guard<std::mutex> lk(_mutex); -mt 
-    wal_buffer::log_list logs;
-    if ( _wal_buffer && _wal_buffer->get_updates_since(req->seq, req->limit, logs) )
+    if ( iter->Valid() )
     {
-      if ( !logs.empty() )
+      res->logs.reserve(req->limit);
+      bool first = true;
+      while ( iter->Valid() && req->limit-- )
       {
-        ready = true;
-        res->seq_first =  wal_buffer::get_sequence_number(logs.front());
-        res->seq_last =  wal_buffer::get_sequence_number(logs.back());
-        res->logs.reserve( logs.size() );
-        std::transform( logs.begin(), logs.end(), std::back_inserter(res->logs), 
-                        []( const wal_buffer::data_type data) -> std::string
-                        {
-                          std::string log64;
-                          log64.reserve(data.size() + data.size()/3);
-                          encode64(data.begin(), data.end(), std::inserter(log64, log64.end()) );
-                          return std::move(log64);
-                        }
-        );
-      }
-    }
-  }
-  */
-  
-  if ( !ready )
-  {
-    std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
-    ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
-    ::rocksdb::SequenceNumber cur_seq=0;
-    if ( status.ok() )
-    {
-      if ( iter->Valid() )
-      {
-        res->logs.reserve(req->limit);
-        bool first = true;
-        while ( iter->Valid() && req->limit-- )
+        ::rocksdb::BatchResult batch = iter->GetBatch();
+        
+        const std::string& data = batch.writeBatchPtr->Data();
+        std::string log64;
+        log64.reserve(data.size() + data.size()/3);
+        encode64(data.begin(), data.end(), std::inserter(log64, log64.end()) );
+        res->logs.push_back( log64 );
+        cur_seq = batch.sequence;
+        if ( first )
         {
-          ::rocksdb::BatchResult batch = iter->GetBatch();
-          
-          const std::string& data = batch.writeBatchPtr->Data();
-          std::string log64;
-          log64.reserve(data.size() + data.size()/3);
-          encode64(data.begin(), data.end(), std::inserter(log64, log64.end()) );
-          res->logs.push_back( log64 );
-          cur_seq = batch.sequence;
-          if ( first )
-          {
-            DEBUG_LOG_MESSAGE("rocksdb::get_updates_since first_seq=" << batch.sequence)
-            res->seq_first = cur_seq;
-            first = false;
-          }
-          
-          iter->Next();
+          DEBUG_LOG_MESSAGE("rocksdb::get_updates_since first_seq=" << batch.sequence)
+          res->seq_first = cur_seq;
+          first = false;
         }
-        res->seq_last  = cur_seq;
+        
+        iter->Next();
       }
-      else
-      {
-        DEBUG_LOG_MESSAGE("rocksdb::get_updates_since iterator invalid" );
-        res->status = common_status::OtherError;
-      }
+      res->seq_last  = cur_seq;
+    }
+    else
+    {
+      DEBUG_LOG_MESSAGE("rocksdb::get_updates_since iterator invalid" );
+      res->status = common_status::OtherError;
     }
   }
+  
   res->seq_final = db->GetLatestSequenceNumber();
-  /*if ( res->seq_final < req->seq )
-    res->status = common_status::OtherError;*/
   cb( std::move(res) );  
 }
-
-
 
 void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_all_prefixes::handler cb)
 {

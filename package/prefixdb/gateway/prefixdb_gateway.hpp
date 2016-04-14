@@ -137,6 +137,17 @@ public:
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override
   {
     this->template call< _continue_background_ >( std::move(req), cb, nullptr);
-  }};
+  }
 
+  virtual void reg_io( ::wfc::iinterface::io_id_t /*io_id*/, std::weak_ptr< ::wfc::iinterface> /*itf*/) override
+  {
+    
+  }
+
+  virtual void unreg_io( ::wfc::iinterface::io_id_t /*io_id*/) override
+  {
+    
+  }
+};
+  
 }}}
