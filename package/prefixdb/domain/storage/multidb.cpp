@@ -554,8 +554,6 @@ void multidb::configure_prefix_reqester_()
   );
 }
 
-
-
 request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
 {
   if ( res == nullptr )
@@ -567,6 +565,11 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_
   {
     for ( const auto& x : res->prefixes )
     {
+      if ( x.empty() )
+      {
+        PREFIXDB_LOG_WARNING("get_all_prefixes: empty prefix")
+        continue;
+      }
       this->prefix_(x, true);
       prefset.erase(x);
     }

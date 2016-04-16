@@ -189,6 +189,9 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
+  
+  PREFIXDB_LOG_BEGIN("::rocksdb::DB::Open '" << dbname << "' ...");
+
   auto status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
   
   if ( !status.ok() )
@@ -214,7 +217,6 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     return nullptr;
   }
   
-  
   if ( status.ok() ) 
   {
     assert(handles.size() == 1);
@@ -222,6 +224,8 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     // default column family
     delete handles[0];
   }
+
+  PREFIXDB_LOG_END("::rocksdb::DB::Open '" << dbname << "' " )
 
   if ( status.ok() )
   {
