@@ -162,22 +162,16 @@ private:
 //::rocksdb::RestoreBackupableDB
 ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
 {
+  if ( dbname.empty() )
+  {
+     PREFIXDB_LOG_ERROR("wrocksdb_factory::create_db ::rocksdb::DB::Open empty name ")
+     return nullptr;
+  }
+  
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   auto conf = _context->config;
-  /*
-  if ( conf.master.enabled )
-  {
-    auto buff = std::make_shared<wal_buffer>(dbname, conf.master.log_buffer_size);
-    conf.master.walbuf = buff;
-   _context->options.compaction_filter = new wall_filter(dbname, buff);
-  }
-  else
-  {
-    _context->options.compaction_filter = nullptr;
-  }
-  */
   
   auto merge = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
   _context->cdf[0].options.merge_operator = merge;

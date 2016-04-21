@@ -606,7 +606,7 @@ std::vector< std::string > multidb::all_prefixes_()
   result.reserve( _db_map.size() );
   for (const auto& p : _db_map)
   {
-    if ( p.second != nullptr )
+    if ( p.second != nullptr && !p.first.empty() )
     {
       result.push_back(p.first);
     }
@@ -618,6 +618,9 @@ std::vector< std::string > multidb::all_prefixes_()
 /// в противном случае, только если база существует 
 multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if_missing)
 {
+  if ( prefix.empty() )
+    return nullptr;
+  
   std::lock_guard<std::mutex> lk(_mutex);
   
   if ( _factory == nullptr )

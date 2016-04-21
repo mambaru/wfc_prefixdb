@@ -115,7 +115,7 @@ void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
-void wrocksdb::get_(ReqPtr req, Callback cb)
+void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
 {
   typedef Res response_type;
   typedef ::rocksdb::Slice slice_type;
@@ -153,8 +153,12 @@ void wrocksdb::get_(ReqPtr req, Callback cb)
       field.second = std::move(resvals[i]);
     }
     else
-    { // Если ключа нет записывам null
-      field.second = "null";
+    { 
+      if ( ignore_if_missing )
+        continue; // просто не возвращаем
+
+      // Если ключа нет записываем null
+      field.second = "null"; 
     }
     res->fields.push_back( std::move(field) );
   }
@@ -176,7 +180,7 @@ void wrocksdb::set( request::set::ptr req, response::set::handler cb)
 
 void wrocksdb::get( request::get::ptr req, response::get::handler cb)
 {
-  this->get_<response::get>( std::move(req), std::move(cb) );
+  this->get_<response::get>( std::move(req), std::move(cb), true );
 }
 
 void wrocksdb::has( request::has::ptr req, response::has::handler cb)
@@ -217,7 +221,7 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
       ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
       res->status = status.ok() ? common_status::OK : common_status::WriteError;
       cb( std::move(res) );
-    });
+    }, true);
   }
 }
 
