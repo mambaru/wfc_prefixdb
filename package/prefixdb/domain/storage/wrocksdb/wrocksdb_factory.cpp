@@ -164,8 +164,13 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
 {
   if ( dbname.empty() )
   {
-     PREFIXDB_LOG_ERROR("wrocksdb_factory::create_db ::rocksdb::DB::Open empty name ")
+     PREFIXDB_LOG_ERROR("wrocksdb_factory::create_db empty name ")
+     abort();
      return nullptr;
+  }
+  else
+  {
+    PREFIXDB_LOG_ERROR("wrocksdb_factory::create_db '" << dbname << "'")
   }
   
   std::lock_guard<std::mutex> lk(_mutex);
