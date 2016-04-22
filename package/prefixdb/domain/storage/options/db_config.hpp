@@ -20,11 +20,15 @@ struct db_config
   std::string detach_path = "./prefixdb_detach";
   // Файл опций в формате ini
   std::string ini = "./rocksdb.ini";
+  
   // Автоматически попытаться востановить базу при ошибке открытия
   bool auto_repair = false;
+
   // Завершение работы, если база префикса не смогла быть открыта
   bool abort_if_open_error = true;
-  
+
+  // Запись batch в отдельном потоке
+  bool enable_delayed_write = false;  
   
   //master_config master;
   slave_config slave;

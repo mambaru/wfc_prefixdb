@@ -24,6 +24,7 @@ struct db_config_json
   JSON_NAME(archive)
   JSON_NAME(restore)
   JSON_NAME(workflow)
+  JSON_NAME(enable_delayed_write)
   JSON_NAME(auto_repair)
   JSON_NAME(abort_if_open_error)
 
@@ -34,6 +35,7 @@ struct db_config_json
       ::wfc::json::member<n_detach_path,    db_config, std::string, &db_config::detach_path>,
       ::wfc::json::member<n_packed_limit, db_config, size_t, &db_config::packed_limit>,
       ::wfc::json::member<n_array_limit, db_config, size_t, &db_config::array_limit>,
+      ::wfc::json::member<n_enable_delayed_write, db_config, bool, &db_config::enable_delayed_write>,
       ::wfc::json::member<n_auto_repair, db_config, bool, &db_config::auto_repair>,
       ::wfc::json::member<n_abort_if_open_error, db_config, bool, &db_config::abort_if_open_error>,
       ::wfc::json::member<n_ini,          db_config, std::string,    &db_config::ini>,

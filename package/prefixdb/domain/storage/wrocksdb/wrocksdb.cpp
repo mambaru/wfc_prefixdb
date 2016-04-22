@@ -93,25 +93,38 @@ void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
   ::rocksdb::WriteOptions wo;
   wo.sync = req->sync;
   
-  
+  /*
   ::rocksdb::Status status;
   if ( auto db = _db1 ) status = db->Write( ::rocksdb::WriteOptions(), &batch);
   else return;
 
   if ( cb == nullptr )
     return;
-
-  if ( req->nores || !status.ok() )
+  */
+  auto db = _db1;
+  
+  if ( db == nullptr )
+  {
+    if ( cb!=nullptr ) cb( nullptr );
+  }
+  else if (  cb == nullptr )
+  {
+    if ( auto db = _db1 ) db->Write( ::rocksdb::WriteOptions(), &batch);
+  }
+  else if ( req->nores )
   {
     auto res = std::make_unique<Res>();
     res->prefix = std::move(req->prefix);
-    res->status = status.ok() ? common_status::OK : common_status::WriteError;
+    res->status = common_status::OK ;
     cb( std::move(res) );
+    db->Write( ::rocksdb::WriteOptions(), &batch);
   }
   else
   {
+    db->Write( ::rocksdb::WriteOptions(), &batch);
     this->get_<Res>( std::move(req), std::move(cb) );
   }
+  
 }
 
 template<typename Res, typename ReqPtr, typename Callback>

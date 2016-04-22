@@ -5,6 +5,7 @@
 #include <prefixdb/domain/storage/iprefixdb_ex.hpp>
 #include <prefixdb/domain/storage/options/db_config.hpp>
 #include <rocksdb/db.h>
+#include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 
 #include <memory>
