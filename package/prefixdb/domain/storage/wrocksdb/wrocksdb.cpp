@@ -322,7 +322,9 @@ void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_a
 void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response::detach_prefixes::handler cb)
 {
   std::lock_guard<std::mutex> lk(_mutex);
+ 
   this->stop_();
+  
   if ( !_conf.detach_path.empty() )
   {
     std::string errmsg;
@@ -331,6 +333,7 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
       PREFIXDB_LOG_ERROR("wrocksdb::detach_prefixes " << errmsg);
     }
   };
+ 
   if ( cb != nullptr )
   {
     auto res = std::make_unique<response::detach_prefixes>();
@@ -341,6 +344,7 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
 void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response::attach_prefixes::handler cb)
 {
   if ( cb!=nullptr ) cb(nullptr);
+  
 }
 
 
@@ -413,17 +417,18 @@ bool wrocksdb::backup()
   auto db = _db1;
   if ( db == nullptr ) return false;
 
-  
-  /*
-  if ( _conf.compact_before_backup )
+  ::rocksdb::Status status;
+  status = db->PurgeOldBackups( _conf.backup.depth -1 );
+  if ( status.ok() )
   {
-    DEBUG_LOG_BEGIN("CompactRange: " << _name )
-    ::rocksdb::Status status = _db->CompactRange( ::rocksdb::CompactRangeOptions(), nullptr, nullptr);
-    DEBUG_LOG_END("CompactRange: " << status.ToString() )
+    DEBUG_LOG_MESSAGE("PurgeOldBackups(5) for " << _name <<  ": " << status.ToString() )
   }
-  */
+  else
+  {
+    COMMON_LOG_MESSAGE("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
+  }
   
-  ::rocksdb::Status status = db->GarbageCollect();
+  status = db->GarbageCollect();
   if ( status.ok() )
   {
     DEBUG_LOG_MESSAGE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
@@ -433,18 +438,6 @@ bool wrocksdb::backup()
     COMMON_LOG_MESSAGE( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
   }
   
-  status = db->PurgeOldBackups( _conf.backup.depth );
-  if ( status.ok() )
-  {
-    DEBUG_LOG_MESSAGE("PurgeOldBackups(5) for " << _name <<  ": " << status.ToString() )
-  }
-  else
-  {
-    COMMON_LOG_MESSAGE("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
-    return false;
-  }
-
-  
   status = db->CreateNewBackup();
   if ( status.ok() )
   {
@@ -453,8 +446,12 @@ bool wrocksdb::backup()
   else
   {
     COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
+    std::string tmp = _conf.backup.path + ".bak";
+    std::string msg;
+    delete_dir(tmp, msg);
+    move_dir( _conf.backup.path, tmp, msg );
+    return false;
   }
-  
   return true;
 }
 

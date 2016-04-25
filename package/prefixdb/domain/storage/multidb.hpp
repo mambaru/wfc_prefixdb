@@ -51,7 +51,9 @@ private:
 
   std::vector< std::string > all_prefixes_();
   bool preopen_(std::string path, bool create_if_missing);
+  
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
+  bool close_prefix_(const std::string& prefix);
   
   template<typename Res, typename ReqPtr, typename Callback>
   bool check_fields_(const ReqPtr& req, const Callback& cb);

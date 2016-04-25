@@ -310,16 +310,28 @@ bool multidb::backup()
   }
 
   auto prefixes = this->all_prefixes_();
-  bool result = true;
+  size_t count = 0;
   for ( const std::string& prefix: prefixes)
   {
     DEBUG_LOG_MESSAGE("Backup for: " << prefix << "..." )
     if ( auto db = this->prefix_(prefix, false) )
     {
-      result = db->backup();
+      bool result = db->backup();
+      if ( !result )
+      {
+        // При неудачном бэкапе дериктория перемещаеться 
+        this->close_prefix_( prefix );
+        db = this->prefix_(prefix, false);
+        if ( db != nullptr )
+        {
+          // При повторном открытии создаеться полный бэкап (на пустой директории)
+          result = db->backup();
+        }
+      }
+      count += result;
     }
   }
-  return result;
+  return count == prefixes.size();
 }
 
 std::string time_string()
@@ -612,6 +624,22 @@ std::vector< std::string > multidb::all_prefixes_()
     }
   }
   return std::move(result);
+}
+
+
+bool multidb::close_prefix_(const std::string& prefix)
+{
+  std::lock_guard<std::mutex> lk(_mutex);
+  auto itr = _db_map.find(prefix);
+  if ( itr == _db_map.end())
+    return false;
+  if ( itr->second != nullptr )
+  {
+    itr->second->stop();
+    itr->second = nullptr;
+  }
+  _db_map.erase(itr);
+  return true;
 }
 
 /// Если create_if_missing всегда возвращает объект,
