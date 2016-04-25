@@ -170,7 +170,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   }
   else
   {
-    PREFIXDB_LOG_ERROR("wrocksdb_factory::create_db '" << dbname << "'")
+    PREFIXDB_LOG_MESSAGE("wrocksdb_factory::create_db '" << dbname << "'")
   }
   
   std::lock_guard<std::mutex> lk(_mutex);
