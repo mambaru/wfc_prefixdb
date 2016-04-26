@@ -40,13 +40,7 @@ struct wrocksdb_factory::context
   ::rocksdb::Env* env;
   ::rocksdb::Options options;
   CFD_list cdf;
-  /*
-  std::string path;
-  std::string backup_path;
-  std::string restore_path;
-  */
   db_config config;
-
 };
 
 wrocksdb_factory::~wrocksdb_factory()
@@ -56,7 +50,6 @@ wrocksdb_factory::~wrocksdb_factory()
 
 wrocksdb_factory::wrocksdb_factory( ::iow::asio::io_service& io)
   : _io(io)
- // , _restore(false)
 {
 }
 
@@ -88,78 +81,8 @@ void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
     DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
     abort();
   }
-
-  
-  
 }
 
-/*
-class wall_filter
-  : public ::rocksdb::CompactionFilter
-{
-  typedef ::rocksdb::WalFilter super;
-  typedef std::shared_ptr<wal_buffer> buffer_ptr;
-public:
-  
-  wall_filter(const std::string& name, buffer_ptr buff)
-    : _name(name)
-    , _buffer(buff)
-    , _log_time(0)
-  {}
-  
-  virtual bool Filter(int level,
-                      const ::rocksdb::Slice& key,
-                      const ::rocksdb::Slice& existing_value,
-                      std::string* new_value,
-                      bool* value_changed) const 
-  {
-    PREFIXDB_LOG_MESSAGE( "Filter level=" << level << " key=" << key.ToString() << " value=" << existing_value.ToString() );
-    *value_changed = false;
-    return false;
-  }
-
-  virtual bool FilterMergeOperand(int level, const ::rocksdb::Slice& key,
-                                  const ::rocksdb::Slice& operand) const {
-                                    
-    PREFIXDB_LOG_MESSAGE( "Filter Merge level=" << level << " key=" << key.ToString() << " operand=" << operand.ToString() );
-    return false;
-  }
-
-    
-   
-  virtual super::WalProcessingOption LogRecord(const ::rocksdb::WriteBatch& batch,
-                                        ::rocksdb::WriteBatch* new_batch,
-                                        bool* batch_changed) const override
-  {
-      PREFIXDB_LOG_DEBUG(_name << "----------->WAL batch.data=" << batch.Data() );
-    
-    time_t now = time(0);
-    if ( _log_time < now )
-    {
-      _log_time = now;
-      PREFIXDB_LOG_MESSAGE( "WalFilter::LogRecord: current size=" << batch.GetDataSize() )
-    }
-    _buffer->add(batch.Data());
-    *batch_changed = false;
-    return super::WalProcessingOption::kContinueProcessing;
-  }
-  
-
-  // Returns a name that identifies this WAL filter.
-  // The name will be printed to LOG file on start up for diagnosis.
-  virtual const char* Name() const override
-  {
-    return _name.c_str();
-  }
-  
-private:
-  std::string _name;
-  buffer_ptr _buffer;
-  mutable std::atomic<time_t> _log_time;
-};
-*/
-
-//::rocksdb::RestoreBackupableDB
 ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
 {
   if ( dbname.empty() )
@@ -252,13 +175,10 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
 
 wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbname) 
 {
-  //_context->options.env = _context->env;
   auto conf = _context->config;
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
-//  if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
 
-  
   ::rocksdb::RestoreBackupableDB* rdb = nullptr;
   if ( !conf.restore.path.empty() )
   {

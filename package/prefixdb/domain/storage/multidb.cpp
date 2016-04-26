@@ -334,6 +334,7 @@ bool multidb::backup()
   return count == prefixes.size();
 }
 
+
 std::string time_string()
 {
   std::tm ti;
@@ -391,7 +392,6 @@ bool multidb::restore()
 }
 
 
-
 bool multidb::archive()
 {
   if ( !_opt.archive.enabled )
@@ -447,6 +447,7 @@ bool multidb::archive()
   return result;
 }
 
+
 void multidb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb)
 {
   if ( req_null(req, cb) ) return;
@@ -467,6 +468,7 @@ void multidb::delay_background( request::delay_background::ptr req, response::de
   if ( cb != nullptr )
     cb(std::make_unique<response::delay_background>());
 }
+
 
 void multidb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb)
 {
@@ -547,8 +549,8 @@ void multidb::configure_backup_timer_()
       [this]() { this->backup(); return true; }
     );
   }
-
 }
+
 
 void multidb::configure_prefix_reqester_()
 {
@@ -565,6 +567,7 @@ void multidb::configure_prefix_reqester_()
     std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
   );
 }
+
 
 request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
 {

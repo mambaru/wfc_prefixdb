@@ -35,10 +35,6 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
 {
   if ( conf.slave.enabled )
     _slave = std::make_shared<wrocksdb_slave>(name, conf.path, conf.slave, *db);
-  /*if ( conf.master.enabled )
-    _wal_buffer = conf.master.walbuf;
-    */
-  
   _flow = conf.workflow_ptr;
 }
 
@@ -63,9 +59,7 @@ void wrocksdb::stop()
 {
   std::lock_guard<std::mutex> lk(_mutex);
   this->stop_();
-  
 }
-
 
 template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
 void wrocksdb::merge_(ReqPtr req, Callback cb)
@@ -93,14 +87,6 @@ void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
   ::rocksdb::WriteOptions wo;
   wo.sync = req->sync;
   
-  /*
-  ::rocksdb::Status status;
-  if ( auto db = _db1 ) status = db->Write( ::rocksdb::WriteOptions(), &batch);
-  else return;
-
-  if ( cb == nullptr )
-    return;
-  */
   auto db = _db1;
   
   if ( db == nullptr )
@@ -344,7 +330,6 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
 void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response::attach_prefixes::handler cb)
 {
   if ( cb!=nullptr ) cb(nullptr);
-  
 }
 
 

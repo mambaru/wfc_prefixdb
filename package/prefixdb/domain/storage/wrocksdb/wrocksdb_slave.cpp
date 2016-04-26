@@ -77,21 +77,6 @@ void wrocksdb_slave::create_updates_requester_()
     preq->seq = seq;
   }
   
-  /*
-  std::string value;
-  
-  ::rocksdb::Status status = _db.Get( ::rocksdb::ReadOptions(), "~slave-last-sequence-number~", &value);
-  if ( status.ok() )
-  {
-    preq->seq = *( reinterpret_cast<const size_t*>( value.data() ) );
-    COMMON_LOG_MESSAGE(_name << " ~slave-last-sequence-number~ " << value )
-  }
-  else
-  {
-    preq->seq = _db.GetLatestSequenceNumber() + 1;
-  }
-  */
-
   _opt.timer->release_timer(_slave_timer_id);
   _slave_timer_id = _opt.timer->create_requester<request::get_updates_since, response::get_updates_since>
   (
