@@ -388,7 +388,6 @@ void merge_operator::packed_inc_(const packed_field_params& upd, std::string& re
   
   // немного быстрее, чем std::back_inserter
   intser(val, std::inserter(result, result.end()) );
-  
 }
 
 }}

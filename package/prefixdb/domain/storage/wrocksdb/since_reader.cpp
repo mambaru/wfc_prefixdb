@@ -158,13 +158,6 @@ const char*  since_reader::read_op_(const char* beg, const char* end, bool ignor
   };
   
   return beg;
-  /*
-  if ( beg==end )
-  {
-    return nullptr;
-  }
-  return beg!=end ? beg : nullptr;
-  */
 }
 
 unsigned int since_reader::read_record_(const char *beg, const char *end)
@@ -185,7 +178,6 @@ size_t since_reader::parse_()
   const char *beg = &(_buffer[0]);
   const char *end = beg + _buffer.size();
   
-  /*const unsigned int record_type =*/ 
   this->read_record_(beg, end);
   return std::distance(beg, end);
 }

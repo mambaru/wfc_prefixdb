@@ -229,7 +229,6 @@ void wrocksdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
   this->merge_<merge_mode::setnx, response::setnx>( std::move(req), std::move(cb) );
 }
 
-
 void wrocksdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
   this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
@@ -331,7 +330,6 @@ void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response:
 {
   if ( cb!=nullptr ) cb(nullptr);
 }
-
 
 void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 {
