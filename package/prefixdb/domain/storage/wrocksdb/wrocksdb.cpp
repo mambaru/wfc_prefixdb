@@ -209,7 +209,7 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
     {
       auto res = std::make_unique<response::del>();
       res->prefix = std::move(req->prefix);
-      res->status = status.ok() ? common_status::OK : common_status::WriteError;
+      //res->status = status.ok() ? common_status::OK : common_status::WriteError;
       cb( std::move(res) );
     }
   }
@@ -218,7 +218,7 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
     this->get_<response::del>( std::move(req), [db, &batch, &cb](response::del::ptr res)
     {
       ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
-      res->status = status.ok() ? common_status::OK : common_status::WriteError;
+      //res->status = status.ok() ? common_status::OK : common_status::WriteError;
       cb( std::move(res) );
     }, true);
   }
@@ -277,7 +277,6 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
         cur_seq = batch.sequence;
         if ( first )
         {
-          DEBUG_LOG_MESSAGE("rocksdb::get_updates_since first_seq=" << batch.sequence)
           res->seq_first = cur_seq;
           first = false;
         }
@@ -288,8 +287,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
     }
     else
     {
-      DEBUG_LOG_MESSAGE("rocksdb::get_updates_since iterator invalid" );
-      res->status = common_status::OtherError;
+      res->status = common_status::InvalidSeqNumber;
     }
   }
   
@@ -340,7 +338,6 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
     return;
   }
 
-  DEBUG_LOG_MESSAGE("range from '" << req->from << " to '" << req->to )
   typedef ::rocksdb::Iterator iterator_type;
   typedef ::rocksdb::Slice slice_type;
   
@@ -368,7 +365,6 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
       slice_type key = itr->key();
       
       field.first.assign(key.data(), key.data() + key.size() );
-      DEBUG_LOG_MESSAGE("key " << field.first << " > " << req->to << "? " << (field.first > req->to) )
       
       if ( !req->to.empty() && field.first > req->to )
         break;
@@ -404,7 +400,6 @@ bool wrocksdb::backup()
   status = db->PurgeOldBackups( _conf.backup.depth -1 );
   if ( status.ok() )
   {
-    DEBUG_LOG_MESSAGE("PurgeOldBackups(5) for " << _name <<  ": " << status.ToString() )
   }
   else
   {
@@ -414,7 +409,7 @@ bool wrocksdb::backup()
   status = db->GarbageCollect();
   if ( status.ok() )
   {
-    DEBUG_LOG_MESSAGE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
+    COMMON_LOG_TRACE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
   }
   else
   {
@@ -424,7 +419,7 @@ bool wrocksdb::backup()
   status = db->CreateNewBackup();
   if ( status.ok() )
   {
-    DEBUG_LOG_MESSAGE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
+    COMMON_LOG_TRACE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
   }
   else
   {
@@ -440,7 +435,6 @@ bool wrocksdb::backup()
 
 bool wrocksdb::archive(std::string path)
 {
-  DEBUG_LOG_MESSAGE("================== " << path << " ==========================")
   std::lock_guard<std::mutex> lk(_mutex);
 
   if ( _conf.archive.path.empty() )
@@ -473,8 +467,6 @@ void wrocksdb::compact(const std::string& key)
       {
         PREFIXDB_LOG_ERROR("wrocksdb::compact(" << key << "): " << status.ToString() )
       }
-      
-      PREFIXDB_LOG_DEBUG("wrocksdb::compact: " << key << " " <<  status.ToString())
     }
   });
 }
@@ -482,20 +474,18 @@ void wrocksdb::compact(const std::string& key)
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
 {
   auto res = std::make_unique<response::delay_background>();
-  PREFIXDB_LOG_DEBUG("wrocksdb::delay_background: " << req->delay_timeout_s )
   ::rocksdb::Status status = _db1->PauseBackgroundWork();
   if ( status.ok() )
   {
     bool force = req->contunue_force;
     _flow->post( std::chrono::seconds(req->delay_timeout_s), [this, force]()
     {
-      while ( this->_db1->ContinueBackgroundWork().ok() && force )
-        PREFIXDB_LOG_DEBUG("wrocksdb::delay_background: ContinueBackgroundWork " );
+      while ( this->_db1->ContinueBackgroundWork().ok() && force );
     } );
   }
   else
   {
-    res->status = common_status::OtherError;
+    PREFIXDB_LOG_ERROR("wrocksdb::delay_background: PauseBackgroundWork: " << status.ToString() );
   }
   
   if ( cb != nullptr ) 

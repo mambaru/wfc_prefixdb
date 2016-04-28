@@ -90,7 +90,6 @@ void wrocksdb_slave::create_updates_requester_()
 
 request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
 {
-  PREFIXDB_LOG_DEBUG("wrocksdb_slave::updates_handler_")
   
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
@@ -121,7 +120,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
     } 
     else if ( diff < 0 )
     {
-      PREFIXDB_LOG_DEBUG( _name << " re-entry sequences'"<< this->_name<<"': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      PREFIXDB_LOG_TRACE( _name << " re-entry sequences'"<< this->_name<<"': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
   }
       
@@ -139,7 +138,6 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
 
   preq->seq = sn;
   
-  PREFIXDB_LOG_DEBUG("DNext preq->seq=" << preq->seq << " _last_sequence=" << _last_sequence )
   
   if ( res->seq_last == res->seq_final )
     return nullptr;

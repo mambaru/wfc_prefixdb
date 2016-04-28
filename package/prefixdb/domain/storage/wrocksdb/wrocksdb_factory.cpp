@@ -158,13 +158,8 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     if ( !conf.restore.path.empty() )
     {
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
-      DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
     }
-    
-    
     auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, bdb);
-    
-    DEBUG_LOG_MESSAGE("New RocksDB " << dbname)
     return pwrdb;
   }
 
@@ -183,7 +178,6 @@ wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbnam
   if ( !conf.restore.path.empty() )
   {
     ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
-    DEBUG_LOG_MESSAGE("New RocksDB Restore " << restore_opt.backup_dir)
     rdb = new ::rocksdb::RestoreBackupableDB( _context->env, restore_opt);
     return std::make_shared< wrocksdb_restore >(dbname, conf, rdb);
   }

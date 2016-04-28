@@ -313,7 +313,6 @@ bool multidb::backup()
   size_t count = 0;
   for ( const std::string& prefix: prefixes)
   {
-    DEBUG_LOG_MESSAGE("Backup for: " << prefix << "..." )
     if ( auto db = this->prefix_(prefix, false) )
     {
       bool result = db->backup();
@@ -437,8 +436,6 @@ bool multidb::archive()
   bool result = true;
   for ( const std::string& prefix: prefixes)
   {
-    DEBUG_LOG_MESSAGE("Archive for: " << prefix << "... " )
-    
     if ( auto db = this->prefix_(prefix, false) )
     {
       result &= db->archive(path);

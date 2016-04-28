@@ -31,15 +31,6 @@ void prefixdb::reconfigure()
   
     
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
-    DEBUG_LOG_MESSAGE("opt.slave.master = " << opt.slave.target)
-
-    if ( opt.slave.master != nullptr )
-    {
-      DEBUG_LOG_MESSAGE("-------------------------------------")
-      DEBUG_LOG_MESSAGE("slave target '" << opt.slave.target << "' enabled " << opt.slave.pull_timeout_ms << " " << opt.path )
-      DEBUG_LOG_MESSAGE("-------------------------------------")
-    }
-    //factory->initialize(opt, false);
     _impl->reconfigure( opt, factory );
   }
   else
@@ -69,7 +60,6 @@ void prefixdb::reconfigure()
       }
     }
     
-    DEBUG_LOG_MESSAGE("void prefixdb::reconfigured()!!!")
   }
  
 }

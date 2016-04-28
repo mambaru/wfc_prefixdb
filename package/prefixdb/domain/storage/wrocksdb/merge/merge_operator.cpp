@@ -152,14 +152,7 @@ try
   if ( updates.size() > 5 && _handler!=nullptr )
     _handler(key.ToString());
     
-  
-  DEBUG_LOG_MESSAGE("Merge save '" << key.ToString() << "': " 
-    << "\nValue: "   << (value ? value->ToString() : "nullptr")
-    << "\nOperand[0]: " << std::string( updates.empty()? std::string("<<empty>>") :  std::string(updates[0]) )
-    << "\nsize: " << updates.size()
-    << "\nResult: " << *result)
   return true;
-
 }
 catch(std::exception e)
 {
