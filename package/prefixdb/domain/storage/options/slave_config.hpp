@@ -29,7 +29,8 @@ struct slave_config
   std::ptrdiff_t acceptable_loss_seq = 0;
   // при каком отставании ругатся в логи
   std::ptrdiff_t wrn_log_diff_seq = 10000;
-  size_t seq_log_timeout_ms = 1000;
+  time_t wrn_log_timeout_ms = 1000;
+  time_t seq_log_timeout_ms = 1000;
   std::shared_ptr<iprefixdb> master;
   std::shared_ptr< ::wfc::workflow > timer;
 };

@@ -90,7 +90,6 @@ void wrocksdb_slave::create_updates_requester_()
 
 request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
 {
-  
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
 
@@ -122,10 +121,12 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
     {
       PREFIXDB_LOG_TRACE( _name << " re-entry sequences'"<< this->_name<<"': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
+    
+    //this->_current_differens = diff;
   }
       
-  this->_current_differens = res->seq_final - res->seq_first ;
-
+  //this->_current_differens = res->seq_final - res->seq_first;
+  this->_current_differens = res->seq_final - res->seq_last;
   this->logs_parser_(res);
   auto batch = _log_parser->detach();
   //size_t sn = res->seq_last + 1;
@@ -175,7 +176,7 @@ void wrocksdb_slave::create_diff_timer_()
   if ( this->_opt.wrn_log_diff_seq !=0 )
   {
     _diff_timer_id = _opt.timer->create_timer(
-      std::chrono::seconds(1),
+      std::chrono::milliseconds(_opt.wrn_log_timeout_ms),
       [this]()->bool
       {
         if ( this->_current_differens > this->_opt.wrn_log_diff_seq )
