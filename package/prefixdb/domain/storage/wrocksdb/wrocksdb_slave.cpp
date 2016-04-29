@@ -126,11 +126,12 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
   }
       
   //this->_current_differens = res->seq_final - res->seq_first;
-  this->_current_differens = res->seq_final - res->seq_last;
+  
   this->logs_parser_(res);
   auto batch = _log_parser->detach();
   //size_t sn = res->seq_last + 1;
   uint64_t sn = _log_parser->get_next_seq_number();
+  this->_current_differens = res->seq_final - (sn - 1);
   _last_sequence = sn;
   // batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
   this->write_sequence_number_(-1);
