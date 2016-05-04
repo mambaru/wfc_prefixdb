@@ -123,6 +123,7 @@ try
     }
   } 
   
+  result->clear(); // Там мусор 
   switch( mode )
   {
     case merge_mode::setnx:

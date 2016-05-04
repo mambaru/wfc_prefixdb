@@ -339,7 +339,6 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
   }
 
   typedef ::rocksdb::Iterator iterator_type;
-  typedef ::rocksdb::Slice slice_type;
   
   typedef std::shared_ptr<iterator_type> iterator_ptr;
   auto res=std::make_unique<response::range>();
@@ -351,8 +350,6 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
   iterator_ptr itr(db->NewIterator(opt));
   if ( itr != nullptr )
   {
-    field_pair field;
-    
     // offset
     itr->Seek( req->from );
     while ( req->offset && itr->Valid() ) 
@@ -362,9 +359,10 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
     
     while ( req->limit && itr->Valid() )
     {
-      slice_type key = itr->key();
+      field_pair field;
+      auto key = itr->key();
       
-      field.first.assign(key.data(), key.data() + key.size() );
+      field.first.assign(key.data(), key.size() );
       
       if ( !req->to.empty() && field.first > req->to )
         break;
@@ -372,7 +370,7 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
       if ( !req->noval )
       {
         auto val = itr->value();
-        field.second.assign(val.data(), val.data() + val.size() );
+        field.second.assign(val.data(), val.size() );
       }
       res->fields.push_back(std::move(field));
       itr->Next();
