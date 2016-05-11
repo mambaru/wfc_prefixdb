@@ -171,6 +171,12 @@ void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 void multidb::range( request::range::ptr req, response::range::handler cb)
 {
   if ( notify_ban(req, cb) ) return;
+  
+  if ( req->limit + req->offset > this->_opt.range_limit )
+  {
+    
+    send_error<common_status::RangeLimitExceeded, response::range>(std::move(req), std::move(cb) );
+  }
 
   if ( auto db = this->prefix_(req->prefix, false) )
   {

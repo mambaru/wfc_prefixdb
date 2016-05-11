@@ -13,6 +13,7 @@ struct db_config
 {
   size_t packed_limit = 1000;
   size_t array_limit  = 1000;
+  size_t range_limit  = 10000; // offset + limit
 
   // Путь к базе данных для всех префиксов
   std::string path = "./prefixdb";

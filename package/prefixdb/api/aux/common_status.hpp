@@ -13,6 +13,7 @@ enum class common_status
   KeyLengthExceeded,
   ValueLengthExceeded,
   PrefixLengthExceeded, 
+  RangeLimitExceeded, 
   InvalidSeqNumber
 };
 

@@ -28,6 +28,7 @@ inline bool create_prefix_fail(const ReqPtr& req, const Callback& cb)
   return send_error<common_status::CreatePrefixFail, Res>(std::move(req), std::move(cb) );
 }
 
+
 template<typename Req, typename Callback>
 inline bool req_null(const Req& req, const Callback& cb)
 {

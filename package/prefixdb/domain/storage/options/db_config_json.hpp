@@ -20,6 +20,7 @@ struct db_config_json
   //JSON_NAME(master)
   JSON_NAME(packed_limit)
   JSON_NAME(array_limit)
+  JSON_NAME(range_limit)
   JSON_NAME(backup)
   JSON_NAME(archive)
   JSON_NAME(restore)
@@ -35,6 +36,7 @@ struct db_config_json
       ::wfc::json::member<n_detach_path,    db_config, std::string, &db_config::detach_path>,
       ::wfc::json::member<n_packed_limit, db_config, size_t, &db_config::packed_limit>,
       ::wfc::json::member<n_array_limit, db_config, size_t, &db_config::array_limit>,
+      ::wfc::json::member<n_range_limit, db_config, size_t, &db_config::range_limit>,
       ::wfc::json::member<n_enable_delayed_write, db_config, bool, &db_config::enable_delayed_write>,
       ::wfc::json::member<n_auto_repair, db_config, bool, &db_config::auto_repair>,
       ::wfc::json::member<n_abort_if_open_error, db_config, bool, &db_config::abort_if_open_error>,
