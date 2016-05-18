@@ -21,6 +21,7 @@ public:
   virtual void start(const std::string&) override;
   virtual void configure() override;
   virtual void reconfigure() override;
+  virtual void suspend(bool value) override;
   virtual void stop(const std::string&) override;
   
   // iprefixdb

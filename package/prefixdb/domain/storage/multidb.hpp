@@ -18,7 +18,9 @@ class multidb
   typedef std::shared_ptr<iprefixdb_ex> prefixdb_ptr;
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
+  multidb();
   bool reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory);
+  void suspend(bool val);
   
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
@@ -61,9 +63,13 @@ private:
   template<typename Res, typename ReqPtr, typename Callback>
   bool check_prefix_(const ReqPtr& req, const Callback& cb);
 
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool suspended_(const ReqPtr& req, const Callback& cb);
+
 private:
   typedef wfc::workflow::timer_id_t timer_id_t;
-
+  std::atomic<bool> _suspend;
+  
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;
   std::mutex _mutex;

@@ -16,6 +16,12 @@ void prefixdb::start(const std::string&)
   this->reconfigure();
 }
 
+void prefixdb::suspend(bool val) 
+{
+  domain_object::suspend(val);
+  if ( _impl != nullptr )
+    _impl->suspend(this->suspended());
+}
 void prefixdb::configure() 
 {
 }
@@ -32,6 +38,7 @@ void prefixdb::reconfigure()
     
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
     _impl->reconfigure( opt, factory );
+    _impl->suspend(this->suspended());
   }
   else
   {
