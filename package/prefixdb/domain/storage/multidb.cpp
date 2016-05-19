@@ -30,15 +30,7 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     _factory = factory;
     _opt = opt;
     
-    if ( _flow == nullptr )  
-    {
-      _flow = ::wfc::workflow::create(opt.workflow);
-      _flow->start();
-    }
-    else 
-    { 
-      _flow->reconfigure( opt.workflow ); 
-    }
+    _flow = ::wfc::workflow::recreate_and_start(_flow, opt.workflow);
     
     _opt.workflow_ptr = _flow;
     _opt.slave.timer = _flow;

@@ -22,8 +22,7 @@ WFC_NAME2(component_name, "prefixdb")
 class impl: public ::wfc::multiton<
   component_name,
   ::wfc::instance<prefixdb>,
-  prefixdb_config_json, 
-  int( ::wfc::component_features::SuspendSupport )
+  prefixdb_config_json
 >
 {  
   
