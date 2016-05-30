@@ -16,7 +16,7 @@ namespace request
     typedef ::wfc::json::object<
       attach_prefixes,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefixes, attach_prefixes, attach_prefixes::prefix_list, &attach_prefixes::prefixes, wfc::json::array_of_strings<50> >,
+        ::wfc::json::member<n_prefixes, attach_prefixes, attach_prefixes::prefix_list, &attach_prefixes::prefixes, wfc::json::vector_of_strings<50> >,
         ::wfc::json::member<n_opendb, attach_prefixes, bool, &attach_prefixes::opendb >
       >
     > type;

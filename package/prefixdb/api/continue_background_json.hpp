@@ -17,7 +17,7 @@ namespace request
     typedef ::wfc::json::object<
       continue_background,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefixes, continue_background, continue_background::prefix_list, &continue_background::prefixes, wfc::json::array_of_strings<50> >,
+        ::wfc::json::member<n_prefixes, continue_background, continue_background::prefix_list, &continue_background::prefixes, wfc::json::vector_of_strings<50> >,
         ::wfc::json::member<n_force, continue_background, bool, &continue_background::force >
       >
     > type;

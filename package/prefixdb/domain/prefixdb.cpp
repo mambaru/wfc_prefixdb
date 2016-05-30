@@ -32,6 +32,7 @@ void prefixdb::reconfigure()
     abort();
   
   auto opt = this->options();
+  opt.args.workflow = this->get_workflow();
   
   if ( _impl == nullptr )
   {

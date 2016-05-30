@@ -16,7 +16,7 @@ namespace request
     typedef ::wfc::json::object<
       detach_prefixes,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefixes, detach_prefixes, detach_prefixes::prefix_list, &detach_prefixes::prefixes, wfc::json::array_of_strings<50> >,
+        ::wfc::json::member<n_prefixes, detach_prefixes, detach_prefixes::prefix_list, &detach_prefixes::prefixes, wfc::json::vector_of_strings<50> >,
         ::wfc::json::member<n_deny_timeout_s, detach_prefixes, time_t, &detach_prefixes::deny_timeout_s >
       >
     > type;

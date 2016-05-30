@@ -30,9 +30,10 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     _factory = factory;
     _opt = opt;
     
-    _flow = ::wfc::workflow::recreate_and_start(_flow, opt.workflow);
+    _flow = opt.args.workflow;
+    //_flow = ::wfc::workflow::recreate_and_start(_flow, opt.arg.workflow);
     
-    _opt.workflow_ptr = _flow;
+    //_opt.workflow_ptr = _flow;
     _opt.slave.timer = _flow;
     _factory->initialize(_opt/*, false*/);
     this->configure_backup_timer_();

@@ -31,7 +31,7 @@ namespace response
     typedef ::wfc::json::object<
       get_all_prefixes,
       ::wfc::json::member_list<
-        ::wfc::json::member<n_prefixes, get_all_prefixes, get_all_prefixes::prefix_list, &get_all_prefixes::prefixes, wfc::json::array_of_strings<50> >,
+        ::wfc::json::member<n_prefixes, get_all_prefixes, get_all_prefixes::prefix_list, &get_all_prefixes::prefixes, wfc::json::vector_of_strings<50> >,
         ::wfc::json::member<n_status, get_all_prefixes, common_status, &get_all_prefixes::status, common_status_json>
       >
     > type;

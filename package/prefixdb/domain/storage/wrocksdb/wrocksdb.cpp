@@ -35,7 +35,7 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
 {
   if ( conf.slave.enabled )
     _slave = std::make_shared<wrocksdb_slave>(name, conf.path, conf.slave, *db);
-  _flow = conf.workflow_ptr;
+  _flow = conf.args.workflow;
 }
 
 
