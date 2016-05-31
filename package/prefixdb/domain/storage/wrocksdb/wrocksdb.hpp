@@ -60,8 +60,8 @@ private:
   template<typename Res, typename ReqPtr, typename Callback>
   void get_(ReqPtr req, Callback cb, bool ignore_if_missing = false);
 
-  template<typename Res, typename Batch, typename ReqPtr, typename Callback>
-  void write_batch_(Batch& batch, ReqPtr req, Callback cb);
+  template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
+  void write_batch_(BatchPtr batch, ReqPtr req, Callback cb);
 
 private:
   

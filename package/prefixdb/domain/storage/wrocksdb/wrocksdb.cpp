@@ -64,7 +64,7 @@ void wrocksdb::stop()
 template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
 void wrocksdb::merge_(ReqPtr req, Callback cb)
 {
-  ::rocksdb::WriteBatch batch;
+  auto batch = std::make_shared< ::rocksdb::WriteBatch >();
   std::string json;
   json.reserve(64);
   merge_json::serializer ser;
@@ -75,14 +75,14 @@ void wrocksdb::merge_(ReqPtr req, Callback cb)
     upd.raw = std::move(f.second);
     json.clear();
     ser( upd, std::inserter(json, json.end()));
-    batch.Merge(f.first, json);
+    batch->Merge(f.first, json);
   }
   
   this->write_batch_<Res>(batch, std::move(req), std::move(cb) );
 }
 
-template<typename Res, typename Batch, typename ReqPtr, typename Callback>
-void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
+template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
+void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
 {
   ::rocksdb::WriteOptions wo;
   wo.sync = req->sync;
@@ -93,9 +93,24 @@ void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
   {
     if ( cb!=nullptr ) cb( nullptr );
   }
+  if ( req->nores || cb == nullptr)
+  {
+    if ( cb != nullptr )
+    {
+      auto res = std::make_unique<Res>();
+      res->prefix = std::move(req->prefix);
+      res->status = common_status::OK ;
+      cb( std::move(res) );
+    }
+    if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
+    else db->Write( wo, &(*batch));
+    
+  }
+  /*
   else if (  cb == nullptr )
   {
-    if ( auto db = _db1 ) db->Write( ::rocksdb::WriteOptions(), &batch);
+    if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
+    else db->Write( wo, &(*batch));
   }
   else if ( req->nores )
   {
@@ -103,11 +118,13 @@ void wrocksdb::write_batch_(Batch& batch, ReqPtr req, Callback cb)
     res->prefix = std::move(req->prefix);
     res->status = common_status::OK ;
     cb( std::move(res) );
-    db->Write( ::rocksdb::WriteOptions(), &batch);
-  }
+    
+    if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
+    else db->Write( wo, &(*batch));
+  }*/
   else
   {
-    db->Write( ::rocksdb::WriteOptions(), &batch);
+    db->Write( wo, &(*batch));
     this->get_<Res>( std::move(req), std::move(cb) );
   }
   
@@ -167,11 +184,11 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
 
 void wrocksdb::set( request::set::ptr req, response::set::handler cb)
 {
-  ::rocksdb::WriteBatch batch;
+  auto batch = std::make_shared< ::rocksdb::WriteBatch >();
 
   for ( const auto& field : req->fields)
   {
-    batch.Put( field.first, field.second );
+    batch->Put( field.first, field.second );
   }
   
   this->write_batch_<response::set>(batch, std::move(req), std::move(cb) );
@@ -189,6 +206,7 @@ void wrocksdb::has( request::has::ptr req, response::has::handler cb)
 
 void wrocksdb::del( request::del::ptr req, response::del::handler cb) 
 {
+  
   auto db = _db1;
   if ( db == nullptr ) 
   {
@@ -196,32 +214,38 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
     return;
   }
     
-  ::rocksdb::WriteBatch batch;
+  auto batch = std::make_shared< ::rocksdb::WriteBatch >();
   for ( auto& key : req->fields)
   {
-    batch.Delete( key );
+    batch->Delete( key );
   }
 
+  this->write_batch_< response::del >(batch, std::move(req), std::move(cb) );
+  
   if ( req->nores || cb==nullptr)
   {
+    req->nores = true;
+    this->write_batch_<response::del>(batch, std::move(req), std::move(cb) );
+    /*
     ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
     if ( cb!=nullptr )
     {
       auto res = std::make_unique<response::del>();
       res->prefix = std::move(req->prefix);
-      //res->status = status.ok() ? common_status::OK : common_status::WriteError;
       cb( std::move(res) );
     }
+    */
   }
   else
   {
-    this->get_<response::del>( std::move(req), [db, &batch, &cb](response::del::ptr res)
+    // сначало берем, потом удаляем
+    this->get_<response::del>( std::move(req), [db, batch, &cb](response::del::ptr res)
     {
-      ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
-      //res->status = status.ok() ? common_status::OK : common_status::WriteError;
+      ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &(*batch));
       cb( std::move(res) );
     }, true);
   }
+  
 }
 
 void wrocksdb::setnx( request::setnx::ptr req, response::setnx::handler cb) 
