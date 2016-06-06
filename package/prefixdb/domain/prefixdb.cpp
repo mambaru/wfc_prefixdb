@@ -16,14 +16,17 @@ void prefixdb::start(const std::string&)
   this->reconfigure();
 }
 
+/*
 void prefixdb::suspend(bool val) 
 {
   domain_object::suspend(val);
   if ( _impl != nullptr )
     _impl->suspend(this->suspended());
 }
+*/
 void prefixdb::configure() 
 {
+  this->reconfigure();
 }
 
 void prefixdb::reconfigure()
@@ -38,8 +41,7 @@ void prefixdb::reconfigure()
   {
     _impl = std::make_shared<multidb>();
     auto factory = god::create("rocksdb", this->global()->io_service );
-  
-    
+
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
     _impl->reconfigure( opt, factory );
     _impl->suspend(this->suspended());

@@ -21,7 +21,7 @@ namespace
   >
   {
   public:
-    virtual std::string description() const override
+    virtual std::string description() override
     {
       return "PrefixDB package. Included PrefixDB.";
     }
