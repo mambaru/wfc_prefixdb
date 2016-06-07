@@ -335,11 +335,11 @@ void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) con
     const packed_field_params& u = upd.second;
     const bool erase = parser::is_null( u.inc.begin(), u.inc.end() )
                     && parser::is_null( u.val.begin(), u.val.end() );
-              
+
     field.first = std::move(upd.first);
     auto itr = std::lower_bound(pck.begin(), pck.end(), field, less);
     const bool found = ( itr != pck.end() && itr->first == field.first );
-     
+
     if ( erase )
     {
       if ( found ) pck.erase(itr);
@@ -356,6 +356,8 @@ void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) con
 
     if ( inc_ready )
       this->packed_inc_( u, itr->second );
+    else if (found)
+      itr->second = std::move( u.val );
   }
 }
 

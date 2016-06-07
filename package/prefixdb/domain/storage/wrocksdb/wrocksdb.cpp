@@ -206,14 +206,13 @@ void wrocksdb::has( request::has::ptr req, response::has::handler cb)
 
 void wrocksdb::del( request::del::ptr req, response::del::handler cb) 
 {
-  
   auto db = _db1;
   if ( db == nullptr ) 
   {
     if (cb!=nullptr) cb(nullptr);
     return;
   }
-    
+
   auto batch = std::make_shared< ::rocksdb::WriteBatch >();
   for ( auto& key : req->fields)
   {
