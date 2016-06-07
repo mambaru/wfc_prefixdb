@@ -220,21 +220,10 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
     batch->Delete( key );
   }
 
-  this->write_batch_< response::del >(batch, std::move(req), std::move(cb) );
-  
   if ( req->nores || cb==nullptr)
   {
     req->nores = true;
     this->write_batch_<response::del>(batch, std::move(req), std::move(cb) );
-    /*
-    ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &batch);
-    if ( cb!=nullptr )
-    {
-      auto res = std::make_unique<response::del>();
-      res->prefix = std::move(req->prefix);
-      cb( std::move(res) );
-    }
-    */
   }
   else
   {
