@@ -24,12 +24,14 @@ void prefixdb::suspend(bool val)
     _impl->suspend(this->suspended());
 }
 */
+/*
 void prefixdb::configure() 
 {
   this->reconfigure();
 }
+*/
 
-void prefixdb::reconfigure()
+void prefixdb::initialize()
 {
   if ( this->global()->workflow == nullptr )
     abort();
