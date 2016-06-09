@@ -3,6 +3,9 @@
 #include "merge/merge.hpp"
 #include "merge/merge_json.hpp"
 #include "../aux/base64.hpp"
+#include "merge/packed_params_json.hpp"
+#include "merge/add_params_json.hpp"
+#include "merge/inc_params_json.hpp"
 
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
@@ -45,8 +48,6 @@ void wrocksdb::start( )
   if ( _slave )  _slave->start();
 }
 
-
-
 void wrocksdb::stop_()
 {
   PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
@@ -60,6 +61,113 @@ void wrocksdb::stop()
   std::lock_guard<std::mutex> lk(_mutex);
   this->stop_();
 }
+
+namespace{
+  template<typename Json, typename Res, typename ReqPtr, typename Callback>
+  bool check_params(ReqPtr& req, Callback& cb)
+  {
+    typedef Json params_json;
+    typedef typename params_json::target params_t;
+    typedef typename params_json::serializer serializer;
+    bool noerr = true;
+    params_t pkg;
+    //pkg.reserve(10);
+    for (const auto& field : req->fields ) try
+    {
+      //pkg.clear();
+      serializer()(pkg, field.second.begin(), field.second.end() );
+    }
+    catch( const ::wfc::json::json_error& e)
+    {
+      JSONRPC_LOG_ERROR( "Jsonrps params error: " << e.message( field.second.begin(), field.second.end() ) );
+      noerr=false; break;
+    }
+    catch(...){ noerr=false; break; }
+
+    if ( !noerr && cb!=nullptr)
+    {
+      auto res = std::make_unique<Res>();
+      res->status = common_status::InvalidFieldValue;
+      cb( std::move(res) );
+    }
+    return noerr;
+  }
+}
+
+bool wrocksdb::check_inc_(request::inc::ptr& req, response::inc::handler& cb)
+{
+  if ( !this->_conf.check_merge_operations )
+    return true;
+
+  return check_params<inc_params_json, response::inc>(req, cb);
+
+}
+
+bool wrocksdb::check_add_(request::add::ptr& req, response::add::handler& cb)
+{
+  if ( !this->_conf.check_merge_operations )
+    return true;
+
+  return check_params<add_params_json, response::add>(req, cb);
+  /*
+  bool noerr = true;
+  packed_params_t pkg;
+  pkg.reserve(10);
+  for (const auto& field : req->fields ) try
+  {
+    pkg.clear();
+    packed_params_json::serializer()(pkg, field.second.begin(), field.second.end() );
+  }
+  catch( const ::wfc::json::json_error& e)
+  {
+    JSONRPC_LOG_ERROR( "Method 'packed' error: " << e.message( field.second.begin(), field.second.end() ) );
+    noerr=false; break;
+  }
+  catch(...){ noerr=false; break; }
+
+  if ( !noerr && cb!=nullptr)
+  {
+     auto res = std::make_unique<response::packed>();
+     res->status = common_status::InvalidFieldValue;
+     cb( std::move(res) );
+  }
+  return noerr;
+
+  */
+}
+
+bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handler& cb)
+{
+  if ( !this->_conf.check_merge_operations )
+    return true;
+
+  return check_params<packed_params_json, response::packed>(req, cb);
+  /*
+  bool noerr = true;
+  packed_params_t pkg;
+  pkg.reserve(10);
+  for (const auto& field : req->fields ) try
+  {
+    pkg.clear();
+    packed_params_json::serializer()(pkg, field.second.begin(), field.second.end() );
+  }
+  catch( const ::wfc::json::json_error& e)
+  {
+    JSONRPC_LOG_ERROR( "Method 'packed' error: " << e.message( field.second.begin(), field.second.end() ) );
+    noerr=false; break;
+  }
+  catch(...){ noerr=false; break; }
+
+  if ( !noerr && cb!=nullptr)
+  {
+     auto res = std::make_unique<response::packed>();
+     res->status = common_status::InvalidFieldValue;
+     cb( std::move(res) );
+  }
+  return noerr;
+  */
+}
+
 
 template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
 void wrocksdb::merge_(ReqPtr req, Callback cb)
@@ -104,24 +212,7 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
     }
     if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
     else db->Write( wo, &(*batch));
-    
   }
-  /*
-  else if (  cb == nullptr )
-  {
-    if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
-    else db->Write( wo, &(*batch));
-  }
-  else if ( req->nores )
-  {
-    auto res = std::make_unique<Res>();
-    res->prefix = std::move(req->prefix);
-    res->status = common_status::OK ;
-    cb( std::move(res) );
-    
-    if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
-    else db->Write( wo, &(*batch));
-  }*/
   else
   {
     db->Write( wo, &(*batch));
@@ -248,12 +339,14 @@ void wrocksdb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void wrocksdb::add( request::add::ptr req, response::add::handler cb) 
 {
-  this->merge_<merge_mode::add, response::add>( std::move(req), std::move(cb) );
+  if ( this->check_add_(req, cb) )
+    this->merge_<merge_mode::add, response::add>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::packed( request::packed::ptr req, response::packed::handler cb)
-{  
-  this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );
+{
+  if ( this->check_packed_(req, cb) )
+    this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 

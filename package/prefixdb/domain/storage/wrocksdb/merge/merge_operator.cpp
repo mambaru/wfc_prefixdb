@@ -281,12 +281,15 @@ void merge_operator::add_operand_(const std::string& oper, std::deque<std::strin
     return;
   }
   
+  /*
   std::vector<std::string> tail;
   typedef ::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > tail_json;
   if ( !helper::unserialize<tail_json>(tail, update.arr, false) )
     return;
   
   arr.insert( arr.end(), tail.begin(), tail.end() );
+  */
+  arr.insert( arr.end(), update.arr.begin(), update.arr.end() );
   if ( arr.size() > update.lim )
   {
     size_t pos = arr.size() - update.lim;

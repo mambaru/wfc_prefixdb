@@ -15,7 +15,11 @@ struct add_params_json
     add_params,
     ::wfc::json::member_list<
         ::wfc::json::member<n_lim, add_params, size_t, &add_params::lim >,
+        ::wfc::json::member<n_arr, add_params, std::vector<std::string>, &add_params::arr, 
+                                   ::wfc::json::array< std::vector< ::wfc::json::raw_value<> >, 20 > >
+        /*::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > *,
         ::wfc::json::member<n_arr, add_params, std::string, &add_params::arr, ::wfc::json::raw_value<> >
+        */
     >
   > type;
 

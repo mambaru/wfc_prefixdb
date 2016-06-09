@@ -53,7 +53,11 @@ public:
 private:
 
   void stop_();
-  
+
+  bool check_inc_(request::inc::ptr& req, response::inc::handler& cb);
+  bool check_add_(request::add::ptr& req, response::add::handler& cb);
+  bool check_packed_(request::packed::ptr& req, response::packed::handler& cb);
+
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
   void merge_(ReqPtr req, Callback cb);
   

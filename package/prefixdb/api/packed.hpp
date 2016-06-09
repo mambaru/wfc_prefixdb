@@ -17,7 +17,7 @@ namespace request
     bool nores = true;  // no result пустой результат, prefix="", status=OK
     bool noval = false; 
     field_list_t fields;
-    
+
     typedef std::unique_ptr<packed> ptr;
   };
 }

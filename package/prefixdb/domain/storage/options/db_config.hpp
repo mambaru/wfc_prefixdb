@@ -31,6 +31,9 @@ struct db_config
   // Запись batch в отдельном потоке
   bool enable_delayed_write = false;  
   
+  //
+  bool check_merge_operations = true;
+  
   //master_config master;
   slave_config slave;
   backup_config backup;
