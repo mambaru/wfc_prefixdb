@@ -189,6 +189,19 @@ void wrocksdb::merge_(ReqPtr req, Callback cb)
   this->write_batch_<Res>(batch, std::move(req), std::move(cb) );
 }
 
+namespace {
+
+template<typename Res, typename ReqPtr>
+std::unique_ptr<Res> create_write_result(ReqPtr& req)
+{
+  auto res = std::make_unique<Res>();
+  res->prefix = std::move(req->prefix);
+  res->status = common_status::OK ;
+  return std::move(res);
+}
+
+}
+
 template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
 void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
 {
@@ -199,19 +212,40 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
   
   if ( db == nullptr )
   {
-    if ( cb!=nullptr ) cb( nullptr );
+    if ( cb!=nullptr ) 
+      cb( nullptr );
   }
+
   if ( req->nores || cb == nullptr)
   {
-    if ( cb != nullptr )
+    // Если не нужен результат и не нужна синхронная запись, то сначала отправляем ответ
+    if ( cb != nullptr && !req->sync )
+      cb( create_write_result<Res>(req) );
+
+    // Если вкличена запись через очередь 
+    if ( _conf.enable_delayed_write ) 
     {
-      auto res = std::make_unique<Res>();
-      res->prefix = std::move(req->prefix);
-      res->status = common_status::OK ;
-      cb( std::move(res) );
+      if ( !req->sync || cb==nullptr ) 
+      {
+        // Если не нужна синхронная запись, от ответ уже отправлили
+        _flow->post([db, wo, batch]() { db->Write( wo, &(*batch)); });
+      }
+      else
+      {
+        auto preq = std::make_shared<ReqPtr>( std::move(req) );
+        _flow->post([db, wo, batch, preq, cb]() 
+        {
+          db->Write( wo, &(*batch)); 
+          cb( create_write_result<Res>( *preq) );
+        });
+      }
     }
-    if ( _conf.enable_delayed_write  ) _flow->post([db, wo, batch]() { db->Write( wo, &(*batch));});
-    else db->Write( wo, &(*batch));
+    else 
+    {
+      db->Write( wo, &(*batch));
+      if ( cb != nullptr && req->sync )
+        cb( create_write_result<Res>(req) );
+    }
   }
   else
   {
