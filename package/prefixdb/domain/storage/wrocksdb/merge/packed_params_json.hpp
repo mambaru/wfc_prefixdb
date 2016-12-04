@@ -24,12 +24,18 @@ struct packed_field_params_json
   typedef type::member_list member_list;
 };
 
+typedef ::wfc::json::dict_vector<
+  packed_field_params_json,
+  10
+> packed_params_json;
+
+/*
 typedef ::wfc::json::object2array<
   ::wfc::json::value<std::string>,
   packed_field_params_json,
   10
 > packed_params_json;
-
+*/
 
 
 }}
