@@ -72,17 +72,18 @@ namespace{
     bool noerr = true;
     params_t pkg;
     //pkg.reserve(10);
-    for (const auto& field : req->fields ) try
+
+    ::wfc::json::json_error e;
+    for (const auto& field : req->fields )
     {
-      //pkg.clear();
-      serializer()(pkg, field.second.begin(), field.second.end() );
+      serializer()(pkg, field.second.begin(), field.second.end(), &e );
+      if ( e )
+      {
+        JSONRPC_LOG_ERROR( "Jsonrps params error: " << wfc::json::strerror::message_trace( e, field.second.begin(), field.second.end() ) );
+        noerr=false; 
+        break;
+      }
     }
-    catch( const ::wfc::json::json_error& e)
-    {
-      JSONRPC_LOG_ERROR( "Jsonrps params error: " << e.message( field.second.begin(), field.second.end() ) );
-      noerr=false; break;
-    }
-    catch(...){ noerr=false; break; }
 
     if ( !noerr && cb!=nullptr)
     {

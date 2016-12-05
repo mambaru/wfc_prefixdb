@@ -6,8 +6,7 @@
 
 namespace wamba { namespace prefixdb {
 
-typedef ::wfc::json::object2array<
-  ::wfc::json::value<std::string>,
+typedef ::wfc::json::dict_vector<
   ::wfc::json::raw_value<std::string>,
   10
 > raw_fields_list_json;

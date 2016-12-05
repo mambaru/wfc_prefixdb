@@ -40,19 +40,19 @@ namespace helper{
   
   template<typename J, typename Obj, typename I>
   inline bool unserialize(Obj& obj, I beg, I end, bool hide)
-  try
   {
     if ( beg==end )
       return false;
     typedef typename J::serializer ser;
-    ser()(obj, beg, end);
+    ::wfc::json::json_error e;
+    ser()(obj, beg, end, &e);
+    if ( e )
+    {
+      if (!hide)
+        COMMON_LOG_ERROR( "unserialize merge_operator error: " << ::wfc::json::strerror::message_trace(e, beg, end) );
+      return false;
+    }
     return true;
-  }
-  catch( const ::wfc::json::json_error& e)
-  {
-    if (!hide)
-      COMMON_LOG_ERROR( "unserialize merge_operator error: " << e.message(beg, end) );
-    return false;
   }
 
   template<typename J, typename Obj>
@@ -380,8 +380,8 @@ void merge_operator::packed_inc_(const packed_field_params& upd, std::string& re
   
   int64_t val = 0;
   int64_t inc = 0;
-  intser(val, result.begin(), result.end());
-  intser(inc, upd.inc.begin(), upd.inc.end() );
+  intser(val, result.begin(), result.end(), nullptr);
+  intser(inc, upd.inc.begin(), upd.inc.end(), nullptr );
   val += inc;
   result.clear();
   
