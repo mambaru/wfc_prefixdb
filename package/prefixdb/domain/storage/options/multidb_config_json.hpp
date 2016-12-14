@@ -20,13 +20,13 @@ struct multidb_config_json
   typedef ::wfc::json::object<
     multidb_config,
     ::wfc::json::member_list<
-      ::wfc::json::base<db_config_json>,
       ::wfc::json::member<n_preopen, multidb_config, bool,        &multidb_config::preopen>,
       ::wfc::json::member<n_keys_per_req, multidb_config, size_t, &multidb_config::keys_per_req>,
       ::wfc::json::member<n_key_size_limit, multidb_config, size_t, &multidb_config::key_size_limit>,
       ::wfc::json::member<n_value_size_limit, multidb_config, size_t, &multidb_config::value_size_limit>,
       ::wfc::json::member<n_prefix_size_limit, multidb_config, size_t, &multidb_config::prefix_size_limit>,
-      ::wfc::json::member<n_max_prefixes, multidb_config, size_t, &multidb_config::max_prefixes>
+      ::wfc::json::member<n_max_prefixes, multidb_config, size_t, &multidb_config::max_prefixes>,
+      ::wfc::json::base<db_config_json>
     >
   > type;
 
