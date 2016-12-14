@@ -12,7 +12,8 @@ namespace wamba{ namespace prefixdb {
   
 void prefixdb::start(const std::string&)
 {
-  if ( this->has_arg("restore") )  return this->restore_();
+  if ( this->has_arg("restore") )  
+    return this->restore_();
   this->reconfigure();
 }
 
