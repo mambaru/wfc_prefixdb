@@ -17,7 +17,7 @@
 #include <prefixdb/api/delay_background.hpp>
 #include <prefixdb/api/continue_background.hpp>
 
-namespace wamba { namespace prefixdb {
+namespace wamba { namespace prefixdb{
 
 struct iprefixdb: public ::wfc::iinterface
 {
