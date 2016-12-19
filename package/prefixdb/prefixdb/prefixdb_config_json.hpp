@@ -4,7 +4,7 @@
 #include <wfc/name.hpp>
 #include <wfc/workflow.hpp>
 #include <prefixdb/prefixdb/prefixdb_config.hpp>
-#include <prefixdb/prefixdb/storage/options/multidb_config_json.hpp>
+#include <prefixdb/prefixdb/multidb/options/multidb_config_json.hpp>
 
 namespace wamba{ namespace prefixdb{
 

@@ -3,8 +3,8 @@
 #include <wfc/logger.hpp>
 #include <wfc/core/icore.hpp>
 #include <wfc/module/iinstance.hpp>
-#include "storage/multidb.hpp"
-#include "storage/god.hpp"
+#include "multidb/multidb.hpp"
+#include "multidb/god.hpp"
 #include "../service/prefixdb_cmd.hpp"
 #include <ctime>
 
@@ -47,7 +47,7 @@ void prefixdb::initialize()
 
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
     _impl->reconfigure( opt, factory );
-    _impl->suspend(this->suspended());
+    /* _impl->suspend(this->suspended()); */
   }
   else
   {

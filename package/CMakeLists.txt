@@ -9,16 +9,16 @@ SET(
   prefixdb_package.cpp
   prefixdb/prefixdb_module.cpp
   prefixdb/prefixdb/prefixdb.cpp
-  prefixdb/prefixdb/storage/multidb.cpp
-  prefixdb/prefixdb/storage/wrocksdb/wrocksdb_factory.cpp
-  prefixdb/prefixdb/storage/wrocksdb/wrocksdb.cpp
-  prefixdb/prefixdb/storage/wrocksdb/wrocksdb_restore.cpp
-  prefixdb/prefixdb/storage/wrocksdb/wrocksdb_slave.cpp
-  prefixdb/prefixdb/storage/wrocksdb/since_reader.cpp
-  prefixdb/prefixdb/storage/wrocksdb/merge/merge_operator.cpp
-  prefixdb/prefixdb/storage/god.cpp
-  prefixdb/prefixdb/storage/aux/scan_dir.cpp
-  prefixdb/prefixdb/storage/aux/copy_dir.cpp
+  prefixdb/prefixdb/multidb/multidb.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_factory.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_restore.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_slave.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/merge/merge_operator.cpp
+  prefixdb/prefixdb/multidb/god.cpp
+  prefixdb/prefixdb/multidb/aux/scan_dir.cpp
+  prefixdb/prefixdb/multidb/aux/copy_dir.cpp
   prefixdb/prefixdb/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/service/prefixdb_cmd.cpp

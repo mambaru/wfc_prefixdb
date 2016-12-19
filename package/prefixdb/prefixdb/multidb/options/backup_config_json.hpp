@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/prefixdb/storage/options/backup_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/backup_config.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba{ namespace prefixdb{

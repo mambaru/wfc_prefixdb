@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include <prefixdb/prefixdb/storage/options/slave_config.hpp>
-#include <prefixdb/prefixdb/storage/options/backup_config.hpp>
-#include <prefixdb/prefixdb/storage/options/archive_config.hpp>
-#include <prefixdb/prefixdb/storage/options/restore_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/slave_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/backup_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/archive_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/restore_config.hpp>
 
 namespace wamba{ namespace prefixdb{
   

@@ -1,31 +1,27 @@
 #pragma once
 
-#include <prefixdb/iprefixdb.hpp>
-#include <prefixdb/prefixdb/storage/wrocksdb/merge/merge.hpp>
-#include <prefixdb/prefixdb/storage/iprefixdb_ex.hpp>
-#include <prefixdb/prefixdb/storage/options/db_config.hpp>
-#include <rocksdb/db.h>
-#include <rocksdb/write_batch.h>
-#include <rocksdb/utilities/backupable_db.h>
-
+#include <prefixdb/prefixdb/multidb/options/multidb_config.hpp>
+#include <prefixdb/prefixdb/multidb/iprefixdb_ex.hpp>
 #include <memory>
+#include <map>
 #include <mutex>
 
-namespace rocksdb{ class BackupableDB;}
 
 namespace wamba{ namespace prefixdb{
-  
-class wrocksdb_slave;
+ 
+struct ifactory;
 
-class wrocksdb
-  : public iprefixdb_ex
-  , public std::enable_shared_from_this<wrocksdb>
+class multidb
+  : public iprefixdb
+  , public std::enable_shared_from_this<multidb>
 {
+  typedef std::shared_ptr<iprefixdb_ex> prefixdb_ptr;
+  typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
-  typedef ::rocksdb::BackupableDB db_type;
-
-  wrocksdb( std::string name, const db_config conf, db_type* db);
-
+  multidb();
+  bool reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory);
+  /*void suspend(bool val);*/
+  
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -35,47 +31,57 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
-  
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
+
+  virtual void stop();  
+  virtual void start();
+  virtual bool backup();
+  virtual bool archive();
+  virtual bool restore();
   
-  virtual void start( ) override;
-  virtual void stop() override;
-  virtual bool backup() override;
-  virtual bool archive(std::string path) override;
-
-  void compact(const std::string& key);
-
 private:
 
-  void stop_();
+  void configure_backup_timer_();
+  void configure_archive_timer_();
+  void configure_prefix_reqester_();
+  request::get_all_prefixes::ptr get_all_prefixes_handler_(response::get_all_prefixes::ptr res);
 
-  bool check_inc_(request::inc::ptr& req, response::inc::handler& cb);
-  bool check_add_(request::add::ptr& req, response::add::handler& cb);
-  bool check_packed_(request::packed::ptr& req, response::packed::handler& cb);
-
-  template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
-  void merge_(ReqPtr req, Callback cb);
+  std::vector< std::string > all_prefixes_();
+  bool preopen_(std::string path, bool create_if_missing);
+  
+  prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
+  bool close_prefix_(const std::string& prefix);
   
   template<typename Res, typename ReqPtr, typename Callback>
-  void get_(ReqPtr req, Callback cb, bool ignore_if_missing = false);
+  bool check_fields_(const ReqPtr& req, const Callback& cb);
 
-  template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
-  void write_batch_(BatchPtr batch, ReqPtr req, Callback cb);
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool check_prefix_(const ReqPtr& req, const Callback& cb);
 
-private:
+  /*
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool suspended_(const ReqPtr& req, const Callback& cb);
+  */
   
-  std::string _name;  
-  const db_config _conf;
-  std::shared_ptr<db_type> _db1;
+private:
+  typedef wfc::workflow::timer_id_t timer_id_t;
+  /*std::atomic<bool> _suspend;*/
+  
+  std::shared_ptr<ifactory> _factory;
+  db_map _db_map;
   std::mutex _mutex;
-  std::shared_ptr<wrocksdb_slave> _slave;
+  multidb_config _opt;
   std::shared_ptr< ::wfc::workflow> _flow;
-};
+  
+  ::wfc::workflow::timer_id_t _backup_timer  = -1;
+  ::wfc::workflow::timer_id_t _archive_timer  = -1;
+  ::wfc::workflow::timer_id_t _prefix_reqester = -1;
 
+};
 
 }}

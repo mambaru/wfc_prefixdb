@@ -1,6 +1,6 @@
 #define BOOST_NO_CXX11_SCOPED_ENUMS
 
-#include <prefixdb/prefixdb/storage/aux/copy_dir.hpp>
+#include <prefixdb/prefixdb/multidb/aux/copy_dir.hpp>
 #include <boost/algorithm/string.hpp>
 #include <wfc/boost.hpp>
 #include <sstream>
