@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/domain/prefixdb_config.hpp>
+#include <prefixdb/prefixdb/prefixdb_config.hpp>
 #include <prefixdb/iprefixdb.hpp>
 
 #include <wfc/domain_object.hpp>
@@ -18,13 +18,9 @@ class prefixdb
 {
 public:
   // domain_object
-  virtual void start(const std::string&) override;
+  virtual void start() override;
   virtual void initialize() override;
-  /*virtual void configure() override;
-  virtual void reconfigure() override;
-  */
-  //virtual void suspend(bool value) override;
-  virtual void stop(const std::string&) override;
+  virtual void stop() override;
   
   // iprefixdb
   virtual void set( request::set::ptr req, response::set::handler cb) override;

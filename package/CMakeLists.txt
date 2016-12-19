@@ -5,25 +5,25 @@ include_directories(.)
 
 SET(
   prefixdb_source_list
-  prefixdb/domain/storage/aux/scan_dir.cpp
+  
   prefixdb_package.cpp
   prefixdb/prefixdb_module.cpp
-  prefixdb/domain/prefixdb.cpp
-  prefixdb/domain/storage/multidb.cpp
-  prefixdb/domain/storage/wrocksdb/wrocksdb_factory.cpp
-  prefixdb/domain/storage/wrocksdb/wrocksdb.cpp
-  prefixdb/domain/storage/wrocksdb/wrocksdb_restore.cpp
-  prefixdb/domain/storage/wrocksdb/wrocksdb_slave.cpp
-  prefixdb/domain/storage/wrocksdb/since_reader.cpp
-  #prefixdb/domain/storage/wrocksdb/wal_buffer.cpp
-  prefixdb/domain/storage/wrocksdb/merge/merge_operator.cpp
-  prefixdb/domain/storage/god.cpp
-  
-  prefixdb/domain/prefixdb_multiton.cpp
+  prefixdb/prefixdb/prefixdb.cpp
+  prefixdb/prefixdb/storage/multidb.cpp
+  prefixdb/prefixdb/storage/wrocksdb/wrocksdb_factory.cpp
+  prefixdb/prefixdb/storage/wrocksdb/wrocksdb.cpp
+  prefixdb/prefixdb/storage/wrocksdb/wrocksdb_restore.cpp
+  prefixdb/prefixdb/storage/wrocksdb/wrocksdb_slave.cpp
+  prefixdb/prefixdb/storage/wrocksdb/since_reader.cpp
+  prefixdb/prefixdb/storage/wrocksdb/merge/merge_operator.cpp
+  prefixdb/prefixdb/storage/god.cpp
+  prefixdb/prefixdb/storage/aux/scan_dir.cpp
+  prefixdb/prefixdb/storage/aux/copy_dir.cpp
+  prefixdb/prefixdb/prefixdb_multiton.cpp
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/service/prefixdb_cmd.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp
-  prefixdb/domain/storage/aux/copy_dir.cpp
+  
 )
 
 add_library(

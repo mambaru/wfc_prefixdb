@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/domain/storage/options/db_config.hpp>
+#include <prefixdb/prefixdb/storage/options/db_config.hpp>
 
 namespace rocksdb{ class BackupableDB;}
 

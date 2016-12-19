@@ -4,9 +4,9 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 
-#include <prefixdb/domain/prefixdb_config_json.hpp>
-#include <prefixdb/domain/prefixdb_multiton.hpp>
-#include <prefixdb/domain/prefixdb.hpp>
+#include <prefixdb/prefixdb/prefixdb_config_json.hpp>
+#include <prefixdb/prefixdb/prefixdb_multiton.hpp>
+#include <prefixdb/prefixdb/prefixdb.hpp>
 
 #include <wfc/module/multiton.hpp>
 #include <wfc/module/instance.hpp>

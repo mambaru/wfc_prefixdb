@@ -10,7 +10,7 @@
 
 namespace wamba{ namespace prefixdb {
   
-void prefixdb::start(const std::string&)
+void prefixdb::start()
 {
   if ( this->has_arg("restore") )  
     return this->restore_();
@@ -78,7 +78,7 @@ void prefixdb::initialize()
   }
 }
 
-void prefixdb::stop(const std::string&) 
+void prefixdb::stop() 
 {
   
   if ( _impl )

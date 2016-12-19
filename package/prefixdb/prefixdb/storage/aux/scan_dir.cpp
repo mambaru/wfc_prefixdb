@@ -1,4 +1,4 @@
-#include <prefixdb/domain/storage/aux/scan_dir.hpp>
+#include <prefixdb/prefixdb/storage/aux/scan_dir.hpp>
 #include <dirent.h>
        
 namespace wamba{ namespace prefixdb {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <prefixdb/domain/storage/options/multidb_config.hpp>
-#include <prefixdb/domain/storage/iprefixdb_ex.hpp>
+#include <prefixdb/prefixdb/storage/options/multidb_config.hpp>
+#include <prefixdb/prefixdb/storage/iprefixdb_ex.hpp>
 #include <memory>
 #include <map>
 #include <mutex>
