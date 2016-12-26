@@ -189,6 +189,7 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
   if ( req->limit + req->offset > this->_opt.range_limit )
   {
     send_error<common_status::RangeLimitExceeded, response::range>(std::move(req), std::move(cb) );
+    return;
   }
 
   if ( auto db = this->prefix_(req->prefix, false) )
@@ -625,7 +626,7 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_
       _flow->post([this, preq]
       {
         this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
-      });
+      }, nullptr);
     }
   }
   else if ( res != nullptr )

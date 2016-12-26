@@ -3,6 +3,7 @@
 
 namespace wamba{ namespace prefixdb { namespace{
   
+#warning удалить мусор который есть дублирует domain_object
 template<common_status Status, typename Res, typename ReqPtr, typename Callback>
 inline bool send_error(const ReqPtr& req, const Callback& cb)
 {
@@ -12,6 +13,7 @@ inline bool send_error(const ReqPtr& req, const Callback& cb)
     res->prefix = std::move(req->prefix);
     res->status = Status;
     cb( std::move(res) );
+    return true;
   }
   return false;
 }

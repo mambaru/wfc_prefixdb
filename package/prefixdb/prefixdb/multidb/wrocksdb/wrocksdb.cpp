@@ -229,7 +229,7 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
       if ( !req->sync || cb==nullptr ) 
       {
         // Если не нужна синхронная запись, от ответ уже отправлили
-        _flow->post([db, wo, batch]() { db->Write( wo, &(*batch)); });
+        _flow->post([db, wo, batch]() { db->Write( wo, &(*batch)); }, nullptr);
       }
       else
       {
@@ -238,7 +238,7 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
         {
           db->Write( wo, &(*batch)); 
           cb( create_write_result<Res>( *preq) );
-        });
+        }, [cb](){ cb(nullptr);});
       }
     }
     else 
@@ -606,7 +606,7 @@ void wrocksdb::compact(const std::string& key)
         PREFIXDB_LOG_ERROR("wrocksdb::compact(" << key << "): " << status.ToString() )
       }
     }
-  });
+  }, nullptr);
 }
 
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
