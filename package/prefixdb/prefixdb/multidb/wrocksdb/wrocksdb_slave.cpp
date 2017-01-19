@@ -33,7 +33,9 @@ void wrocksdb_slave::start()
     PREFIXDB_LOG_WARNING("Slave '" << _name << "' not running. enabled==true but target not set")
     return;
   }
-  
+
+  PREFIXDB_LOG_BEGIN("Start Slave '" << _name << "' ")
+
   _last_update_time = 0;
   _update_counter  = 0;
   _current_differens  = 0;
@@ -43,6 +45,7 @@ void wrocksdb_slave::start()
   this->create_updates_requester_();
   this->create_diff_timer_();
   this->create_seq_timer_();
+  PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
 }
 
 void wrocksdb_slave::stop()
