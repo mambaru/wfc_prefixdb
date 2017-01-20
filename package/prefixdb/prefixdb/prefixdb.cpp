@@ -200,7 +200,7 @@ void prefixdb::restore_()
   auto opt = this->options();
   if ( opt.restore.forbid )
   {
-    ::wfc_exit_with_error("Restore forbidden in this configurations");
+    PREFIXDB_LOG_FATAL("Restore forbidden in this configurations");
     return;
   }
   

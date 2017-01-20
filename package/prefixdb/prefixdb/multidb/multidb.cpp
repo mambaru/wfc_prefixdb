@@ -581,18 +581,13 @@ void multidb::configure_prefix_reqester_()
     &iprefixdb::get_all_prefixes,
     std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
   );
-  
 }
-
 
 request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
 {
-  PREFIXDB_LOG_MESSAGE("DEBUG  request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res) ")
-  /*sleep(1);*/
   if ( res == nullptr )
     return std::make_unique<request::get_all_prefixes>();
 
-  /*abort();*/
   auto preflist = this->all_prefixes_();
   std::set<std::string> prefset( preflist.begin(), preflist.end() );
   if ( res->status == common_status::OK)
