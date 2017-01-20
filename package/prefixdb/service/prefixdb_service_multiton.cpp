@@ -12,11 +12,14 @@
 
 namespace wamba{ namespace prefixdb{
 
-WFC_NAME2(prefixdb_service_name, "prefixdb-service")
+namespace
+{
+  WFC_NAME2(service_name, "prefixdb-service")
 
-class prefixdb_service_multiton::impl
-  : public ::wfc::jsonrpc::service_multiton< prefixdb_service_name, service::method_list> 
-{};
+  class impl
+    : public ::wfc::jsonrpc::service_multiton< service_name, service::method_list> 
+  {};
+}
 
 prefixdb_service_multiton::prefixdb_service_multiton()
   : wfc::component( std::make_shared<impl>() )

@@ -578,11 +578,19 @@ void multidb::configure_backup_timer_()
 
 void multidb::configure_prefix_reqester_()
 {
-  if ( _prefix_reqester != -1 ) _flow->release_timer(_prefix_reqester);
-  
-  if ( !_opt.slave.enabled ) return;
+  _flow->release_timer(_prefix_reqester);
+
+  if ( !_opt.slave.enabled ) 
+    return;
+
   
   std::weak_ptr<multidb> wthis = this->shared_from_this();
+  PREFIXDB_LOG_MESSAGE("BEGIN Test ms=" << _opt.slave.query_prefixes_timeout_ms )
+  _flow->create_timer( std::chrono::milliseconds( 100 ), []()
+  {
+    PREFIXDB_LOG_MESSAGE("Test")
+    return true;
+  });
   _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
   (
     std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
