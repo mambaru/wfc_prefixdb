@@ -15,14 +15,6 @@ void prefixdb::start()
   if ( this->has_arg("restore") )  
     return this->restore_();
   this->reconfigure();
-  
-  CONFIG_LOG_MESSAGE(" Create Test Timer ------------------------------- 100? ");
-  auto id = this->get_workflow()->create_timer( std::chrono::milliseconds( 100 ), []()
-  {
-    CONFIG_LOG_MESSAGE("Test ------------------------------- ");
-    return true;
-  });
-  CONFIG_LOG_MESSAGE(" Create Test Timer ------------------------------- Created id = " << id);
 }
 
 /*
