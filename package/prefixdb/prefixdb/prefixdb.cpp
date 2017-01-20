@@ -5,7 +5,9 @@
 #include <wfc/module/iinstance.hpp>
 #include "multidb/multidb.hpp"
 #include "multidb/god.hpp"
+
 #include "../service/prefixdb_cmd.hpp"
+#include "../logger.hpp"
 #include <ctime>
 
 namespace wamba{ namespace prefixdb {
@@ -15,28 +17,12 @@ void prefixdb::start()
   if ( this->has_arg("restore") )  
     return this->restore_();
   this->reconfigure();
+  _impl->start();
 }
 
-/*
-void prefixdb::suspend(bool val) 
-{
-  domain_object::suspend(val);
-  if ( _impl != nullptr )
-    _impl->suspend(this->suspended());
-}
-*/
-/*
-void prefixdb::configure() 
-{
-  this->reconfigure();
-}
-*/
 
 void prefixdb::initialize()
 {
-  if ( this->global()->workflow == nullptr )
-    abort();
-  
   auto opt = this->options();
   opt.args.workflow = this->get_workflow();
   
@@ -47,7 +33,6 @@ void prefixdb::initialize()
 
     opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
     _impl->reconfigure( opt, factory );
-    /* _impl->suspend(this->suspended()); */
   }
   else
   {
@@ -61,11 +46,11 @@ void prefixdb::initialize()
     }
     
     auto factory = god::create("rocksdb", this->global()->io_service );
-    factory->initialize(opt/*, false*/);
+    factory->initialize(opt);
 
     if ( !_impl->reconfigure( opt, factory ) )
     {
-      wfc_exit_with_error("prefixdb open DB abort!");
+      PREFIXDB_LOG_FATAL("prefixdb open DB abort!");
     }
     
     for ( const std::string& name : stop_list )
@@ -77,6 +62,7 @@ void prefixdb::initialize()
     }
   }
 }
+
 
 void prefixdb::stop() 
 {

@@ -14,15 +14,7 @@ namespace wamba{ namespace prefixdb {
 
 multidb::multidb()
 {
-//  _suspend = false;
 }
-
-/*
-void multidb::suspend(bool val)
-{
-  _suspend = val;
-}
-*/
 
 bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory)
 {
@@ -31,16 +23,9 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
-    
     _flow = opt.args.workflow;
-    //_flow = ::wfc::workflow::recreate_and_start(_flow, opt.arg.workflow);
-    
-    //_opt.workflow_ptr = _flow;
     _opt.slave.timer = _flow;
-    _factory->initialize(_opt/*, false*/);
-    this->configure_backup_timer_();
-    this->configure_archive_timer_();
-    this->configure_prefix_reqester_();
+    _factory->initialize(_opt);
   }
     
   if ( !::boost::filesystem::exists(opt.path) )
@@ -55,6 +40,14 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
   }
   
   return !opt.preopen || this->preopen_(opt.path, false);
+}
+
+void multidb::start() 
+{
+  std::lock_guard<std::mutex> lk(_mutex);
+  this->configure_backup_timer_();
+  this->configure_archive_timer_();
+  this->configure_prefix_reqester_();
 }
 
 
@@ -361,9 +354,6 @@ void multidb::stop()
 }
 
 
-void multidb::start() 
-{
-}
 
 
 bool multidb::backup()
@@ -591,14 +581,18 @@ void multidb::configure_prefix_reqester_()
     &iprefixdb::get_all_prefixes,
     std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
   );
+  
 }
 
 
 request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
 {
+  PREFIXDB_LOG_MESSAGE("DEBUG  request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res) ")
+  /*sleep(1);*/
   if ( res == nullptr )
     return std::make_unique<request::get_all_prefixes>();
 
+  /*abort();*/
   auto preflist = this->all_prefixes_();
   std::set<std::string> prefset( preflist.begin(), preflist.end() );
   if ( res->status == common_status::OK)

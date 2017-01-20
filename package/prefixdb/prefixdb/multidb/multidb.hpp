@@ -20,8 +20,8 @@ class multidb
 public:
   multidb();
   bool reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory);
-  /*void suspend(bool val);*/
-  
+  virtual void start();
+
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -39,7 +39,7 @@ public:
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
 
   virtual void stop();  
-  virtual void start();
+  
   virtual bool backup();
   virtual bool archive();
   virtual bool restore();
@@ -63,14 +63,9 @@ private:
   template<typename Res, typename ReqPtr, typename Callback>
   bool check_prefix_(const ReqPtr& req, const Callback& cb);
 
-  /*
-  template<typename Res, typename ReqPtr, typename Callback>
-  bool suspended_(const ReqPtr& req, const Callback& cb);
-  */
-  
 private:
   typedef wfc::workflow::timer_id_t timer_id_t;
-  /*std::atomic<bool> _suspend;*/
+  
   
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;

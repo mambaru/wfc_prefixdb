@@ -13,7 +13,7 @@ namespace wamba{ namespace prefixdb{
 class multidb;
 
 class prefixdb
-  : public ::wfc::domain_object<iprefixdb, prefixdb_config>
+  : public ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat>
   , public std::enable_shared_from_this< prefixdb >
 {
 public:
