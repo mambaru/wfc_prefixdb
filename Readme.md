@@ -57,4 +57,6 @@ wfc_prefixdb - пакет модулей префиксного key-value хра
 Важно понимать, что отложенные операции также являються персистентными и реплицируемыми на уровне RocksDB. Т.е. в результате 
 падения или перезапуска они не будут потеряны. 
 
-[Описание модуля](http://github.lan/cpp/wfc_prefixdb/wikis/wfc_prefixdb)
+# API
+
+[PrefixDB API](http://github.lan/cpp/wfc_prefixdb/wikis/wfc_prefixdb)
