@@ -110,27 +110,28 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
-  
+
+  auto options = _context->options;
   if ( !conf.wal_path.empty() )
-    _context->options.wal_dir = conf.wal_path + "/" + _context->options.wal_dir;
+    options.wal_dir = conf.wal_path + "/" + _context->options.wal_dir;
   
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
   PREFIXDB_LOG_BEGIN("::rocksdb::DB::Open '" << dbname << "' ...");
 
-  auto status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
+  auto status = ::rocksdb::DB::Open(options, conf.path, _context->cdf , &handles, &db);
   
   if ( !status.ok() )
   {
     PREFIXDB_LOG_ERROR("::rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
     if ( conf.auto_repair )
     {
-      status = ::rocksdb::RepairDB(conf.path, _context->options );
+      status = ::rocksdb::RepairDB(conf.path, options );
       PREFIXDB_LOG_MESSAGE("::rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
       if ( status.ok() )
       {
-        status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
+        status = ::rocksdb::DB::Open(options, conf.path, _context->cdf , &handles, &db);
       }
     }
   }
