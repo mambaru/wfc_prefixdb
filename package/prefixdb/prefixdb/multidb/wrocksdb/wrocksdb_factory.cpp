@@ -106,7 +106,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   _context->cdf[0].options.merge_operator = merge;
   
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
-  if ( !conf.wal_path.empty() ) conf.path = _context->config.wal_path + "/" + dbname;
+  if ( !conf.wal_path.empty() ) conf.wal_path = _context->config.wal_path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
