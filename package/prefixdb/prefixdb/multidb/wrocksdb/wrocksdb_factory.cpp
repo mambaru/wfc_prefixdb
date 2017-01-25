@@ -112,7 +112,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
   
   if ( !conf.wal_path.empty() )
-    _context->options = conf.wal_path + "/" + _context->options.wal_dir;
+    _context->options.wal_dir = conf.wal_path + "/" + _context->options.wal_dir;
   
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
