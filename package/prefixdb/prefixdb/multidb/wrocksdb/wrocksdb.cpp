@@ -397,7 +397,9 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   res->prefix = std::move(req->prefix);
 
   std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
-  ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
+  ::rocksdb::TransactionLogIterator::ReadOptions ro;
+  ro.verify_checksums_ = false; // TODO: опционально
+  ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ro );
   ::rocksdb::SequenceNumber cur_seq=0;
   if ( status.ok() )
   {
