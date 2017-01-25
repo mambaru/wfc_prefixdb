@@ -16,6 +16,9 @@ struct db_config
 
   // Путь к базе данных для всех префиксов
   std::string path = "./prefixdb";
+  // Путь для WAL, если не указан то по умолчанью из rocksdb
+  // если путь указано в ini, то wal_path + "prefix" + ini.wal_dir
+  std::string wal_path = "";
   // для "отцепленных" префиксов
   std::string detach_path = "./prefixdb_detach";
   // Файл опций в формате ini
