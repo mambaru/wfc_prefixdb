@@ -116,8 +116,8 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     auto wal_dir = options.wal_dir;
     options.wal_dir = conf.wal_path;
-    if ( !wal_dir.empty() )
-      options.wal_dir += std::string("/") + _context->options.wal_dir;
+    if ( !wal_dir.empty() && wal_dir!="\"\"" )
+      options.wal_dir += std::string("/") + wal_dir;
   }
   
   ::rocksdb::DB* db;
