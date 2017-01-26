@@ -13,6 +13,7 @@ namespace wamba{ namespace prefixdb{
 struct db_config_json
 {
   JSON_NAME(path)
+  JSON_NAME(wal_path)
   JSON_NAME(detach_path)
   JSON_NAME(ini)
   JSON_NAME(slave)
@@ -33,6 +34,7 @@ struct db_config_json
     db_config,
     ::wfc::json::member_list<
       ::wfc::json::member<n_path,    db_config, std::string, &db_config::path>,
+      ::wfc::json::member<n_wal_path,    db_config, std::string, &db_config::wal_path>,
       ::wfc::json::member<n_detach_path,    db_config, std::string, &db_config::detach_path>,
       ::wfc::json::member<n_packed_limit, db_config, size_t, &db_config::packed_limit>,
       ::wfc::json::member<n_array_limit, db_config, size_t, &db_config::array_limit>,

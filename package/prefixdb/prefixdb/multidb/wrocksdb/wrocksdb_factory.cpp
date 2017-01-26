@@ -57,6 +57,7 @@ void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
 {
   db_config conf = conf1;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
+  while ( !conf.wal_path.empty() && conf.wal_path.back()=='/' ) conf.wal_path.pop_back();
   while ( !conf.detach_path.empty() && conf.detach_path.back()=='/' ) conf.path.pop_back();
   while ( !conf.backup.path.empty() && conf.backup.path.back()=='/' ) conf.backup.path.pop_back();
   while ( !conf.restore.path.empty() && conf.restore.path.back()=='/' ) conf.restore.path.pop_back();
@@ -105,27 +106,37 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   _context->cdf[0].options.merge_operator = merge;
   
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
+  if ( !conf.wal_path.empty() ) conf.wal_path = _context->config.wal_path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
+
+  auto options = _context->options;
+  if ( !conf.wal_path.empty() )
+  {
+    auto wal_dir = options.wal_dir;
+    options.wal_dir = conf.wal_path;
+    if ( !wal_dir.empty() && wal_dir!="\"\"" )
+      options.wal_dir += std::string("/") + wal_dir;
+  }
   
   ::rocksdb::DB* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
   PREFIXDB_LOG_BEGIN("::rocksdb::DB::Open '" << dbname << "' ...");
 
-  auto status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
+  auto status = ::rocksdb::DB::Open(options, conf.path, _context->cdf , &handles, &db);
   
   if ( !status.ok() )
   {
     PREFIXDB_LOG_ERROR("::rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
     if ( conf.auto_repair )
     {
-      status = ::rocksdb::RepairDB(conf.path, _context->options );
+      status = ::rocksdb::RepairDB(conf.path, options );
       PREFIXDB_LOG_MESSAGE("::rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
       if ( status.ok() )
       {
-        status = ::rocksdb::DB::Open(_context->options, conf.path, _context->cdf , &handles, &db);
+        status = ::rocksdb::DB::Open(options, conf.path, _context->cdf , &handles, &db);
       }
     }
   }
@@ -134,7 +145,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     if ( conf.abort_if_open_error )
     {
-      wfc_exit_with_error("Can not open DB " + conf.path);
+      DOMAIN_LOG_FATAL("Can not open DB " << conf.path);
     }
     return nullptr;
   }
