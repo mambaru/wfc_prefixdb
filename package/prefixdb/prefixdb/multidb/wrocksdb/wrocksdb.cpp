@@ -615,11 +615,14 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
   ::rocksdb::Status status = _db1->PauseBackgroundWork();
   if ( status.ok() )
   {
+    PREFIXDB_LOG_BEGIN("Delay Background" )
     bool force = req->contunue_force;
-    _flow->post( std::chrono::seconds(req->delay_timeout_s), [this, force]()
+    auto cb_fun = [this, force]()
     {
       while ( this->_db1->ContinueBackgroundWork().ok() && force );
-    } );
+      PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork] " )
+    };
+    _flow->post( std::chrono::seconds(req->delay_timeout_s), cb_fun, cb_fun);
   }
   else
   {
