@@ -12,7 +12,7 @@ struct backup_config
   // Путь к бэкапу базы данных для всех префиксов
   std::string path   = "./prefixdb_backup";
   
-  std::string start_time  = "";
+  std::string start_time  = "03:00:00";
   
   time_t period_s = 600;
   
@@ -20,7 +20,7 @@ struct backup_config
   size_t depth = 10;
   
   // не реализовано
-  time_t start_delay_s = 0;
+  /*time_t start_delay_s = 0;*/
   
 };
 

@@ -5,6 +5,7 @@
 #include <prefixdb/prefixdb/multidb/options/backup_config.hpp>
 #include <prefixdb/prefixdb/multidb/options/archive_config.hpp>
 #include <prefixdb/prefixdb/multidb/options/restore_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/compact_config.hpp>
 
 namespace wamba{ namespace prefixdb{
   
@@ -36,7 +37,7 @@ struct db_config
   //
   bool check_merge_operations = true;
   
-  //master_config master;
+  compact_config compact;
   slave_config slave;
   backup_config backup;
   archive_config archive;

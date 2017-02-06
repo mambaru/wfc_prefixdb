@@ -39,13 +39,14 @@ public:
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
 
   virtual void stop();  
-  
   virtual bool backup();
   virtual bool archive();
   virtual bool restore();
+  virtual bool compact();
   
 private:
 
+  void configure_compact_timer_();
   void configure_backup_timer_();
   void configure_archive_timer_();
   void configure_prefix_reqester_();
@@ -73,6 +74,7 @@ private:
   multidb_config _opt;
   std::shared_ptr< ::wfc::workflow> _flow;
   
+  ::wfc::workflow::timer_id_t _compact_timer  = -1;
   ::wfc::workflow::timer_id_t _backup_timer  = -1;
   ::wfc::workflow::timer_id_t _archive_timer  = -1;
   ::wfc::workflow::timer_id_t _prefix_reqester = -1;

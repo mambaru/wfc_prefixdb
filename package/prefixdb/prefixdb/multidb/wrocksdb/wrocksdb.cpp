@@ -589,8 +589,24 @@ bool wrocksdb::archive(std::string path)
   return false;
 }
 
-void wrocksdb::compact(const std::string& key)
+bool wrocksdb::compact()
 {
+  bool result  = false;
+  if ( auto db = _db1 )
+  {
+    ::rocksdb::CompactRangeOptions opt;
+    opt.exclusive_manual_compaction = true;
+    ::rocksdb::Status status = db->CompactRange( opt, nullptr, nullptr );
+    result = status.ok();
+    if ( !result ) 
+    {
+      PREFIXDB_LOG_ERROR( "wrocksdb::compact error: " << status.ToString() )
+    }
+  }
+  
+  return result;
+  
+  /*
   std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
   _flow->post([wthis, key]()
   {
@@ -607,6 +623,7 @@ void wrocksdb::compact(const std::string& key)
       }
     }
   }, nullptr);
+  */
 }
 
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
