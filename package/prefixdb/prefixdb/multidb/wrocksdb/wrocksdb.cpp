@@ -71,7 +71,6 @@ namespace{
     typedef typename params_json::serializer serializer;
     bool noerr = true;
     params_t pkg;
-    //pkg.reserve(10);
 
     ::wfc::json::json_error e;
     for (const auto& field : req->fields )
@@ -110,31 +109,6 @@ bool wrocksdb::check_add_(request::add::ptr& req, response::add::handler& cb)
     return true;
 
   return check_params<add_params_json, response::add>(req, cb);
-  /*
-  bool noerr = true;
-  packed_params_t pkg;
-  pkg.reserve(10);
-  for (const auto& field : req->fields ) try
-  {
-    pkg.clear();
-    packed_params_json::serializer()(pkg, field.second.begin(), field.second.end() );
-  }
-  catch( const ::wfc::json::json_error& e)
-  {
-    JSONRPC_LOG_ERROR( "Method 'packed' error: " << e.message( field.second.begin(), field.second.end() ) );
-    noerr=false; break;
-  }
-  catch(...){ noerr=false; break; }
-
-  if ( !noerr && cb!=nullptr)
-  {
-     auto res = std::make_unique<response::packed>();
-     res->status = common_status::InvalidFieldValue;
-     cb( std::move(res) );
-  }
-  return noerr;
-
-  */
 }
 
 bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handler& cb)
@@ -143,30 +117,6 @@ bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handle
     return true;
 
   return check_params<packed_params_json, response::packed>(req, cb);
-  /*
-  bool noerr = true;
-  packed_params_t pkg;
-  pkg.reserve(10);
-  for (const auto& field : req->fields ) try
-  {
-    pkg.clear();
-    packed_params_json::serializer()(pkg, field.second.begin(), field.second.end() );
-  }
-  catch( const ::wfc::json::json_error& e)
-  {
-    JSONRPC_LOG_ERROR( "Method 'packed' error: " << e.message( field.second.begin(), field.second.end() ) );
-    noerr=false; break;
-  }
-  catch(...){ noerr=false; break; }
-
-  if ( !noerr && cb!=nullptr)
-  {
-     auto res = std::make_unique<response::packed>();
-     res->status = common_status::InvalidFieldValue;
-     cb( std::move(res) );
-  }
-  return noerr;
-  */
 }
 
 
@@ -389,7 +339,8 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   auto db = _db1;
   if ( db == nullptr ) 
   {
-    if (cb!=nullptr) cb(nullptr);
+    if (cb!=nullptr) 
+      cb(nullptr);
     return;
   }
 
@@ -397,7 +348,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   res->prefix = std::move(req->prefix);
 
   std::unique_ptr< ::rocksdb::TransactionLogIterator> iter;
-  ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions() );
+  ::rocksdb::Status status = db->GetUpdatesSince(req->seq, &iter, ::rocksdb::TransactionLogIterator::ReadOptions(false) );
   ::rocksdb::SequenceNumber cur_seq=0;
   if ( status.ok() )
   {
