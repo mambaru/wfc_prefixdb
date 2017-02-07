@@ -46,10 +46,14 @@ void wrocksdb_slave::start()
   this->create_diff_timer_();
   this->create_seq_timer_();
   PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
+  std::lock_guard<mutex_type> lk(_mutex);
+  is_started = true;
 }
 
 void wrocksdb_slave::stop()
 {
+  std::lock_guard<mutex_type> lk(_mutex);
+  is_started = false;
   if ( !_opt.enabled )
     return;
   
@@ -138,7 +142,11 @@ request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_u
   _last_sequence = sn;
   // batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
   this->write_sequence_number_(-1);
-  this->_db.Write( ::rocksdb::WriteOptions(), batch.get() );
+  {
+    std::lock_guard<mutex_type> lk(_mutex);
+    if ( is_started )
+      this->_db.Write( ::rocksdb::WriteOptions(), batch.get() );
+  }
   this->write_sequence_number_(sn);
 
   preq->seq = sn;

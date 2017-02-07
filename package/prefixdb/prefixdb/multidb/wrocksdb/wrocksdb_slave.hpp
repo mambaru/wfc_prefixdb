@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
-
+#include <mutex>
 namespace rocksdb{ class BackupableDB;}
 
 namespace wamba{ namespace prefixdb{
@@ -51,6 +51,9 @@ private:
   timer_id_t _seq_timer_id = -1;
   
   std::shared_ptr< ::wfc::workflow> _workflow;
+  typedef std::mutex mutex_type;
+  mutex_type _mutex;
+  bool is_started = false;
 };
  
 
