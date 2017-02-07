@@ -16,12 +16,12 @@ void prefixdb::start()
 {
   if ( this->has_arg("restore") )  
     return this->restore_();
-  this->reconfigure();
+  this->open_prefixdb();
   _impl->start();
 }
 
 
-void prefixdb::initialize()
+void prefixdb::open_prefixdb()
 {
   auto opt = this->options();
   opt.args.workflow = this->get_workflow();
