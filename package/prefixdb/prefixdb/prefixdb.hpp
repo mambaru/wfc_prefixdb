@@ -5,7 +5,7 @@
 
 #include <wfc/domain_object.hpp>
 #include <wfc/workflow.hpp>
-#include <iow/io/timer/timer.hpp>
+//#include <iow/io/timer/timer.hpp>
 #include <memory>
 
 namespace wamba{ namespace prefixdb{
