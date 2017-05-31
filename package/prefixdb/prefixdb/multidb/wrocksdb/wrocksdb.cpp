@@ -71,7 +71,6 @@ namespace{
     typedef typename params_json::serializer serializer;
     bool noerr = true;
     params_t pkg;
-    //pkg.reserve(10);
 
     ::wfc::json::json_error e;
     for (const auto& field : req->fields )
@@ -110,31 +109,6 @@ bool wrocksdb::check_add_(request::add::ptr& req, response::add::handler& cb)
     return true;
 
   return check_params<add_params_json, response::add>(req, cb);
-  /*
-  bool noerr = true;
-  packed_params_t pkg;
-  pkg.reserve(10);
-  for (const auto& field : req->fields ) try
-  {
-    pkg.clear();
-    packed_params_json::serializer()(pkg, field.second.begin(), field.second.end() );
-  }
-  catch( const ::wfc::json::json_error& e)
-  {
-    JSONRPC_LOG_ERROR( "Method 'packed' error: " << e.message( field.second.begin(), field.second.end() ) );
-    noerr=false; break;
-  }
-  catch(...){ noerr=false; break; }
-
-  if ( !noerr && cb!=nullptr)
-  {
-     auto res = std::make_unique<response::packed>();
-     res->status = common_status::InvalidFieldValue;
-     cb( std::move(res) );
-  }
-  return noerr;
-
-  */
 }
 
 bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handler& cb)
@@ -143,30 +117,6 @@ bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handle
     return true;
 
   return check_params<packed_params_json, response::packed>(req, cb);
-  /*
-  bool noerr = true;
-  packed_params_t pkg;
-  pkg.reserve(10);
-  for (const auto& field : req->fields ) try
-  {
-    pkg.clear();
-    packed_params_json::serializer()(pkg, field.second.begin(), field.second.end() );
-  }
-  catch( const ::wfc::json::json_error& e)
-  {
-    JSONRPC_LOG_ERROR( "Method 'packed' error: " << e.message( field.second.begin(), field.second.end() ) );
-    noerr=false; break;
-  }
-  catch(...){ noerr=false; break; }
-
-  if ( !noerr && cb!=nullptr)
-  {
-     auto res = std::make_unique<response::packed>();
-     res->status = common_status::InvalidFieldValue;
-     cb( std::move(res) );
-  }
-  return noerr;
-  */
 }
 
 
@@ -389,7 +339,8 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
   auto db = _db1;
   if ( db == nullptr ) 
   {
-    if (cb!=nullptr) cb(nullptr);
+    if (cb!=nullptr) 
+      cb(nullptr);
     return;
   }
 
@@ -591,8 +542,24 @@ bool wrocksdb::archive(std::string path)
   return false;
 }
 
-void wrocksdb::compact(const std::string& key)
+bool wrocksdb::compact()
 {
+  bool result  = false;
+  if ( auto db = _db1 )
+  {
+    ::rocksdb::CompactRangeOptions opt;
+    opt.exclusive_manual_compaction = true;
+    ::rocksdb::Status status = db->CompactRange( opt, nullptr, nullptr );
+    result = status.ok();
+    if ( !result ) 
+    {
+      PREFIXDB_LOG_ERROR( "wrocksdb::compact error: " << status.ToString() )
+    }
+  }
+  
+  return result;
+  
+  /*
   std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
   _flow->post([wthis, key]()
   {
@@ -609,6 +576,7 @@ void wrocksdb::compact(const std::string& key)
       }
     }
   }, nullptr);
+  */
 }
 
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
@@ -617,11 +585,14 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
   ::rocksdb::Status status = _db1->PauseBackgroundWork();
   if ( status.ok() )
   {
+    PREFIXDB_LOG_BEGIN("Delay Background" )
     bool force = req->contunue_force;
-    _flow->post( std::chrono::seconds(req->delay_timeout_s), [this, force]()
+    auto cb_fun = [this, force]()
     {
       while ( this->_db1->ContinueBackgroundWork().ok() && force );
-    } );
+      PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork] " )
+    };
+    _flow->post( std::chrono::seconds(req->delay_timeout_s), cb_fun, cb_fun);
   }
   else
   {

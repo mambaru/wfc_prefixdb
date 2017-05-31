@@ -5,7 +5,7 @@
 
 #include <wfc/domain_object.hpp>
 #include <wfc/workflow.hpp>
-#include <iow/io/timer/timer.hpp>
+//#include <iow/io/timer/timer.hpp>
 #include <memory>
 
 namespace wamba{ namespace prefixdb{
@@ -19,7 +19,7 @@ class prefixdb
 public:
   // domain_object
   virtual void start() override;
-  virtual void initialize() override;
+  void open_prefixdb();
   virtual void stop() override;
   
   // iprefixdb

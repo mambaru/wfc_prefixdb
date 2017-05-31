@@ -45,10 +45,9 @@ public:
   
   virtual void start( ) override;
   virtual void stop() override;
+  virtual bool compact() override;
   virtual bool backup() override;
   virtual bool archive(std::string path) override;
-
-  void compact(const std::string& key);
 
 private:
 

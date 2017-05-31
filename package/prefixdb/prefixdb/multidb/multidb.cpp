@@ -12,6 +12,18 @@
 
 namespace wamba{ namespace prefixdb {
 
+namespace {
+  std::string time_string()
+  {
+    std::tm ti;
+    std::time_t now = time(0);
+    localtime_r( &now, &ti );
+    char buf[80]={0};
+    strftime( buf, 80, "%Y%m%d-%H%M%S", &ti);
+    return std::string(buf);
+  }
+}
+
 multidb::multidb()
 {
 }
@@ -39,7 +51,13 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     }
   }
   
-  return !opt.preopen || this->preopen_(opt.path, false);
+  if (!opt.preopen)
+    return true;
+  if ( !this->preopen_(opt.path, false) )
+    return false;
+  if (_opt.compact.startup_compact)
+    return this->compact();
+  return true;
 }
 
 void multidb::start() 
@@ -48,13 +66,14 @@ void multidb::start()
   this->configure_backup_timer_();
   this->configure_archive_timer_();
   this->configure_prefix_reqester_();
+  this->configure_compact_timer_();
 }
 
 
 void multidb::set( request::set::ptr req, response::set::handler cb)
 {
-  // if ( suspended_<response::set>(req, cb) ) return;
-  if ( !check_fields_<response::set>(req, cb) ) return;
+  if ( !check_fields_<response::set>(req, cb) ) 
+    return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -69,8 +88,8 @@ void multidb::set( request::set::ptr req, response::set::handler cb)
 
 void multidb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 {
-  // if ( suspended_<response::setnx>(req, cb) ) return;
-  if ( !check_fields_<response::setnx>(req, cb) ) return;
+  if ( !check_fields_<response::setnx>(req, cb) ) 
+    return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -84,9 +103,6 @@ void multidb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 
 void multidb::get( request::get::ptr req, response::get::handler cb)
 {
-  // if ( suspended_<response::get>(req, cb) ) return;
-  if ( notify_ban(req, cb) ) return;
-
   if ( auto db = this->prefix_(req->prefix, false) )
   {
     db->get( std::move(req), std::move(cb) );
@@ -99,9 +115,6 @@ void multidb::get( request::get::ptr req, response::get::handler cb)
 
 void multidb::has( request::has::ptr req, response::has::handler cb)
 {
-  // if ( suspended_<response::has>(req, cb) ) return;
-  if ( notify_ban(req, cb) ) return;
-
   if ( auto db = this->prefix_(req->prefix, false) )
   {
     db->has( std::move(req), std::move(cb) );
@@ -115,7 +128,6 @@ void multidb::has( request::has::ptr req, response::has::handler cb)
 
 void multidb::del( request::del::ptr req, response::del::handler cb) 
 {
-  // if ( suspended_<response::del>(req, cb) ) return;
   if ( empty_fields<response::del>(req, cb) ) 
     return;
 
@@ -131,8 +143,8 @@ void multidb::del( request::del::ptr req, response::del::handler cb)
 
 void multidb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-  // if ( suspended_<response::inc>(req, cb) ) return;
-  if ( !check_fields_<response::inc>(req, cb) ) return;
+  if ( !check_fields_<response::inc>(req, cb) )
+    return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -146,8 +158,8 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void multidb::add( request::add::ptr req, response::add::handler cb) 
 {
-  // if ( suspended_<response::add>(req, cb) ) return;
-  if ( !check_fields_<response::add>(req, cb) ) return;
+  if ( !check_fields_<response::add>(req, cb) )
+    return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -161,8 +173,8 @@ void multidb::add( request::add::ptr req, response::add::handler cb)
 
 void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 {
-  // if ( suspended_<response::packed>(req, cb) ) return;
-  if ( !check_fields_<response::packed>(req, cb) ) return;
+  if ( !check_fields_<response::packed>(req, cb) )
+    return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
   {
@@ -176,9 +188,6 @@ void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void multidb::range( request::range::ptr req, response::range::handler cb)
 {
-  // if ( suspended_<response::range>(req, cb) ) return;
-  if ( notify_ban(req, cb) ) return;
-  
   if ( req->limit + req->offset > this->_opt.range_limit )
   {
     send_error<common_status::RangeLimitExceeded, response::range>(std::move(req), std::move(cb) );
@@ -197,9 +206,6 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
 
 void multidb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
 {
-  // if ( suspended_<response::get_updates_since>(req, cb) ) return;
-  if ( notify_ban(req, cb) ) return;
-
   if ( auto db = this->prefix_(req->prefix, false) )
   {
     db->get_updates_since( std::move(req), std::move(cb) );
@@ -210,11 +216,8 @@ void multidb::get_updates_since( request::get_updates_since::ptr req, response::
   }  
 }
 
-void multidb::get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb)
+void multidb::get_all_prefixes( request::get_all_prefixes::ptr /*req*/, response::get_all_prefixes::handler cb)
 {
-  // if ( suspended_<response::get_all_prefixes>(req, cb) ) return;
-  if ( notify_ban(req, cb) ) return;
-  
   auto res = std::make_unique<response::get_all_prefixes>();
   res->prefixes = this->all_prefixes_();
   cb(std::move(res));
@@ -222,27 +225,31 @@ void multidb::get_all_prefixes( request::get_all_prefixes::ptr req, response::ge
 
 void multidb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)
 {
-  // if ( suspended_<response::attach_prefixes>(req, cb) ) return;
-  if ( req_null(req, cb) ) return;
-  
+  bool ready = false;
   for (const auto& prefix : req->prefixes )
   {
     std::lock_guard<std::mutex> lk(this->_mutex);
     auto itr = this->_db_map.find(prefix);
     if ( itr != this->_db_map.end() && itr->second == nullptr )
     {
+      ready = true;
       _db_map.erase(itr);
       if ( req->opendb )
         this->prefix_(prefix, false);
     }
   }
+
+  if ( cb!=nullptr )
+  {
+    auto res = std::make_unique<response::attach_prefixes>();
+    res->status = ready 
+      ? common_status::OK
+      : common_status::CreatePrefixFail;
+  }
 }
 
 void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)
 {
-  //if ( suspended_<response::detach_prefixes>(req, cb) ) return;
-  if ( req_null(req, cb) ) return;
-  
   for (const auto& prefix : req->prefixes )
   {
     if ( auto db = this->prefix_(prefix, false) )
@@ -286,9 +293,6 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
 
 void multidb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb)
 {
-  //if ( suspended_<response::delay_background>(req, cb) ) return;
-  if ( req_null(req, cb) ) return;
-  
   auto prefixes = std::move(req->prefixes);
 
   if ( prefixes.empty() )
@@ -309,9 +313,6 @@ void multidb::delay_background( request::delay_background::ptr req, response::de
 
 void multidb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb)
 {
-  //if ( suspended_<response::continue_background>(req, cb) ) return;
-  if ( req_null(req, cb) ) return;
-  
   auto prefixes = std::move(req->prefixes);
 
   if ( prefixes.empty() )
@@ -329,12 +330,15 @@ void multidb::continue_background( request::continue_background::ptr req, respon
     cb(std::make_unique<response::continue_background>());
 }
 
-
-
 void multidb::stop()
 {
   if ( _flow )
-    _flow->stop();
+  {
+    _flow->release_timer(_archive_timer);
+    _flow->release_timer(_backup_timer);
+    _flow->release_timer(_compact_timer);
+    _flow->release_timer(_prefix_reqester);
+  }
 
   std::lock_guard<std::mutex> lk(_mutex);
   _flow = nullptr;
@@ -352,9 +356,6 @@ void multidb::stop()
     CONFIG_LOG_END("STOP DB!")
   }
 }
-
-
-
 
 bool multidb::backup()
 {
@@ -393,17 +394,23 @@ bool multidb::backup()
   return count == prefixes.size();
 }
 
-
-std::string time_string()
+bool multidb::compact()
 {
-  std::tm ti;
-  std::time_t now = time(0);
-  localtime_r( &now, &ti );
-  char buf[80]={0};
-  strftime( buf, 80, "%Y%m%d-%H%M%S", &ti);
-  return std::string(buf);
+  PREFIXDB_LOG_BEGIN("Compact the underlying storage for all prefixes ")
+  auto prefixes = this->all_prefixes_();
+  bool result = true;
+  for ( const std::string& prefix: prefixes)
+  {
+    if ( auto db = this->prefix_(prefix, false) )
+    {
+      PREFIXDB_LOG_BEGIN("Compact the underlying storage for the prefix '" << prefix << "'")
+      result &= db->compact();
+      PREFIXDB_LOG_END("Compact the underlying storage for the prefix '" << prefix << "'")
+    }
+  }
+  PREFIXDB_LOG_END("Compact the underlying storage for all prefixes ")
+  return result;
 }
-
 
 bool multidb::restore()
 {
@@ -513,7 +520,7 @@ bool multidb::archive()
 
 void multidb::configure_archive_timer_()
 {
-  if ( _archive_timer != -1 ) _flow->release_timer(_archive_timer);
+  _flow->release_timer(_archive_timer);
   if ( _opt.archive.enabled && !_opt.archive.path.empty() )
   {
     std::weak_ptr<multidb> wthis = this->shared_from_this();
@@ -549,14 +556,27 @@ bool multidb::preopen_(std::string path, bool create_if_missing)
   return true;
 }
 
+void multidb::configure_compact_timer_()
+{
+  _flow->release_timer(_compact_timer);
+  auto c = _opt.compact;
+  if ( c.enabled)
+  {
+    _compact_timer = _flow->create_timer(
+      c.start_time,
+      std::chrono::seconds( c.period_s ),
+      [this]() { this->compact(); return true; }
+    );
+  }
+}
+
 
 void multidb::configure_backup_timer_()
 {
-  if ( _backup_timer != -1 ) _flow->release_timer(_backup_timer);
+  _flow->release_timer(_backup_timer);
   
   if ( _opt.backup.enabled &&  !_opt.backup.path.empty() )
   {
-    std::weak_ptr<multidb> wthis = this->shared_from_this();
     _backup_timer = _flow->create_timer(
       _opt.backup.start_time,
       std::chrono::seconds( _opt.backup.period_s ),
@@ -573,7 +593,6 @@ void multidb::configure_prefix_reqester_()
   if ( !_opt.slave.enabled ) 
     return;
 
-  std::weak_ptr<multidb> wthis = this->shared_from_this();
   _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
   (
     std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
@@ -712,18 +731,6 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix, bool create_if
   return nullptr;
 }
 
-/*
-template<typename Res, typename ReqPtr, typename Callback>
-bool multidb::suspended_(const ReqPtr& , const Callback& cb)
-{
-  if ( !this->_suspend ) return false;
-  if ( cb != nullptr )
-  {
-    cb( std::make_unique<Res>() );
-  }
-  return true;
-}
-*/
 
 template<typename Res, typename ReqPtr, typename Callback>
 bool multidb::check_prefix_(const ReqPtr& req, const Callback& cb)
@@ -763,7 +770,5 @@ bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
   }
   return true;
 }
-
-
 
 }}
