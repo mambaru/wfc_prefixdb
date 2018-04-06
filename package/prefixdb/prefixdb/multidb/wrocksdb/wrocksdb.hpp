@@ -4,14 +4,18 @@
 #include <prefixdb/prefixdb/multidb/wrocksdb/merge/merge.hpp>
 #include <prefixdb/prefixdb/multidb/iprefixdb_ex.hpp>
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
+#pragma GCC diagnostic pop
 
 #include <memory>
 #include <mutex>
 
-namespace rocksdb{ class BackupableDB;}
+namespace rocksdb{ class BackupEngine;}
 
 namespace wamba{ namespace prefixdb{
   
@@ -22,9 +26,10 @@ class wrocksdb
   , public std::enable_shared_from_this<wrocksdb>
 {
 public:
-  typedef ::rocksdb::BackupableDB db_type;
+  typedef ::rocksdb::BackupEngine backup_type;
+  typedef ::rocksdb::DB  db_type;
 
-  wrocksdb( std::string name, const db_config conf, db_type* db);
+  wrocksdb( std::string name, const db_config conf, db_type* db, backup_type* bk);
 
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
@@ -70,7 +75,8 @@ private:
   
   std::string _name;  
   const db_config _conf;
-  std::shared_ptr<db_type> _db1;
+  std::shared_ptr<db_type> _db;
+  std::shared_ptr<backup_type> _backup;
   std::mutex _mutex;
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr< ::wfc::workflow> _flow;

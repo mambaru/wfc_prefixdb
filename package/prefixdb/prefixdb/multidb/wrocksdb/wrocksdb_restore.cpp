@@ -1,7 +1,11 @@
 #include "wrocksdb_restore.hpp"
 #include <prefixdb/logger.hpp>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
+#pragma GCC diagnostic pop
 
 namespace wamba{ namespace prefixdb {
 

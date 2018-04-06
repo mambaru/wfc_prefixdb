@@ -1,6 +1,10 @@
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/write_batch.h>
+#pragma GCC diagnostic pop
+
 #include <deque>
 #include <vector>
 #include <memory>

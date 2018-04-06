@@ -3,7 +3,7 @@
 #include <wfc/logger.hpp>
 
 #define LOG_NAME "PrefixDB"
-#define PREFIXDB_LOG(TYPE, X)    WFC_WRITE_LOG(LOG_NAME, TYPE, X)
+#define PREFIXDB_LOG(TYPE, X)    WLOG(LOG_NAME, TYPE, X)
 #define PREFIXDB_LOG_REPLI(ON, X) if (ON) { PREFIXDB_LOG("REPLI", X)}
 #define PREFIXDB_LOG_ERROR(X)    WFC_LOG_ERROR( LOG_NAME, X )
 #define PREFIXDB_LOG_WARNING(X)  WFC_LOG_WARNING( LOG_NAME, X )

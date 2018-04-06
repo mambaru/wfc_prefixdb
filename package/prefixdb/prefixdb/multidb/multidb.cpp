@@ -37,7 +37,8 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     _opt = opt;
     _flow = opt.args.workflow;
     _opt.slave.timer = _flow;
-    _factory->initialize(_opt);
+    if ( !_factory->initialize(_opt) )
+      return false;
   }
     
   if ( !::boost::filesystem::exists(opt.path) )
@@ -344,7 +345,7 @@ void multidb::stop()
   _flow = nullptr;
   if ( _factory )
   {
-    CONFIG_LOG_BEGIN("STOP DB...")
+    PREFIXDB_LOG_BEGIN("STOP DB...")
     _factory = nullptr;
     for (auto& db : _db_map)
     {
@@ -353,7 +354,7 @@ void multidb::stop()
       db.second=nullptr;
     }
     _db_map.clear();
-    CONFIG_LOG_END("STOP DB!")
+    PREFIXDB_LOG_END("STOP DB!")
   }
 }
 
@@ -365,7 +366,7 @@ bool multidb::backup()
     ::boost::filesystem::create_directory(_opt.backup.path, ec);
     if (ec)
     {
-      COMMON_LOG_ERROR("Create directory fail '" << _opt.backup.path << "'" << ec.message() );
+      PREFIXDB_LOG_ERROR("Create directory fail '" << _opt.backup.path << "'" << ec.message() );
       return true;
     }
   }
@@ -539,20 +540,20 @@ bool multidb::preopen_(std::string path, bool create_if_missing)
   auto dirs = scan_dir(path, fail);
   if (fail)
   {
-    CONFIG_LOG_FATAL("Directory " << path << " is missing");
+    PREFIXDB_LOG_FATAL("Directory " << path << " is missing");
     return false;
   }
   
-  CONFIG_LOG_BEGIN("Pre open prefixes ...")
+  PREFIXDB_LOG_BEGIN("Pre open prefixes ...")
   for (auto name: dirs)
   {
-    CONFIG_LOG_MESSAGE("Pre open prefix " << name << "...")
+    PREFIXDB_LOG_MESSAGE("Pre open prefix " << name << "...")
     if ( nullptr == this->prefix_(name, create_if_missing) )
     {
-      CONFIG_LOG_WARNING("Pre open prefix FAIL")
+      PREFIXDB_LOG_WARNING("Pre open prefix FAIL")
     }
   }
-  CONFIG_LOG_END("Pre open prefixes")
+  PREFIXDB_LOG_END("Pre open prefixes")
   return true;
 }
 
@@ -593,11 +594,20 @@ void multidb::configure_prefix_reqester_()
   if ( !_opt.slave.enabled ) 
     return;
 
+  std::weak_ptr<iprefixdb> wprefixdb = _opt.slave.master;
   _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
   (
     std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
-    this->_opt.slave.master,
-    &iprefixdb::get_all_prefixes,
+    [wprefixdb](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)
+    {
+      auto pprefixdb = wprefixdb.lock();
+      if (pprefixdb==nullptr)
+        return false;
+      pprefixdb->get_all_prefixes(std::move(req), callback);
+      return true;
+    },
+    /*this->_opt.slave.master,
+    &iprefixdb::get_all_prefixes,*/
     std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
   );
 }

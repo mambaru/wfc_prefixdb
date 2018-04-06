@@ -20,8 +20,8 @@ namespace {
 
   class impl: public ::wfc::component_list<
     module_name,
-    prefixdb_multiton,
     prefixdb_service_multiton,
+    prefixdb_multiton,
     prefixdb_gateway_multiton
   >
   {

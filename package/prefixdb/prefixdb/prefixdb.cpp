@@ -72,7 +72,7 @@ void prefixdb::stop()
 
 void prefixdb::set( request::set::ptr req, response::set::handler cb)
 {
-  if ( this->bad_request<response::set>(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
   
   _impl->set( std::move(req), std::move(cb) );
@@ -80,7 +80,7 @@ void prefixdb::set( request::set::ptr req, response::set::handler cb)
 
 void prefixdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 {
-  if ( this->bad_request<response::setnx>(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->setnx( std::move(req), std::move(cb) );
@@ -88,7 +88,7 @@ void prefixdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 
 void prefixdb::get( request::get::ptr req, response::get::handler cb)
 {
-  if ( this->notify_ban<response::get>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->get( std::move(req), std::move(cb) );
@@ -96,7 +96,7 @@ void prefixdb::get( request::get::ptr req, response::get::handler cb)
 
 void prefixdb::has( request::has::ptr req, response::has::handler cb)
 {
-  if ( this->notify_ban<response::has>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->has( std::move(req), std::move(cb) );
@@ -104,7 +104,7 @@ void prefixdb::has( request::has::ptr req, response::has::handler cb)
 
 void prefixdb::del( request::del::ptr req, response::del::handler cb) 
 {
-  if ( this->bad_request<response::del>(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->del( std::move(req), std::move(cb) );
@@ -112,7 +112,7 @@ void prefixdb::del( request::del::ptr req, response::del::handler cb)
 
 void prefixdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-  if ( this->bad_request<response::inc>(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->inc( std::move(req), std::move(cb) );
@@ -120,7 +120,7 @@ void prefixdb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void prefixdb::add( request::add::ptr req, response::add::handler cb) 
 {
-  if ( this->bad_request<response::add>(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->add( std::move(req), std::move(cb) );
@@ -128,7 +128,7 @@ void prefixdb::add( request::add::ptr req, response::add::handler cb)
 
 void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)
 {
-  if ( this->bad_request<response::packed>(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->packed( std::move(req), std::move(cb) );
@@ -136,7 +136,7 @@ void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void prefixdb::range( request::range::ptr req, response::range::handler cb)
 {
-  if ( this->notify_ban<response::range>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->range( std::move(req), std::move(cb) );
@@ -144,7 +144,7 @@ void prefixdb::range( request::range::ptr req, response::range::handler cb)
 
 void prefixdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
 {
-  if ( this->notify_ban<response::get_updates_since>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->get_updates_since( std::move(req), std::move(cb) );  
@@ -152,7 +152,7 @@ void prefixdb::get_updates_since( request::get_updates_since::ptr req, response:
 
 void prefixdb::get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb)
 {
-  if ( this->notify_ban<response::get_all_prefixes>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->get_all_prefixes( std::move(req), std::move(cb) );  
@@ -160,7 +160,7 @@ void prefixdb::get_all_prefixes( request::get_all_prefixes::ptr req, response::g
 
 void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)
 {
-  if ( this->notify_ban<response::detach_prefixes>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->detach_prefixes( std::move(req), std::move(cb) );  
@@ -168,7 +168,7 @@ void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::det
 
 void prefixdb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)
 {
-  if ( this->notify_ban<response::attach_prefixes>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->attach_prefixes( std::move(req), std::move(cb) );  
@@ -176,7 +176,7 @@ void prefixdb::attach_prefixes( request::attach_prefixes::ptr req, response::att
 
 void prefixdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
 {
-  if ( this->notify_ban<response::delay_background>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->delay_background( std::move(req), std::move(cb) );  
@@ -184,13 +184,13 @@ void prefixdb::delay_background( request::delay_background::ptr req, response::d
 
 void prefixdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) 
 {
-  if ( this->notify_ban<response::continue_background>(req, cb) )
+  if ( this->notify_ban(req, cb) )
     return;
 
   _impl->continue_background( std::move(req), std::move(cb) );  
 }
 
-void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, outgoing_handler_t handler)
+void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler)
 {
   service::prefixdb_cmd(this->shared_from_this(), std::move(d), handler);
 }

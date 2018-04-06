@@ -9,7 +9,7 @@ namespace wamba{ namespace prefixdb{ namespace service{
 
 namespace
 {
-  void delay_background_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void delay_background_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     time_t delay_s = 0;
     bool force = false;
@@ -26,7 +26,7 @@ namespace
     });
   }
 
-  void continue_background_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void continue_background_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     bool force = false;
     
@@ -41,7 +41,7 @@ namespace
     });
   }
 
-  void detach_prefixes_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void detach_prefixes_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::detach_prefixes>();
     time_t deny_timeout = 0;
@@ -64,7 +64,7 @@ namespace
     } );
   }
 
-  void get_all_prefixes_( std::shared_ptr<iprefixdb> db, std::stringstream& , ::wfc::iinterface::outgoing_handler_t handler)
+  void get_all_prefixes_( std::shared_ptr<iprefixdb> db, std::stringstream& , wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::get_all_prefixes>();
     db->get_all_prefixes( std::move(req), [handler](response::get_all_prefixes::ptr res)
@@ -79,7 +79,7 @@ namespace
     } );
   }
   
-  void get_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void get_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::get>();
     ss >> req->prefix;
@@ -102,7 +102,7 @@ namespace
     } );
   }
 
-  void del_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void del_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::del>();
     ss >> req->prefix;
@@ -128,7 +128,7 @@ namespace
     } );
   }
 
-  void set_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void set_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::set>();
     ss >> req->prefix;
@@ -142,7 +142,7 @@ namespace
     } );
   }
 
-  void inc_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void inc_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     
     auto req = std::make_unique<request::inc>();
@@ -167,7 +167,7 @@ namespace
     
   }
 
-  void range_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void range_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::range>();
     ss >> req->prefix;
@@ -213,7 +213,7 @@ namespace
     
 
   };
-  void help_( std::shared_ptr<iprefixdb> /*db*/, std::stringstream& ss, ::wfc::iinterface::outgoing_handler_t handler)
+  void help_( std::shared_ptr<iprefixdb> /*db*/, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     std::stringstream oss;
     std::string cmd;
@@ -238,7 +238,7 @@ namespace
   }
 }
   
-void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d, ::wfc::iinterface::outgoing_handler_t handler)
+void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d, wfc::iinterface::output_handler_t handler)
 {
   std::string result;
   std::stringstream ss;

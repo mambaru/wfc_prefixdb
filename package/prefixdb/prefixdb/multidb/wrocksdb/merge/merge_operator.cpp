@@ -76,6 +76,7 @@ namespace helper{
 }
   
 merge_operator::merge_operator(size_t array_limit, size_t packed_limit)
+ 
 {
   _array_limit = array_limit;
   _packed_limit = packed_limit;

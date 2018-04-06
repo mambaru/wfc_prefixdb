@@ -1,11 +1,17 @@
 
 #include "wrocksdb_factory.hpp"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/compaction_filter.h>
 #include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/options_util.h>
+#pragma GCC diagnostic pop
+
 
 #include <prefixdb/logger.hpp>
 #include <memory>
@@ -20,6 +26,8 @@
 
 
 #include <wfc/wfc_exit.hpp>
+
+/*
 namespace rocksdb
 {
 
@@ -28,7 +36,7 @@ Status LoadOptionsFromFile(const std::string& options_file_name, Env* env,
                            std::vector<ColumnFamilyDescriptor>* cf_descs);
 
 }
-
+*/
 
 namespace wamba{ namespace prefixdb{
   
@@ -53,7 +61,7 @@ wrocksdb_factory::wrocksdb_factory( ::iow::asio::io_service& io)
 {
 }
 
-void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/) 
+bool wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/) 
 {
   db_config conf = conf1;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
@@ -80,16 +88,16 @@ void wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
   if ( !status.ok() )
   {
     DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
-    abort();
+    return false;
   }
+  return true;
 }
 
 ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
 {
   if ( dbname.empty() )
   {
-     PREFIXDB_LOG_ERROR("wrocksdb_factory::create_db empty name ")
-     abort();
+     PREFIXDB_LOG_FATAL("wrocksdb_factory::create_db empty name ")
      return nullptr;
   }
   else
@@ -164,13 +172,19 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     COMMON_LOG_MESSAGE("Backup path: " << conf.backup.path)
     ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
+    ::rocksdb::BackupEngine* backup_engine;
+    status = ::rocksdb::BackupEngine::Open( 
+      _context->env, 
+      backup_opt, 
+      &backup_engine
+    );
 
-    auto bdb = new ::rocksdb::BackupableDB(db, backup_opt);
+    //auto bdb = new ::rocksdb::BackupEngine(db, backup_opt);
     if ( !conf.restore.path.empty() )
     {
       ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
     }
-    auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, bdb);
+    auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, db, backup_engine);
     return pwrdb;
   }
 
@@ -185,12 +199,14 @@ wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbnam
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
 
-  ::rocksdb::RestoreBackupableDB* rdb = nullptr;
+  rocksdb::BackupEngineReadOnly* backup_engine = nullptr;
   if ( !conf.restore.path.empty() )
   {
-    ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
-    rdb = new ::rocksdb::RestoreBackupableDB( _context->env, restore_opt);
-    return std::make_shared< wrocksdb_restore >(dbname, conf, rdb);
+    rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
+    //rdb = new ::rocksdb::RestoreBackupableDB( _context->env, restore_opt);
+    rocksdb::Status s = rocksdb::BackupEngineReadOnly::Open( _context->env, restore_opt, &backup_engine);
+    if ( s.ok() )
+      return std::make_shared< wrocksdb_restore >(dbname, conf, backup_engine);
   }
   return nullptr;
   

@@ -1,7 +1,11 @@
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/env.h>
+#pragma GCC diagnostic pop
+
 #include "packed.hpp"
 #include "packed_params.hpp"
 
@@ -12,7 +16,6 @@ namespace wamba{ namespace prefixdb{
   
 class merge_operator
   : public ::rocksdb::MergeOperator
-  //: public ::rocksdb::AssociativeMergeOperator
 {
   
 public:
@@ -35,6 +38,7 @@ public:
     const operand_list& operands,
     std::string* result,
     logger_type* logger) const override;
+    
 private:
 
   void setnx_(const slice_type* value, const update_list& operands, std::string& result) const;

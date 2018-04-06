@@ -6,8 +6,13 @@
 #include <prefixdb/logger.hpp>
 #include <wfc/wfc_exit.hpp>
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
+#pragma GCC diagnostic pop
+
 #include <ctime>
 #include <fstream>
 
@@ -84,18 +89,27 @@ void wrocksdb_slave::create_updates_requester_()
     preq->seq = seq;
   }
   
+  std::weak_ptr<iprefixdb> wprefixdb = _opt.master;
   _opt.timer->release_timer(_slave_timer_id);
   _slave_timer_id = _opt.timer->create_requester<request::get_updates_since, response::get_updates_since>
   (
     _opt.start_time,
     std::chrono::milliseconds(_opt.pull_timeout_ms),
-    _opt.master,
-    &iprefixdb::get_updates_since,
-    std::bind(&wrocksdb_slave::updates_handler_, this, std::placeholders::_1, preq)
+    /*_opt.master,
+    &iprefixdb::get_updates_since,*/
+    [wprefixdb](request::get_updates_since::ptr req, response::get_updates_since::handler callback) -> bool
+    {
+      auto pprefixdb = wprefixdb.lock();
+      if ( pprefixdb == nullptr )
+        return false;
+      pprefixdb->get_updates_since( std::move(req), callback);
+      return true;
+    },
+    std::bind(&wrocksdb_slave::updates_generator_, this, std::placeholders::_1, preq)
   );
 }
 
-request::get_updates_since::ptr wrocksdb_slave::updates_handler_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
+request::get_updates_since::ptr wrocksdb_slave::updates_generator_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
 {
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);

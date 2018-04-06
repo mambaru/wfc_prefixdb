@@ -10,14 +10,19 @@
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
 #include <wfc/core/global.hpp>
-#include <rocksdb/db.h>
-#include <rocksdb/write_batch.h>
-#include <rocksdb/iterator.h>
 #include <iomanip>
 #include <sstream>
 #include <ctime>
 #include <chrono>
 #include <string>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <rocksdb/db.h>
+#include <rocksdb/write_batch.h>
+#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/iterator.h>
+#pragma GCC diagnostic pop
 
 
 #include "../aux/copy_dir.hpp"
@@ -31,10 +36,11 @@ namespace
   inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
 }
 
-wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db)
+wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup_type* bk)
   : _name(name)
   , _conf(conf)
-  , _db1(db)
+  , _db(db)
+  , _backup(bk)
 {
   if ( conf.slave.enabled )
     _slave = std::make_shared<wrocksdb_slave>(name, conf.path, conf.slave, *db);
@@ -53,7 +59,7 @@ void wrocksdb::stop_()
   PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
   if ( _slave ) _slave->stop();
   _slave = nullptr;
-  _db1=nullptr;
+  _db=nullptr;
 }
 
 void wrocksdb::stop()
@@ -159,7 +165,7 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
   ::rocksdb::WriteOptions wo;
   wo.sync = req->sync;
   
-  auto db = _db1;
+  auto db = _db;
   
   if ( db == nullptr )
   {
@@ -222,7 +228,8 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
   std::vector<std::string> resvals;
   resvals.reserve(keys.size());
   std::vector< ::rocksdb::Status> status;
-  if ( auto db = _db1 ) status = db->MultiGet( ::rocksdb::ReadOptions(), keys, &resvals);
+  if ( _db != nullptr ) 
+    status = _db->MultiGet( ::rocksdb::ReadOptions(), keys, &resvals);
   else cb(nullptr);
 
   auto res = std::make_unique<response_type>();
@@ -282,7 +289,7 @@ void wrocksdb::has( request::has::ptr req, response::has::handler cb)
 
 void wrocksdb::del( request::del::ptr req, response::del::handler cb) 
 {
-  auto db = _db1;
+  auto db = _db;
   if ( db == nullptr ) 
   {
     if (cb!=nullptr) cb(nullptr);
@@ -336,7 +343,7 @@ void wrocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) 
 {
-  auto db = _db1;
+  auto db = _db;
   if ( db == nullptr ) 
   {
     if (cb!=nullptr) 
@@ -424,7 +431,7 @@ void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response:
 
 void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 {
-  auto db = _db1;
+  auto db = _db;
   if ( db == nullptr ) 
   {
     if (cb!=nullptr) cb(nullptr);
@@ -484,11 +491,11 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 bool wrocksdb::backup()
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  auto db = _db1;
-  if ( db == nullptr ) return false;
+  
+  if ( _backup == nullptr ) return false;
 
   ::rocksdb::Status status;
-  status = db->PurgeOldBackups( _conf.backup.depth -1 );
+  status = _backup->PurgeOldBackups( _conf.backup.depth -1 );
   if ( status.ok() )
   {
   }
@@ -497,7 +504,7 @@ bool wrocksdb::backup()
     COMMON_LOG_MESSAGE("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
   }
   
-  status = db->GarbageCollect();
+  status = _backup->GarbageCollect();
   if ( status.ok() )
   {
     COMMON_LOG_TRACE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
@@ -507,7 +514,11 @@ bool wrocksdb::backup()
     COMMON_LOG_MESSAGE( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
   }
   
-  status = db->CreateNewBackup();
+  COMMON_LOG_BEGIN("CreateNewBackup...")
+  int progress = 0;
+  status = _backup->CreateNewBackup( _db.get(), true, 
+    [progress]() mutable { COMMON_LOG_PROGRESS("CreateNewBackup...." << std::string(progress, '.') ) });
+  
   if ( status.ok() )
   {
     COMMON_LOG_TRACE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
@@ -545,7 +556,7 @@ bool wrocksdb::archive(std::string path)
 bool wrocksdb::compact()
 {
   bool result  = false;
-  if ( auto db = _db1 )
+  if ( auto db = _db )
   {
     ::rocksdb::CompactRangeOptions opt;
     opt.exclusive_manual_compaction = true;
@@ -569,7 +580,7 @@ bool wrocksdb::compact()
       ::rocksdb::Slice skey2(key+"~");
       ::rocksdb::CompactRangeOptions opt;
       opt.exclusive_manual_compaction = true;
-      ::rocksdb::Status status = pthis->_db1->CompactRange( opt, &skey, &skey);
+      ::rocksdb::Status status = pthis->_db->CompactRange( opt, &skey, &skey);
       if ( !status.ok())
       {
         PREFIXDB_LOG_ERROR("wrocksdb::compact(" << key << "): " << status.ToString() )
@@ -582,14 +593,14 @@ bool wrocksdb::compact()
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
 {
   auto res = std::make_unique<response::delay_background>();
-  ::rocksdb::Status status = _db1->PauseBackgroundWork();
+  ::rocksdb::Status status = _db->PauseBackgroundWork();
   if ( status.ok() )
   {
     PREFIXDB_LOG_BEGIN("Delay Background" )
     bool force = req->contunue_force;
     auto cb_fun = [this, force]()
     {
-      while ( this->_db1->ContinueBackgroundWork().ok() && force );
+      while ( this->_db->ContinueBackgroundWork().ok() && force );
       PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork] " )
     };
     _flow->post( std::chrono::seconds(req->delay_timeout_s), cb_fun, cb_fun);
@@ -606,7 +617,7 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
 void wrocksdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) 
 {
   auto res = std::make_unique<response::continue_background>();
-  while ( this->_db1->ContinueBackgroundWork().ok() && req->force );
+  while ( this->_db->ContinueBackgroundWork().ok() && req->force );
   if ( cb != nullptr ) 
     cb( std::move(res) );  
 }

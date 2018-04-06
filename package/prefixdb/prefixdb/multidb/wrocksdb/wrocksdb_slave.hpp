@@ -2,7 +2,7 @@
 
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
 #include <mutex>
-namespace rocksdb{ class BackupableDB;}
+namespace rocksdb{ class DB;}
 
 namespace wamba{ namespace prefixdb{
   
@@ -14,7 +14,7 @@ class wrocksdb_slave
   typedef wfc::workflow::timer_id_t timer_id_t;
 
 public:
-  typedef ::rocksdb::BackupableDB db_type;
+  typedef ::rocksdb::DB db_type;
   
   wrocksdb_slave(std::string name, std::string path, const slave_config& opt, db_type& db);
   
@@ -26,7 +26,7 @@ private:
   
   void create_updates_requester_();
   
-  request::get_updates_since::ptr updates_handler_(response::get_updates_since::ptr, std::shared_ptr<request::get_updates_since> preq);
+  request::get_updates_since::ptr updates_generator_(response::get_updates_since::ptr, std::shared_ptr<request::get_updates_since> preq);
   
   void logs_parser_( response::get_updates_since::ptr& res);
   void create_diff_timer_();

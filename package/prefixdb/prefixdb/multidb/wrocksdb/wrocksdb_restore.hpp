@@ -3,13 +3,17 @@
 #include <prefixdb/iprefixdb.hpp>
 #include <prefixdb/prefixdb/multidb/iprefixdb_ex.hpp>
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
+#pragma GCC diagnostic pop
 
 #include <memory>
 #include <mutex>
 
-namespace rocksdb{ class RestoreBackupableDB;}
+namespace rocksdb{ class BackupEngineReadOnly;}
 
 namespace wamba{ namespace prefixdb{
   
@@ -17,7 +21,7 @@ class wrocksdb_restore
   : public iprefixdb_restore
 {
 public:
-  typedef ::rocksdb::RestoreBackupableDB restore_db_type;
+  typedef ::rocksdb::BackupEngineReadOnly restore_db_type;
   wrocksdb_restore( std::string name, const db_config conf, restore_db_type* rdb);
   virtual bool restore() override;
 private:

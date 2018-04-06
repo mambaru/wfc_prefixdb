@@ -40,7 +40,7 @@ public:
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
   
   // iinterface
-  virtual void perform_io(data_ptr d, io_id_t /*io_id*/, outgoing_handler_t handler) override;
+  virtual void perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler) override;
 private:
   void restore_();
   std::shared_ptr<multidb> _impl;
