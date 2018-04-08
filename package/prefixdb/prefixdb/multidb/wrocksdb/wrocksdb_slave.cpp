@@ -95,8 +95,6 @@ void wrocksdb_slave::create_updates_requester_()
   (
     _opt.start_time,
     std::chrono::milliseconds(_opt.pull_timeout_ms),
-    /*_opt.master,
-    &iprefixdb::get_updates_since,*/
     [wprefixdb](request::get_updates_since::ptr req, response::get_updates_since::handler callback) -> bool
     {
       auto pprefixdb = wprefixdb.lock();
@@ -109,7 +107,10 @@ void wrocksdb_slave::create_updates_requester_()
   );
 }
 
-request::get_updates_since::ptr wrocksdb_slave::updates_generator_(response::get_updates_since::ptr res, std::shared_ptr<request::get_updates_since> preq)
+request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
+  response::get_updates_since::ptr res, 
+  std::shared_ptr<request::get_updates_since> preq
+)
 {
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
@@ -130,7 +131,6 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(response::get
     if ( diff > this->_opt.acceptable_loss_seq )
     {
       DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence '" << this->_name << "': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
-      ::wfc_exit_with_error("Slave replication error");
       return nullptr;
     }
     else if ( diff > 0)

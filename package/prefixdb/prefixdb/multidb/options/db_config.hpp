@@ -11,19 +11,19 @@ namespace wamba{ namespace prefixdb{
   
 struct db_config
 {
-  size_t packed_limit = 1000;
-  size_t array_limit  = 1000;
-  size_t range_limit  = 10000; // offset + limit
+  size_t packed_limit = 0;
+  size_t array_limit  = 0;
+  size_t range_limit  = 0; // offset + limit
 
   // Путь к базе данных для всех префиксов
-  std::string path = "./prefixdb";
+  std::string path = "";
   // Путь для WAL, если не указан то по умолчанью из rocksdb
   // если путь указано в ini, то wal_path + "prefix" + ini.wal_dir
   std::string wal_path = "";
   // для "отцепленных" префиксов
-  std::string detach_path = "./prefixdb_detach";
+  std::string detach_path = "";
   // Файл опций в формате ini
-  std::string ini = "./rocksdb.ini";
+  std::string ini = "";
   
   // Автоматически попытаться востановить базу при ошибке открытия
   bool auto_repair = false;
@@ -34,8 +34,10 @@ struct db_config
   // Запись batch в отдельном потоке
   bool enable_delayed_write = false;  
   
-  //
-  bool check_merge_operations = true;
+  // Проверять на валидность параметры JSON в merge - опирациях 
+  // (параметров в WAL идет сыром виде, если там мусор будет ошибка, 
+  //  котору будет трудно идентифицировать )
+  bool check_incoming_merge_json = true;
   
   compact_config compact;
   slave_config slave;
@@ -44,12 +46,6 @@ struct db_config
   restore_config restore;
   
   struct { std::shared_ptr< ::wfc::workflow > workflow; } args;
-  
-  /*
-  ::wfc::workflow_options workflow;
-  
-  std::shared_ptr< ::wfc::workflow > workflow_ptr;
-  */
 };
 
 }}

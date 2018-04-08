@@ -167,6 +167,21 @@ namespace
     
   }
 
+  void compact_prefix_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
+  {
+    auto req = std::make_unique<request::compact_prefix>();
+    ss >> req->prefix;
+    ss >> req->from;
+    ss >> req->to;
+    db->compact_prefix( std::move(req), [handler](response::compact_prefix::ptr res)
+    {
+      if ( res->status == common_status::OK )
+        handler( ::iow::io::make("OK") );
+      else
+        handler( ::iow::io::make("FAIL") );
+    } );
+  }
+
   void range_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::range>();
@@ -191,16 +206,18 @@ namespace
   }
 
   const char* help_str[][4] = { 
-    {"", "help", "[<<command>>]",  "Подсказка по конкретной команде. Если не указана, то список всех комманд."}, 
+    {"h", "help", "[<<command>>]",  "Подсказка по конкретной команде. Если не указана, то список всех комманд."},
+    {"e", "exit", "",  "Выход."}, 
     {"db", "delay_background", "[0](delay seconds) [0](force)", "Завершает все фоновые процессы на delay_s секунд. \n"
                                "Если force=1 то по завершению таймаута гарантировано запустит все фоновые \n"
                                "процессы, даже если в это время были вызовы delay_background c большим таймаутом. "
                                "Для гаранитированного запуска используй: 'db 0 1'"},
     {"cb", "continue_background", "[0](delay seconds) [0](force)", ""},
+    {"cp", "compact_prefix", "<<prefix>> [<<from>> [<<to>>] ]", "compact для префикса"}, 
     {"dp", "detach_prefixes",  "[0](access denied in sec) <<prefix1>> [<<prefix2>> ...]", "Отсоединяет префиксы на заданный таймаут. База префиксов перемещаеться в указанное \n"
                                "в конфигурации место. Префикс станет доступен через заданное первым параметром число секунд." },
     {"gap", "get_all_prefixes",  "", "Получить спискок всех доступных префиксов" },
-    {"g", "get", "<<prefix>> <<key1>> [<<key2>> ....]", "Получить значения полей в указанном префиксе"}, 
+    {"g", "get", "<<prefix>> <<key1>> [<<key2>> ....]", "Получить значения полей в указанном префиксе"},
     {"d", "del", "<<prefix>> <<key1>> [<<key2>> ....]", "Удалить поля в указанном префиксе"}, 
     {"s", "set", "<<prefix>> <<key>> <<value>>", "Изменить значение поля в указанном префиксе"},
     {"i", "inc", "<<prefix>> <<key>> <<increment>> [<<default value>>]", "Инкрементировать значение поля для указанном префиксе"},
@@ -246,9 +263,13 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   std::string method;
   ss >> method;
   //std::cout << "method=" << method  << std::endl;
-  if ( method == "help")
+  if ( method == "help" || method == "h")
   {
     help_(db, ss, std::move(handler) );
+  }
+  else if ( method == "exit" || method == "e")
+  {
+    handler(nullptr);
   }
   else if ( method == "db" || method=="delay_background")
   {
@@ -285,6 +306,10 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   else if ( method == "r" || method=="range")
   {
     range_(db, ss, std::move(handler) );
+  }
+  else if ( method=="cp" || method=="compact_prefix")
+  {
+    compact_prefix_(db, ss, std::move(handler) );
   }
   else
   {

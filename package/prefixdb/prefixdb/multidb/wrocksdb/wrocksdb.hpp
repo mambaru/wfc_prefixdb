@@ -10,6 +10,7 @@
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/db_ttl.h>
 #pragma GCC diagnostic pop
 
 #include <memory>
@@ -27,7 +28,7 @@ class wrocksdb
 {
 public:
   typedef ::rocksdb::BackupEngine backup_type;
-  typedef ::rocksdb::DB  db_type;
+  typedef ::rocksdb::DBWithTTL  db_type;
 
   wrocksdb( std::string name, const db_config conf, db_type* db, backup_type* bk);
 
@@ -47,6 +48,7 @@ public:
   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
+  virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
   
   virtual void start( ) override;
   virtual void stop() override;

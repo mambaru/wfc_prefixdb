@@ -15,6 +15,7 @@ struct multidb_config_json
   JSON_NAME(value_size_limit)
   JSON_NAME(prefix_size_limit)
   JSON_NAME(max_prefixes)
+  JSON_NAME(TTL_seconds)
   
 
   typedef ::wfc::json::object<
@@ -26,6 +27,7 @@ struct multidb_config_json
       ::wfc::json::member<n_value_size_limit, multidb_config, size_t, &multidb_config::value_size_limit>,
       ::wfc::json::member<n_prefix_size_limit, multidb_config, size_t, &multidb_config::prefix_size_limit>,
       ::wfc::json::member<n_max_prefixes, multidb_config, size_t, &multidb_config::max_prefixes>,
+      ::wfc::json::member<n_TTL_seconds, multidb_config, uint32_t, &multidb_config::TTL_seconds>,
       ::wfc::json::base<db_config_json>
     >
   > type;

@@ -160,7 +160,7 @@ void prefixdb::get_all_prefixes( request::get_all_prefixes::ptr req, response::g
 
 void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)
 {
-  if ( this->notify_ban(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->detach_prefixes( std::move(req), std::move(cb) );  
@@ -168,7 +168,7 @@ void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::det
 
 void prefixdb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)
 {
-  if ( this->notify_ban(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->attach_prefixes( std::move(req), std::move(cb) );  
@@ -176,7 +176,7 @@ void prefixdb::attach_prefixes( request::attach_prefixes::ptr req, response::att
 
 void prefixdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
 {
-  if ( this->notify_ban(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->delay_background( std::move(req), std::move(cb) );  
@@ -184,10 +184,18 @@ void prefixdb::delay_background( request::delay_background::ptr req, response::d
 
 void prefixdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) 
 {
-  if ( this->notify_ban(req, cb) )
+  if ( this->bad_request(req, cb) )
     return;
 
   _impl->continue_background( std::move(req), std::move(cb) );  
+}
+
+void prefixdb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) 
+{
+  if ( this->bad_request(req, cb) )
+    return;
+  
+  _impl->compact_prefix( std::move(req), std::move(cb) );  
 }
 
 void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler)

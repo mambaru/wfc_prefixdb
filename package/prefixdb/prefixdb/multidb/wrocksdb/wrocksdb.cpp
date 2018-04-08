@@ -102,7 +102,7 @@ namespace{
 
 bool wrocksdb::check_inc_(request::inc::ptr& req, response::inc::handler& cb)
 {
-  if ( !this->_conf.check_merge_operations )
+  if ( !this->_conf.check_incoming_merge_json )
     return true;
 
   return check_params<inc_params_json, response::inc>(req, cb);
@@ -111,7 +111,7 @@ bool wrocksdb::check_inc_(request::inc::ptr& req, response::inc::handler& cb)
 
 bool wrocksdb::check_add_(request::add::ptr& req, response::add::handler& cb)
 {
-  if ( !this->_conf.check_merge_operations )
+  if ( !this->_conf.check_incoming_merge_json )
     return true;
 
   return check_params<add_params_json, response::add>(req, cb);
@@ -119,7 +119,7 @@ bool wrocksdb::check_add_(request::add::ptr& req, response::add::handler& cb)
 
 bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handler& cb)
 {
-  if ( !this->_conf.check_merge_operations )
+  if ( !this->_conf.check_incoming_merge_json )
     return true;
 
   return check_params<packed_params_json, response::packed>(req, cb);
@@ -486,6 +486,36 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
     }
   }
   cb( std::move(res) );
+}
+
+void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) 
+{
+  bool compact_res = false;
+  if (req->from.empty() && req->to.empty() )
+  {
+    compact_res = this->compact();
+  }
+  else
+  {
+    typedef ::rocksdb::Slice slice_type;
+    typedef std::unique_ptr<slice_type> slice_ptr;
+    slice_ptr fromptr = nullptr;
+    slice_ptr toptr = nullptr;
+    if ( !req->from.empty() )
+      fromptr = std::make_unique<slice_type>(req->from);
+    if ( !req->to.empty() )
+      toptr = std::make_unique<slice_type>(req->to);
+    
+    ::rocksdb::CompactRangeOptions opt;
+    ::rocksdb::Status status = _db->CompactRange( opt, fromptr.get(), toptr.get() );
+    compact_res = status.ok();
+  }
+  
+  auto res = std::make_unique<response::compact_prefix>();
+  res->prefix = std::move(req->prefix);
+  res->status = compact_res ? common_status::OK : common_status::CompactFail;
+  cb( std::move(res) );
+  
 }
 
 bool wrocksdb::backup()

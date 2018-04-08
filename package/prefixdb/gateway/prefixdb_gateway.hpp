@@ -16,6 +16,7 @@
 #include <prefixdb/api/attach_prefixes_json.hpp>
 #include <prefixdb/api/delay_background_json.hpp>
 #include <prefixdb/api/continue_background_json.hpp>
+#include <prefixdb/api/compact_prefix_json.hpp>
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace gateway{
@@ -35,6 +36,7 @@ JSONRPC_TAG(detach_prefixes)
 JSONRPC_TAG(attach_prefixes)
 JSONRPC_TAG(delay_background)
 JSONRPC_TAG(continue_background)
+JSONRPC_TAG(compact_prefix)
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -53,7 +55,8 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _detach_prefixes_, request::detach_prefixes_json, response::detach_prefixes_json>,
   wfc::jsonrpc::call_method< _attach_prefixes_, request::attach_prefixes_json, response::attach_prefixes_json>,
   wfc::jsonrpc::call_method< _delay_background_, request::delay_background_json, response::delay_background_json>,
-  wfc::jsonrpc::call_method< _continue_background_, request::continue_background_json, response::continue_background_json>
+  wfc::jsonrpc::call_method< _continue_background_, request::continue_background_json, response::continue_background_json>,
+  wfc::jsonrpc::call_method< _compact_prefix_, request::compact_prefix_json, response::compact_prefix_json>
 >
 {
 };
@@ -137,6 +140,11 @@ public:
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override
   {
     this->template call< _continue_background_ >( std::move(req), cb, nullptr);
+  }
+
+  virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override
+  {
+    this->template call< _compact_prefix_ >( std::move(req), cb, nullptr);
   }
 
   virtual void reg_io( ::wfc::iinterface::io_id_t /*io_id*/, std::weak_ptr< ::wfc::iinterface> /*itf*/) override

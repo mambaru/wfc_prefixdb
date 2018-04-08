@@ -10,6 +10,7 @@
 #include <rocksdb/compaction_filter.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/options_util.h>
+#include <rocksdb/utilities/db_ttl.h>
 #pragma GCC diagnostic pop
 
 
@@ -27,19 +28,7 @@
 
 #include <wfc/wfc_exit.hpp>
 
-/*
-namespace rocksdb
-{
-
-Status LoadOptionsFromFile(const std::string& options_file_name, Env* env,
-                           DBOptions* db_options,
-                           std::vector<ColumnFamilyDescriptor>* cf_descs);
-
-}
-*/
-
 namespace wamba{ namespace prefixdb{
-  
 
 struct wrocksdb_factory::context
 {
@@ -84,16 +73,24 @@ bool wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
   _context->env = ::rocksdb::Env::Default();
   _context->config = conf;
   
-  auto status = ::rocksdb::LoadOptionsFromFile( conf.ini, _context->env, &(_context->options), &(_context->cdf) );
-  if ( !status.ok() )
+  if ( !conf.ini.empty() )
   {
-    DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
-    return false;
+    auto status = ::rocksdb::LoadOptionsFromFile( conf.ini, _context->env, &(_context->options), &(_context->cdf) );
+    if ( !status.ok() )
+    {
+      DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
+      return false;
+    }
+  }
+  else
+  {
+    _context->cdf.push_back( context::CFD() );
+    _context->options = ::rocksdb::Options();
   }
   return true;
 }
 
-ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
+ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, int32_t ttl, bool create_if_missing) 
 {
   if ( dbname.empty() )
   {
@@ -116,6 +113,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
   if ( !conf.wal_path.empty() ) conf.wal_path = _context->config.wal_path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
+  //else conf.detach_path = _context->config.detach_path + "/" + dbname + "_detach";
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
 
@@ -128,12 +126,14 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       options.wal_dir += std::string("/") + wal_dir;
   }
   
-  ::rocksdb::DB* db;
+  ::rocksdb::DBWithTTL* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
-  PREFIXDB_LOG_BEGIN("::rocksdb::DB::Open '" << dbname << "' ...");
+  PREFIXDB_LOG_BEGIN("::rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << ttl << " ...");
 
-  auto status = ::rocksdb::DB::Open(options, conf.path, _context->cdf , &handles, &db);
+  std::vector<int32_t> ttls;
+  ttls.push_back(ttl);
+  auto status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
   
   if ( !status.ok() )
   {
@@ -144,7 +144,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       PREFIXDB_LOG_MESSAGE("::rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
       if ( status.ok() )
       {
-        status = ::rocksdb::DB::Open(options, conf.path, _context->cdf , &handles, &db);
+        status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
       }
     }
   }

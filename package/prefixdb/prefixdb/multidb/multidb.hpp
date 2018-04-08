@@ -37,7 +37,7 @@ public:
   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
-
+  virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
   virtual void stop();  
   virtual bool backup();
   virtual bool archive();
@@ -55,7 +55,7 @@ private:
   std::vector< std::string > all_prefixes_();
   bool preopen_(std::string path, bool create_if_missing);
   
-  prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
+  prefixdb_ptr prefix_(const std::string& prefix, int32_t ttl, bool create_if_missing);
   bool close_prefix_(const std::string& prefix);
   
   template<typename Res, typename ReqPtr, typename Callback>

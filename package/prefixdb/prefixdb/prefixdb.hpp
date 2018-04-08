@@ -38,7 +38,7 @@ public:
   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
-  
+  virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
   // iinterface
   virtual void perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler) override;
 private:

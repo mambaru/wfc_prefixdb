@@ -8,15 +8,17 @@ namespace wamba{ namespace prefixdb{
 struct multidb_config: db_config
 {
   // максимальное количество ключей на запрос
-  size_t keys_per_req = 100;
+  size_t keys_per_req = 0;
   // ограничкение на размер ключа
-  size_t key_size_limit = 128;
+  size_t key_size_limit = 0;
   // ограничкение на размер значений
-  size_t value_size_limit = 1024*10;
+  size_t value_size_limit = 0;
   // ограничкение на размер префикса
-  size_t prefix_size_limit = 256;
+  size_t prefix_size_limit = 0;
   // ограничкение на общее число префиксов
-  size_t max_prefixes = 128;
+  size_t max_prefixes = 0;
+  
+  uint32_t TTL_seconds = 0;
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
   

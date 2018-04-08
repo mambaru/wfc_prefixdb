@@ -15,7 +15,7 @@ struct restore_config
   int64_t backup_id = 0;
   
   // архив бэкапов
-  std::string path  = "./prefixdb_backup";
+  std::string path  = "";
 };
 
 

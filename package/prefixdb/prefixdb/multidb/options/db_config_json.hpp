@@ -30,7 +30,7 @@ struct db_config_json
   JSON_NAME(enable_delayed_write)
   JSON_NAME(auto_repair)
   JSON_NAME(abort_if_open_error)
-  JSON_NAME(check_merge_operations)
+  JSON_NAME(check_incoming_merge_json)
 
   typedef ::wfc::json::object<
     db_config,
@@ -44,7 +44,7 @@ struct db_config_json
       ::wfc::json::member<n_enable_delayed_write, db_config, bool, &db_config::enable_delayed_write>,
       ::wfc::json::member<n_auto_repair, db_config, bool, &db_config::auto_repair>,
       ::wfc::json::member<n_abort_if_open_error, db_config, bool, &db_config::abort_if_open_error>,
-      ::wfc::json::member<n_check_merge_operations, db_config, bool, &db_config::abort_if_open_error>,
+      ::wfc::json::member<n_check_incoming_merge_json, db_config, bool, &db_config::check_incoming_merge_json>,
       ::wfc::json::member<n_ini,          db_config, std::string,    &db_config::ini>,
       ::wfc::json::member<n_compact,      db_config, compact_config,   &db_config::compact, compact_config_json>,
       ::wfc::json::member<n_slave,        db_config, slave_config,   &db_config::slave, slave_config_json>,
