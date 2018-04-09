@@ -27,18 +27,30 @@ public:
   
   merge_operator(size_t array_limit, size_t packed_limit );
   
-  void set_handler( compact_handler );
+  void set_handler_depr( compact_handler );
   
   //void reconfigure(const merge_config& config);
   virtual const char* Name() const override;
  
+  /*
   virtual bool FullMerge(
     const slice_type& key,
     const slice_type* value,
     const operand_list& operands,
     std::string* result,
     logger_type* logger) const override;
+    */
+    virtual bool FullMergeV2(const MergeOperationInput& merge_in,
+                           MergeOperationOutput* merge_out) const override; 
+
     
+  // Determines whether the MergeOperator can be called with just a single
+  // merge operand.
+  // Override and return true for allowing a single operand. FullMergeV2 and
+  // PartialMerge/PartialMergeMulti should be implemented accordingly to handle
+  // a single operand.
+  virtual bool AllowSingleOperand() const override { return true; }
+
 private:
 
   void setnx_(const slice_type* value, const update_list& operands, std::string& result) const;
