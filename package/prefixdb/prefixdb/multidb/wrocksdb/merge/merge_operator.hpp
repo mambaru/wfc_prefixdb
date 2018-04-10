@@ -17,7 +17,6 @@ namespace wamba{ namespace prefixdb{
 class merge_operator
   : public ::rocksdb::MergeOperator
 {
-  
 public:
   typedef ::rocksdb::Slice slice_type;
   typedef ::rocksdb::Logger logger_type;
@@ -27,30 +26,21 @@ public:
   
   merge_operator(size_t array_limit, size_t packed_limit );
   
-  void set_handler_depr( compact_handler );
-  
-  //void reconfigure(const merge_config& config);
   virtual const char* Name() const override;
  
-  /*
-  virtual bool FullMerge(
-    const slice_type& key,
-    const slice_type* value,
-    const operand_list& operands,
-    std::string* result,
-    logger_type* logger) const override;
-    */
-    virtual bool FullMergeV2(const MergeOperationInput& merge_in,
+  virtual bool FullMergeV2(const MergeOperationInput& merge_in,
                            MergeOperationOutput* merge_out) const override; 
 
-    
-  // Determines whether the MergeOperator can be called with just a single
-  // merge operand.
-  // Override and return true for allowing a single operand. FullMergeV2 and
-  // PartialMerge/PartialMergeMulti should be implemented accordingly to handle
-  // a single operand.
-  virtual bool AllowSingleOperand() const override { return true; }
+  
+  virtual bool AllowSingleOperand() const override { return false; }
 
+  // Allows to control when to invoke a full merge during Get.
+  // This could be used to limit the number of merge operands that are looked at
+  // during a point lookup, thereby helping in limiting the number of levels to
+  // read from.
+  // Doesn't help with iterators.
+  // For TTL
+  virtual bool ShouldMerge(const std::vector<slice_type>& /*operands*/) const override;
 private:
 
   void setnx_(const slice_type* value, const update_list& operands, std::string& result) const;
@@ -63,11 +53,9 @@ private:
   void packed_(const slice_type* value, const update_list& operands, std::string& result) const;
   void packed_operand_(const std::string& operand, packed_t& pck) const;
   void packed_inc_(const packed_field_params& upd, std::string& result) const;
-  //void packed_field_(const packed_field_params& upd, packed_field& field );
-  //std::shared_ptr<merge_config> _config;
+  
   std::atomic<size_t> _array_limit;
   std::atomic<size_t> _packed_limit;
-  compact_handler _handler;
 };
 
 }}

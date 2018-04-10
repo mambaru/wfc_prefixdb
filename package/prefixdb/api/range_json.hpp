@@ -18,15 +18,15 @@ namespace request
     JSON_NAME(limit)
     JSON_NAME(offset)
     
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       range,
-      ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, range, std::string, &range::prefix>,
-        ::wfc::json::member<n_noval, range, bool, &range::noval>,
-        ::wfc::json::member<n_from, range, std::string, &range::from>,
-        ::wfc::json::member<n_to, range, std::string, &range::to>,
-        ::wfc::json::member<n_limit, range, size_t, &range::limit>,
-        ::wfc::json::member<n_offset, range, size_t, &range::offset>
+      wfc::json::member_list<
+        wfc::json::member<n_prefix, range, std::string, &range::prefix>,
+        wfc::json::member<n_noval, range, bool, &range::noval>,
+        wfc::json::member<n_from, range, std::string, &range::from>,
+        wfc::json::member<n_to, range, std::string, &range::to>,
+        wfc::json::member<n_limit, range, size_t, &range::limit>,
+        wfc::json::member<n_offset, range, size_t, &range::offset>
       >
     > type;
     
@@ -44,13 +44,13 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
     
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       range,
-      ::wfc::json::member_list<
-        ::wfc::json::member<n_final,  range, bool, &range::fin>,
-        ::wfc::json::member<n_prefix, range, std::string, &range::prefix>,
-        ::wfc::json::member<n_status, range, common_status, &range::status, common_status_json>,
-        ::wfc::json::member<n_fields, range, range::field_list_t, &range::fields, raw_fields_list_json>
+      wfc::json::member_list<
+        wfc::json::member<n_final,  range, bool, &range::fin>,
+        wfc::json::member<n_prefix, range, std::string, &range::prefix>,
+        wfc::json::member<n_status, range, common_status, &range::status, common_status_json>,
+        wfc::json::member<n_fields, range, range::field_list_t, &range::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;

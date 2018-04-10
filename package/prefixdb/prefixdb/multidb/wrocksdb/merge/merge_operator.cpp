@@ -82,31 +82,17 @@ merge_operator::merge_operator(size_t array_limit, size_t packed_limit)
   _packed_limit = packed_limit;
 }
 
-void merge_operator::set_handler_depr( compact_handler handler)
-{
-  _handler = handler;
-}
-
-/*
- bool merge_operator::FullMerge(
-    const slice_type& key,
-    const slice_type* value,
-    const operand_list& operands,
-    std::string* result,
-    logger_type* ) const
-*/
 bool merge_operator::FullMergeV2(
   const MergeOperationInput& merge_in,
   MergeOperationOutput* merge_out
 ) const
 try
 {
-  PREFIXDB_LOG_DEBUG("merge_operator::FullMerge -1- " )
+  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2")
   const auto& operands = merge_in.operand_list;
   if ( operands.empty() )
     return true;
   
-  PREFIXDB_LOG_DEBUG("merge_operator::FullMerge -2- " )
   merge mrg;
   merge_mode mode = merge_mode::none;
   
@@ -114,6 +100,7 @@ try
   updates.reserve(operands.size());
   for (size_t i = 0; i < operands.size(); ++i)
   {
+    PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 OPERAND: " << i)
     if ( helper::unserialize<merge_json>(mrg, operands[i], false) )
     {
       if ( mrg.mode == merge_mode::setnx && mode!=merge_mode::none )
@@ -133,21 +120,20 @@ try
     }
   } 
   
-#warning проверить
-  //!!! result->clear(); // Там мусор 
+  merge_out->new_value.clear();
   
-  PREFIXDB_LOG_DEBUG("merge_operator::FullMerge -SWITCH- " )
+  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 switch...")
   switch( mode )
   {
     case merge_mode::setnx:
-      this->setnx_(merge_in.existing_value, updates, merge_out->new_value ); 
+      this->setnx_(merge_in.existing_value,  updates, merge_out->new_value ); 
       break;
     case merge_mode::inc:
-      this->inc_(merge_in.existing_value, updates, merge_out->new_value ); 
-      PREFIXDB_LOG_DEBUG("merge_operator::FullMerge -INC- " )
+      this->inc_(merge_in.existing_value,    updates, merge_out->new_value ); 
+      PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 INC")
       break;
     case merge_mode::add:
-      this->add_(merge_in.existing_value, updates, merge_out->new_value ); 
+      this->add_(merge_in.existing_value,    updates, merge_out->new_value ); 
       break;
     case merge_mode::packed:
       this->packed_(merge_in.existing_value, updates, merge_out->new_value ); 
@@ -155,19 +141,16 @@ try
     default:
       if ( !updates.empty() )
       {
-        COMMON_LOG_MESSAGE("merge_operator::Merge: Invalid method merge: " << updates[0]  )
+        COMMON_LOG_WARNING("merge_operator::Merge: Invalid method merge: " << updates[0]  )
       }
       if ( merge_in.existing_value!=nullptr )
         merge_out->new_value = merge_in.existing_value->ToString();
       else
         merge_out->new_value="\"\"";
       COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << merge_out->new_value  )
-  }
-  
-  if ( updates.size() > 5 && _handler!=nullptr )
-    _handler(merge_in.key.ToString());
-  
-  PREFIXDB_LOG_DEBUG("merge_operator::FullMerge -END- " )
+  } // switch( mode )
+
+  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 Done!")
   return true;
 }
 catch(std::exception e)
@@ -176,7 +159,8 @@ catch(std::exception e)
     merge_out->new_value = merge_in.existing_value->ToString();
   
   DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge exception: "<< e.what() << ": key=" 
-                  << merge_in.key.ToString() << " existing=" << ( merge_in.existing_value ? merge_in.existing_value ->ToString() : std::string("nullptr") )
+                  << merge_in.key.ToString() << " existing=" 
+                  << ( merge_in.existing_value ? merge_in.existing_value ->ToString() : std::string("nullptr") )
                   << " operands=" << merge_in.operand_list.size() )
   return true;
 }
@@ -185,13 +169,9 @@ catch(...)
   if ( merge_in.existing_value )
     merge_out->new_value = merge_in.existing_value->ToString();
 
-/*  DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge unhandled exception: key=" 
-                  << key.ToString() << " value=" << ( value ? value->ToString() : "nullptr" )
-                  << " operands=" << operands.size() )
-                  */
-
   DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge unhandled exception: key=" 
-                  << merge_in.key.ToString() << " existing=" << ( merge_in.existing_value ? merge_in.existing_value ->ToString() : std::string("nullptr") )
+                  << merge_in.key.ToString() << " existing=" 
+                  << ( merge_in.existing_value ? merge_in.existing_value ->ToString() : std::string("nullptr") )
                   << " operands=" << merge_in.operand_list.size() )
   return true;
 }
@@ -199,6 +179,11 @@ catch(...)
 const char* merge_operator::Name() const 
 {
   return "PreffixDBMergeOperator";
+}
+
+bool merge_operator::ShouldMerge(const std::vector<slice_type>& /*operands*/) const
+{
+  return true;
 }
 
 void merge_operator::setnx_(const slice_type* value, const update_list& operands, std::string& result) const
@@ -272,7 +257,6 @@ void merge_operator::add_(const slice_type* value, const update_list& operands, 
   typedef ::wfc::json::array< std::deque< ::wfc::json::raw_value<> > > arr_json;
 
   // Десериализуем текущий объект
-  
   if ( !helper::unserialize<arr_json>(arr, value, false) )
   {
     // очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его
@@ -300,15 +284,7 @@ void merge_operator::add_operand_(const std::string& oper, std::deque<std::strin
     arr.clear();
     return;
   }
-  
-  /*
-  std::vector<std::string> tail;
-  typedef ::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > tail_json;
-  if ( !helper::unserialize<tail_json>(tail, update.arr, false) )
-    return;
-  
-  arr.insert( arr.end(), tail.begin(), tail.end() );
-  */
+
   arr.insert( arr.end(), update.arr.begin(), update.arr.end() );
   if ( arr.size() > update.lim )
   {

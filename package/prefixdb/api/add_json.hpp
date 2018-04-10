@@ -18,14 +18,14 @@ namespace request
     JSON_NAME(sync)
     JSON_NAME(update)
 
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       add,
-      ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, add, std::string, &add::prefix>,
-        ::wfc::json::member<n_sync,   add, bool, &add::sync>,
-        ::wfc::json::member<n_nores,  add, bool, &add::nores>,
-        ::wfc::json::member<n_noval,  add, bool, &add::noval>,
-        ::wfc::json::member<n_update, add, add::field_list_t, &add::fields, raw_fields_list_json>
+      wfc::json::member_list<
+        wfc::json::member<n_prefix, add, std::string, &add::prefix>,
+        wfc::json::member<n_sync,   add, bool, &add::sync>,
+        wfc::json::member<n_nores,  add, bool, &add::nores>,
+        wfc::json::member<n_noval,  add, bool, &add::noval>,
+        wfc::json::member<n_update, add, add::field_list_t, &add::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;
@@ -42,12 +42,12 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
 
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       add,
-      ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, add, std::string, &add::prefix>,
-        ::wfc::json::member<n_fields, add, add::field_list_t, &add::fields, raw_fields_list_json>,
-        ::wfc::json::member<n_status, add, common_status, &add::status, common_status_json>
+      wfc::json::member_list<
+        wfc::json::member<n_prefix, add, std::string, &add::prefix>,
+        wfc::json::member<n_fields, add, add::field_list_t, &add::fields, raw_fields_list_json>,
+        wfc::json::member<n_status, add, common_status, &add::status, common_status_json>
       >
     > type;
     typedef type::target target;

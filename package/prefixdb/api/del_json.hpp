@@ -18,14 +18,14 @@ namespace request
     JSON_NAME(noval)
     JSON_NAME(sync)
 
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       del,
-      ::wfc::json::member_list<
-        ::wfc::json::member<n_sync,   del, bool, &del::sync>,
-        ::wfc::json::member<n_nores,  del, bool, &del::nores>,
-        ::wfc::json::member<n_noval,  del, bool, &del::noval>,
-        ::wfc::json::member<n_prefix, del, std::string, &del::prefix>,
-        ::wfc::json::member<n_fields, del, del::field_list_t, &del::fields, key_list_json >
+      wfc::json::member_list<
+        wfc::json::member<n_sync,   del, bool, &del::sync>,
+        wfc::json::member<n_nores,  del, bool, &del::nores>,
+        wfc::json::member<n_noval,  del, bool, &del::noval>,
+        wfc::json::member<n_prefix, del, std::string, &del::prefix>,
+        wfc::json::member<n_fields, del, del::field_list_t, &del::fields, key_list_json >
       >
     > type;
     typedef type::target target;
@@ -44,21 +44,21 @@ namespace response
     JSON_NAME(fields)
 
     /*
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       del::field,
-      ::wfc::json::member_list<
-        ::wfc::json::base< basic_field_json >
+      wfc::json::member_list<
+        wfc::json::base< basic_field_json >
       >
     > field_json;
-    typedef ::wfc::json::array< std::vector< field_json > > array_of_fields_json;
+    typedef wfc::json::array< std::vector< field_json > > array_of_fields_json;
     */
 
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       del,
-      ::wfc::json::member_list<
-        ::wfc::json::member<n_prefix, del, std::string, &del::prefix>,
-        ::wfc::json::member<n_status, del, common_status, &del::status, common_status_json>,
-        ::wfc::json::member<n_fields, del, del::field_list_t, &del::fields, raw_fields_list_json>
+      wfc::json::member_list<
+        wfc::json::member<n_prefix, del, std::string, &del::prefix>,
+        wfc::json::member<n_status, del, common_status, &del::status, common_status_json>,
+        wfc::json::member<n_fields, del, del::field_list_t, &del::fields, raw_fields_list_json>
       >
     > type;
     typedef type::target target;

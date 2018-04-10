@@ -14,7 +14,7 @@ namespace request
     JSON_NAME(from)
     JSON_NAME(to)
     
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       compact_prefix,
         wfc::json::member_list<
           wfc::json::member<n_prefix, compact_prefix, std::string, &compact_prefix::prefix >,
@@ -35,7 +35,7 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(prefix)
 
-    typedef ::wfc::json::object<
+    typedef wfc::json::object<
       compact_prefix,
       wfc::json::member_list<
         wfc::json::member<n_prefix, compact_prefix, std::string, &compact_prefix::prefix>,

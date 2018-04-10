@@ -494,6 +494,7 @@ void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compa
   if (req->from.empty() && req->to.empty() )
   {
     compact_res = this->compact();
+    PREFIXDB_LOG_DEBUG("wrocksdb::compact_prefix compact_res=" << compact_res)
   }
   else
   {
