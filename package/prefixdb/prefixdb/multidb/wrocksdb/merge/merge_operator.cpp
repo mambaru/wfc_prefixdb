@@ -130,7 +130,7 @@ try
       break;
     case merge_mode::inc:
       this->inc_(merge_in.existing_value,    updates, merge_out->new_value ); 
-      PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 INC")
+      PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 inc: " << merge_in.existing_value)
       break;
     case merge_mode::add:
       this->add_(merge_in.existing_value,    updates, merge_out->new_value ); 
@@ -181,8 +181,10 @@ const char* merge_operator::Name() const
   return "PreffixDBMergeOperator";
 }
 
-bool merge_operator::ShouldMerge(const std::vector<slice_type>& /*operands*/) const
+bool merge_operator::ShouldMerge(const std::vector<slice_type>& operands) const
 {
+  PREFIXDB_LOG_FATAL("merge_operator::ShouldMerge operands=" << operands.size() );
+  
   return true;
 }
 

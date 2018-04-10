@@ -11,9 +11,6 @@ namespace wamba{ namespace prefixdb{
   
 struct db_config
 {
-  size_t packed_limit = 0;
-  size_t array_limit  = 0;
-  size_t range_limit  = 0; // offset + limit
 
   // Путь к базе данных для всех префиксов
   std::string path = "";
@@ -24,6 +21,11 @@ struct db_config
   std::string detach_path = "";
   // Файл опций в формате ini
   std::string ini = "";
+  
+  uint32_t TTL_seconds = 0;
+  size_t packed_limit = 0;
+  size_t array_limit  = 0;
+  size_t range_limit  = 0; // offset + limit
   
   // Автоматически попытаться востановить базу при ошибке открытия
   bool auto_repair = false;

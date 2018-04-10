@@ -17,8 +17,6 @@ struct multidb_config: db_config
   size_t prefix_size_limit = 0;
   // ограничкение на общее число префиксов
   size_t max_prefixes = 0;
-  
-  uint32_t TTL_seconds = 0;
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
   

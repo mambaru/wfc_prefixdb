@@ -32,7 +32,7 @@ public:
                            MergeOperationOutput* merge_out) const override; 
 
   
-  virtual bool AllowSingleOperand() const override { return false; }
+  virtual bool AllowSingleOperand() const override { return true; }
 
   // Allows to control when to invoke a full merge during Get.
   // This could be used to limit the number of merge operands that are looked at

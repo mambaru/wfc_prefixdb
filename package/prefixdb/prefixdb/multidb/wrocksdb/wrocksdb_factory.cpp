@@ -50,9 +50,9 @@ wrocksdb_factory::wrocksdb_factory( ::iow::asio::io_service& io)
 {
 }
 
-bool wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/) 
+bool wrocksdb_factory::initialize(const db_config& db_conf) 
 {
-  db_config conf = conf1;
+  db_config conf = db_conf;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
   while ( !conf.wal_path.empty() && conf.wal_path.back()=='/' ) conf.wal_path.pop_back();
   while ( !conf.detach_path.empty() && conf.detach_path.back()=='/' ) conf.path.pop_back();
@@ -68,7 +68,7 @@ bool wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
   }
     
   std::lock_guard<std::mutex> lk(_mutex);  
-  //_restore = restore;
+  _ttl = conf.TTL_seconds;
   _context = std::make_shared<wrocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->config = conf;
@@ -90,7 +90,7 @@ bool wrocksdb_factory::initialize(const db_config& conf1/*, bool restore*/)
   return true;
 }
 
-ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, int32_t ttl, bool create_if_missing) 
+ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
 {
   if ( dbname.empty() )
   {
@@ -129,19 +129,19 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, int32_t t
   ::rocksdb::DBWithTTL* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
   
-  PREFIXDB_LOG_BEGIN("::rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << ttl << " ...");
+  PREFIXDB_LOG_BEGIN("rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << _ttl << " ...");
 
   std::vector<int32_t> ttls;
-  ttls.push_back(ttl);
+  ttls.push_back(_ttl);
   auto status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
   
   if ( !status.ok() )
   {
-    PREFIXDB_LOG_ERROR("::rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
+    PREFIXDB_LOG_ERROR("rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
     if ( conf.auto_repair )
     {
       status = ::rocksdb::RepairDB(conf.path, options );
-      PREFIXDB_LOG_MESSAGE("::rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
+      PREFIXDB_LOG_MESSAGE("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
       if ( status.ok() )
       {
         status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
@@ -166,7 +166,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, int32_t t
     delete handles[0];
   }
 
-  PREFIXDB_LOG_END("::rocksdb::DB::Open '" << dbname << "' " )
+  PREFIXDB_LOG_END("rocksdb::DB::Open '" << dbname << "' " )
 
   if ( status.ok() )
   {
