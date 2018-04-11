@@ -15,6 +15,7 @@ namespace request
     bool noval = false; // не сериализуеться 
     std::string prefix;
     field_list_t fields;
+    size_t snapshot = 0;
     typedef std::unique_ptr<get> ptr;
   };
 }

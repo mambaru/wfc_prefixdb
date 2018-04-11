@@ -17,6 +17,7 @@ namespace request
     std::string to;
     size_t offset = 0;
     size_t limit = 10;
+    size_t snapshot = 0;
     typedef std::unique_ptr<range> ptr;
   };
 }

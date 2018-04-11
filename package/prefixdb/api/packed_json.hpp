@@ -16,13 +16,15 @@ namespace request
     JSON_NAME(nores)
     JSON_NAME(update)
     JSON_NAME(sync)
-
+    JSON_NAME(snapshot)
+    
     typedef wfc::json::object<
       packed,
       wfc::json::member_list<
         wfc::json::member<n_prefix, packed, std::string, &packed::prefix>,
         wfc::json::member<n_sync,   packed, bool, &packed::sync>,
         wfc::json::member<n_nores,  packed, bool, &packed::nores>,
+        wfc::json::member<n_snapshot,  packed, size_t, &packed::snapshot>,
         wfc::json::member<n_update, packed, packed::field_list_t, &packed::fields, raw_fields_list_json>
       >
     > type;

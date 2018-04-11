@@ -17,6 +17,8 @@
 #include <prefixdb/api/delay_background.hpp>
 #include <prefixdb/api/continue_background.hpp>
 #include <prefixdb/api/compact_prefix.hpp>
+#include <prefixdb/api/create_snapshot.hpp>
+#include <prefixdb/api/release_snapshot.hpp>
 
 namespace wamba { namespace prefixdb{
 
@@ -47,6 +49,8 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) = 0;
   
   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) = 0;
+  virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) = 0;
+  virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) = 0;
   
 };
 

@@ -18,6 +18,8 @@ namespace request
     bool noval = false;
     std::string prefix;
     field_list_t fields;
+    // Только для noval=false, пишет в базу, а значение из snapshot_id
+    size_t snapshot = 0;
     typedef std::unique_ptr<set> ptr;
   };
 }

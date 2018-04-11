@@ -84,7 +84,7 @@ namespace{
       serializer()(pkg, field.second.begin(), field.second.end(), &e );
       if ( e )
       {
-        JSONRPC_LOG_ERROR( "Jsonrps params error: " << wfc::json::strerror::message_trace( e, field.second.begin(), field.second.end() ) );
+        PREFIXDB_LOG_ERROR( "JSONRPC params error: " << wfc::json::strerror::message_trace( e, field.second.begin(), field.second.end() ) );
         noerr=false; 
         break;
       }
@@ -212,6 +212,46 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
   
 }
 
+wrocksdb::snapshot_ptr wrocksdb::find_snapshot_(size_t id) const
+{
+  if ( id == 0 )
+    return nullptr;
+  std::lock_guard<std::mutex> lk(_mutex);
+  auto itr = _snapshot_map.find(id);
+  if ( itr!=_snapshot_map.end() )
+    return itr->second;
+  return nullptr;
+}
+
+size_t wrocksdb::create_snapshot_()
+{
+  snapshot_ptr ss = _db->GetSnapshot();
+  if ( ss == nullptr )
+    return 0;
+  
+  std::lock_guard<std::mutex> lk(_mutex);
+  ++_snapshot_counter;
+  _snapshot_map.emplace(_snapshot_counter, ss);
+  PREFIXDB_LOG_MESSAGE( "Create snapshot №" << _snapshot_counter << " total=" << _snapshot_map.size() )
+  return _snapshot_counter;
+}
+
+bool wrocksdb::release_snapshot_(size_t id)
+{
+  snapshot_ptr ss = nullptr;
+  {
+    std::lock_guard<std::mutex> lk(_mutex);
+    auto itr = _snapshot_map.find(id);
+    if ( itr==_snapshot_map.end() )
+      return false;
+    ss = itr->second;
+    _snapshot_map.erase(itr);
+  }
+  PREFIXDB_LOG_MESSAGE( "Release snapshot №" << id << " total=" << _snapshot_map.size() )  
+  _db->ReleaseSnapshot(ss);
+  return true;
+}
+
 template<typename Res, typename ReqPtr, typename Callback>
 void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
 {
@@ -228,9 +268,24 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
   std::vector<std::string> resvals;
   resvals.reserve(keys.size());
   std::vector< ::rocksdb::Status> status;
+  ::rocksdb::ReadOptions ro;
+  
+  if ( req->snapshot!=0 )
+  {
+    ro.snapshot = this->find_snapshot_(req->snapshot);
+    if ( ro.snapshot == nullptr )
+    {
+      auto res = std::make_unique<response_type>();
+      res->prefix = std::move(req->prefix);
+      res->status = common_status::SnapshotNotFound;
+      cb( std::move(res) );
+      return;
+    }
+  }
+  
   if ( _db != nullptr ) 
-    status = _db->MultiGet( ::rocksdb::ReadOptions(), keys, &resvals);
-  else cb(nullptr);
+    status = _db->MultiGet( ro, keys, &resvals);
+  else { cb(nullptr); return;}
 
   auto res = std::make_unique<response_type>();
   res->prefix = std::move(req->prefix);
@@ -516,8 +571,45 @@ void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compa
   res->prefix = std::move(req->prefix);
   res->status = compact_res ? common_status::OK : common_status::CompactFail;
   cb( std::move(res) );
+}
+
+void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) 
+{
+  auto res = std::make_unique<response::create_snapshot>();
+  res->prefix = std::move(req->prefix);
+  if ( auto id = this->create_snapshot_() )
+  {
+    res->snapshot = id;
+    if ( 0 != req->release_timeout_s )
+    {
+      _flow->safe_post(
+        std::chrono::seconds(req->release_timeout_s),
+        [this, id]()
+        {
+          this->release_snapshot_(id);
+        }
+      );
+    }
+  }
+  else
+    res->status = common_status::CreateSnapshotFail;
+  cb( std::move(res) );
+}
+
+void wrocksdb::release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) 
+{
+  bool status = this->release_snapshot_(req->snapshot);
+  if (cb!=nullptr)
+  {
+    auto res = std::make_unique<response::release_snapshot>();
+    res->prefix = std::move(req->prefix);
+    if (!status)
+      res->status = common_status::SnapshotNotFound;
+    cb( std::move(res) );
+  }
   
 }
+
 
 bool wrocksdb::backup()
 {

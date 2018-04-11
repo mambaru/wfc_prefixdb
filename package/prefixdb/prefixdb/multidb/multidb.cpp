@@ -353,6 +353,30 @@ void multidb::compact_prefix( request::compact_prefix::ptr req, response::compac
   }  
 }
 
+void multidb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) 
+{
+  if ( auto db = this->prefix_(req->prefix, false) )
+  {
+    db->create_snapshot( std::move(req), std::move(cb) );
+  }
+  else
+  {
+    prefix_not_found<response::create_snapshot>( std::move(req), std::move(cb) );
+  }  
+}
+
+void  multidb::release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb)
+{
+  if ( auto db = this->prefix_(req->prefix, false) )
+  {
+    db->release_snapshot( std::move(req), std::move(cb) );
+  }
+  else
+  {
+    prefix_not_found<response::release_snapshot>( std::move(req), std::move(cb) );
+  }  
+}
+
 void multidb::stop()
 {
   if ( _flow )

@@ -29,6 +29,8 @@ class wrocksdb
 public:
   typedef ::rocksdb::BackupEngine backup_type;
   typedef ::rocksdb::DBWithTTL  db_type;
+  typedef ::rocksdb::Snapshot snapshot_type;
+  typedef const snapshot_type* snapshot_ptr;
 
   wrocksdb( std::string name, const db_config conf, db_type* db, backup_type* bk);
 
@@ -49,6 +51,9 @@ public:
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
+  
+  virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) override;
+  virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) override;
   
   virtual void start( ) override;
   virtual void stop() override;
@@ -73,13 +78,18 @@ private:
   template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
   void write_batch_(BatchPtr batch, ReqPtr req, Callback cb);
 
+  snapshot_ptr find_snapshot_(size_t id) const;
+  size_t create_snapshot_();
+  bool release_snapshot_(size_t id);
 private:
   
   std::string _name;  
   const db_config _conf;
   std::shared_ptr<db_type> _db;
   std::shared_ptr<backup_type> _backup;
-  std::mutex _mutex;
+  mutable std::mutex _mutex;
+  size_t _snapshot_counter = 0;
+  std::map<size_t, snapshot_ptr> _snapshot_map;
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr< ::wfc::workflow> _flow;
 };

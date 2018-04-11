@@ -17,6 +17,10 @@
 #include <prefixdb/api/delay_background_json.hpp>
 #include <prefixdb/api/continue_background_json.hpp>
 
+#include <prefixdb/api/compact_prefix_json.hpp>
+#include <prefixdb/api/create_snapshot_json.hpp>
+#include <prefixdb/api/release_snapshot_json.hpp>
+
 
 #include <wfc/jsonrpc.hpp>
 
@@ -38,6 +42,10 @@ JSONRPC_TAG(attach_prefixes)
 JSONRPC_TAG(continue_background)
 JSONRPC_TAG(delay_background)
 
+JSONRPC_TAG(compact_prefix)
+JSONRPC_TAG(create_snapshot)
+JSONRPC_TAG(release_snapshot)
+
 
 
 struct method_list: wfc::jsonrpc::method_list
@@ -57,7 +65,12 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::invoke_method< _detach_prefixes_, request::detach_prefixes_json,  response::detach_prefixes_json, iprefixdb, &iprefixdb::detach_prefixes>,
   wfc::jsonrpc::invoke_method< _attach_prefixes_, request::attach_prefixes_json,  response::attach_prefixes_json, iprefixdb, &iprefixdb::attach_prefixes>,
   wfc::jsonrpc::invoke_method< _delay_background_, request::delay_background_json,  response::delay_background_json, iprefixdb, &iprefixdb::delay_background>,
-  wfc::jsonrpc::invoke_method< _continue_background_, request::continue_background_json,  response::continue_background_json, iprefixdb, &iprefixdb::continue_background>
+  wfc::jsonrpc::invoke_method< _continue_background_, request::continue_background_json,  response::continue_background_json, iprefixdb,
+  &iprefixdb::continue_background>,
+  
+  wfc::jsonrpc::invoke_method< _compact_prefix_, request::compact_prefix_json,  response::compact_prefix_json, iprefixdb, &iprefixdb::compact_prefix>,
+  wfc::jsonrpc::invoke_method< _create_snapshot_, request::create_snapshot_json,  response::create_snapshot_json, iprefixdb, &iprefixdb::create_snapshot>,
+  wfc::jsonrpc::invoke_method< _release_snapshot_, request::release_snapshot_json,  response::release_snapshot_json, iprefixdb, &iprefixdb::release_snapshot>
 >
 {
 };

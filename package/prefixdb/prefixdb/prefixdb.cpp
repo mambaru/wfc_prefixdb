@@ -198,6 +198,23 @@ void prefixdb::compact_prefix( request::compact_prefix::ptr req, response::compa
   _impl->compact_prefix( std::move(req), std::move(cb) );  
 }
 
+void prefixdb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) 
+{
+  if ( this->notify_ban(req, cb) )
+    return;
+  
+  _impl->create_snapshot( std::move(req), std::move(cb) );  
+}
+
+void prefixdb::release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) 
+{
+  if ( this->bad_request(req, cb) )
+    return;
+  
+  _impl->release_snapshot( std::move(req), std::move(cb) );  
+}
+
+
 void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler)
 {
   service::prefixdb_cmd(this->shared_from_this(), std::move(d), handler);

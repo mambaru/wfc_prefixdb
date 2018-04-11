@@ -17,7 +17,8 @@ namespace request
     JSON_NAME(noval)
     JSON_NAME(sync)
     JSON_NAME(update)
-
+    JSON_NAME(snapshot)
+    
     typedef wfc::json::object<
       add,
       wfc::json::member_list<
@@ -25,6 +26,7 @@ namespace request
         wfc::json::member<n_sync,   add, bool, &add::sync>,
         wfc::json::member<n_nores,  add, bool, &add::nores>,
         wfc::json::member<n_noval,  add, bool, &add::noval>,
+        wfc::json::member<n_snapshot,  add, size_t, &add::snapshot>,
         wfc::json::member<n_update, add, add::field_list_t, &add::fields, raw_fields_list_json>
       >
     > type;

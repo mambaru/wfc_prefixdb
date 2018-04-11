@@ -14,9 +14,11 @@ namespace request
   {
     JSON_NAME(prefix)
     JSON_NAME(fields)
+    JSON_NAME(snapshot)
     typedef wfc::json::object<
       get,
       wfc::json::member_list<
+        wfc::json::member<n_snapshot,  get, size_t, &get::snapshot>,
         wfc::json::member<n_prefix, get, std::string, &get::prefix>,
         wfc::json::member<n_fields, get, get::field_list_t, &get::fields, key_list_json >
       >

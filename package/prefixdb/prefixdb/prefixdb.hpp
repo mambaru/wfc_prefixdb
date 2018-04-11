@@ -39,6 +39,9 @@ public:
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
+  virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) override;
+  virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) override;
+
   // iinterface
   virtual void perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler) override;
 private:

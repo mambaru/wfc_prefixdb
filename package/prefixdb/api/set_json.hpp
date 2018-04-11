@@ -14,6 +14,7 @@ namespace request
     JSON_NAME(prefix)
     JSON_NAME(nores)
     JSON_NAME(noval)
+    JSON_NAME(snapshot)
     JSON_NAME(fields)
     JSON_NAME(sync)
 
@@ -24,6 +25,7 @@ namespace request
         wfc::json::member<n_sync,   set, bool, &set::sync>,
         wfc::json::member<n_nores,  set, bool, &set::nores>,
         wfc::json::member<n_noval,  set, bool, &set::noval>,
+        wfc::json::member<n_snapshot,  set, size_t, &set::snapshot>,
         wfc::json::member<n_fields, set, set::field_list_t, &set::fields, raw_fields_list_json >
       >
     > type;

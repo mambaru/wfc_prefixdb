@@ -17,6 +17,10 @@
 #include <prefixdb/api/delay_background_json.hpp>
 #include <prefixdb/api/continue_background_json.hpp>
 #include <prefixdb/api/compact_prefix_json.hpp>
+
+#include <prefixdb/api/create_snapshot_json.hpp>
+#include <prefixdb/api/release_snapshot_json.hpp>
+
 #include <wfc/jsonrpc.hpp>
 
 namespace wamba{ namespace prefixdb{ namespace gateway{
@@ -37,6 +41,10 @@ JSONRPC_TAG(attach_prefixes)
 JSONRPC_TAG(delay_background)
 JSONRPC_TAG(continue_background)
 JSONRPC_TAG(compact_prefix)
+JSONRPC_TAG(create_snapshot)
+JSONRPC_TAG(release_snapshot)
+
+
 
 struct method_list: wfc::jsonrpc::method_list
 <
@@ -56,7 +64,9 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _attach_prefixes_, request::attach_prefixes_json, response::attach_prefixes_json>,
   wfc::jsonrpc::call_method< _delay_background_, request::delay_background_json, response::delay_background_json>,
   wfc::jsonrpc::call_method< _continue_background_, request::continue_background_json, response::continue_background_json>,
-  wfc::jsonrpc::call_method< _compact_prefix_, request::compact_prefix_json, response::compact_prefix_json>
+  wfc::jsonrpc::call_method< _compact_prefix_, request::compact_prefix_json, response::compact_prefix_json>,
+  wfc::jsonrpc::call_method< _create_snapshot_, request::create_snapshot_json, response::create_snapshot_json>,
+  wfc::jsonrpc::call_method< _release_snapshot_, request::release_snapshot_json, response::release_snapshot_json>
 >
 {
 };
@@ -145,6 +155,16 @@ public:
   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override
   {
     this->template call< _compact_prefix_ >( std::move(req), cb, nullptr);
+  }
+
+  virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) override
+  {
+    this->template call< _create_snapshot_ >( std::move(req), cb, nullptr);
+  }
+
+  virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) override
+  {
+    this->template call< _release_snapshot_ >( std::move(req), cb, nullptr);
   }
 
   virtual void reg_io( ::wfc::iinterface::io_id_t /*io_id*/, std::weak_ptr< ::wfc::iinterface> /*itf*/) override

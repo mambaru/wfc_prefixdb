@@ -9,8 +9,10 @@ enum class common_status
   EmptyFields,
   EmptyPrefix, 
   CreatePrefixFail,
+  CreateSnapshotFail,
   CompactFail,
   PrefixNotFound,
+  SnapshotNotFound,
   TooManyKeys,     // Слишком много ключей в запросе 
   KeyLengthExceeded,
   ValueLengthExceeded,

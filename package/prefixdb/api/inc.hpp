@@ -17,7 +17,8 @@ namespace request
     bool nores = true;  // no result пустой результат, prefix="", status=OK
     bool noval = false; // не сериализуеться
     field_list_t fields;
-    
+    // Только для noval=false, пишет в базу, а значение из snapshot_id
+    size_t snapshot = 0;
     typedef std::unique_ptr<inc> ptr;
   };
 }

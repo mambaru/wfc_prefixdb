@@ -11,7 +11,9 @@ struct common_status_json
   JSON_NAME(EmptyFields)
   JSON_NAME(EmptyPrefix)
   JSON_NAME(CreatePrefixFail)
+  JSON_NAME(CreateSnapshotFail)
   JSON_NAME(PrefixNotFound)
+  JSON_NAME(SnapshotNotFound)
   JSON_NAME(TooManyKeys)
   JSON_NAME(KeyLengthExceeded)
   JSON_NAME(ValueLengthExceeded)
@@ -29,6 +31,8 @@ struct common_status_json
         ::wfc::json::enum_value<n_EmptyPrefix, common_status, common_status::EmptyPrefix>,
         ::wfc::json::enum_value<n_CreatePrefixFail, common_status, common_status::CreatePrefixFail>,
         ::wfc::json::enum_value<n_PrefixNotFound, common_status, common_status::PrefixNotFound>,
+        ::wfc::json::enum_value<n_CreateSnapshotFail, common_status, common_status::CreateSnapshotFail>,
+        ::wfc::json::enum_value<n_SnapshotNotFound, common_status, common_status::SnapshotNotFound>,
         ::wfc::json::enum_value<n_TooManyKeys, common_status, common_status::TooManyKeys>,
         ::wfc::json::enum_value<n_KeyLengthExceeded, common_status, common_status::KeyLengthExceeded>,
         ::wfc::json::enum_value<n_ValueLengthExceeded, common_status, common_status::ValueLengthExceeded>,
