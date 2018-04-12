@@ -58,7 +58,8 @@ void wrocksdb::start( )
 void wrocksdb::stop_()
 {
   PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
-  if ( _slave ) _slave->stop();
+  if ( _slave!=nullptr ) 
+    _slave->stop();
   _slave = nullptr;
   _db=nullptr;
 }
@@ -226,7 +227,10 @@ wrocksdb::snapshot_ptr wrocksdb::find_snapshot_(size_t id) const
 
 size_t wrocksdb::create_snapshot_(size_t *seq_num)
 {
-  snapshot_ptr ss = _db->GetSnapshot();
+  auto db = _db;
+  if (db==nullptr) return 0;
+  
+  snapshot_ptr ss = db->GetSnapshot();
   if ( ss == nullptr )
     return 0;
 
@@ -251,8 +255,11 @@ bool wrocksdb::release_snapshot_(size_t id)
     ss = itr->second;
     _snapshot_map.erase(itr);
   }
-  PREFIXDB_LOG_MESSAGE( "Release snapshot №" << id << " total=" << _snapshot_map.size() )  
-  _db->ReleaseSnapshot(ss);
+  if ( auto db = _db )
+  {
+    PREFIXDB_LOG_MESSAGE( "Release snapshot №" << id << " total=" << _snapshot_map.size() )  
+    db->ReleaseSnapshot(ss);
+  }
   return true;
 }
 
@@ -287,8 +294,8 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
     }
   }
   
-  if ( _db != nullptr ) 
-    status = _db->MultiGet( ro, keys, &resvals);
+  if ( auto db = _db ) 
+    status = db->MultiGet( ro, keys, &resvals);
   else { cb(nullptr); return;}
 
   auto res = std::make_unique<response_type>();
@@ -463,7 +470,21 @@ void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_a
 
 void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response::detach_prefixes::handler cb)
 {
-  std::lock_guard<std::mutex> lk(_mutex);
+  auto db = _db;
+  
+  if ( db.use_count() > 2 )
+  {
+    PREFIXDB_LOG_DEBUG("detach_prefixes db.use_count()=" << db.use_count() )
+    db.reset();
+    std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
+    _flow->safe_post(
+      std::chrono::milliseconds(100),
+      [wthis, cb](){
+      if (auto pthis = wthis.lock() )
+        pthis->detach_prefixes(std::make_unique<request::detach_prefixes>(), cb);
+    });
+    return;
+  }
  
   this->stop_();
   
@@ -566,9 +587,12 @@ void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compa
     if ( !req->to.empty() )
       toptr = std::make_unique<slice_type>(req->to);
     
-    ::rocksdb::CompactRangeOptions opt;
-    ::rocksdb::Status status = _db->CompactRange( opt, fromptr.get(), toptr.get() );
-    compact_res = status.ok();
+    if (auto db = _db)
+    {
+      ::rocksdb::CompactRangeOptions opt;
+      ::rocksdb::Status status = db->CompactRange( opt, fromptr.get(), toptr.get() );
+      compact_res = status.ok();
+    }
   }
   
   auto res = std::make_unique<response::compact_prefix>();
@@ -643,8 +667,11 @@ bool wrocksdb::backup()
   
   COMMON_LOG_BEGIN("CreateNewBackup...")
   int progress = 0;
-  status = _backup->CreateNewBackup( _db.get(), true, 
-    [progress]() mutable { COMMON_LOG_PROGRESS("CreateNewBackup...." << std::string(progress, '.') ) });
+  if (auto db = _db)
+  {
+    status = _backup->CreateNewBackup( db.get(), true, 
+      [progress]() mutable { COMMON_LOG_PROGRESS("CreateNewBackup...." << std::string(progress, '.') ) });
+  }
   
   if ( status.ok() )
   {
@@ -719,15 +746,23 @@ bool wrocksdb::compact()
 
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 
 {
+  auto db = _db;
+  if (db == nullptr)
+  {
+    if (cb!=nullptr) cb(nullptr);
+    return;
+  }
   auto res = std::make_unique<response::delay_background>();
-  ::rocksdb::Status status = _db->PauseBackgroundWork();
+  ::rocksdb::Status status = db->PauseBackgroundWork();
   if ( status.ok() )
   {
     PREFIXDB_LOG_BEGIN("Delay Background" )
     bool force = req->contunue_force;
-    auto cb_fun = [this, force]()
+    std::weak_ptr<db_type> wdb = db;
+    auto cb_fun = [wdb, force]()
     {
-      while ( this->_db->ContinueBackgroundWork().ok() && force );
+      if ( auto pdb = wdb.lock() )
+        while ( pdb->ContinueBackgroundWork().ok() && force );
       PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork] " )
     };
     _flow->post( std::chrono::seconds(req->delay_timeout_s), cb_fun, cb_fun);
@@ -744,7 +779,10 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
 void wrocksdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) 
 {
   auto res = std::make_unique<response::continue_background>();
-  while ( this->_db->ContinueBackgroundWork().ok() && req->force );
+  if ( auto db = _db )
+  {
+    while ( db->ContinueBackgroundWork().ok() && req->force );
+  }
   if ( cb != nullptr ) 
     cb( std::move(res) );  
 }

@@ -30,7 +30,11 @@ private:
   
   void create_updates_requester_();
   
-  request::get_updates_since::ptr updates_generator_(response::get_updates_since::ptr, std::shared_ptr<request::get_updates_since> preq);
+  static request::get_updates_since::ptr updates_generator_(
+    std::weak_ptr<wrocksdb_slave> wthis,
+    response::get_updates_since::ptr, 
+    std::shared_ptr<request::get_updates_since> preq
+  );
   
   void logs_parser_( response::get_updates_since::ptr& res);
   void create_diff_timer_();

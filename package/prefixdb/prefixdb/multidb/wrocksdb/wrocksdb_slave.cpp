@@ -115,21 +115,26 @@ void wrocksdb_slave::create_updates_requester_()
       pprefixdb->get_updates_since( std::move(req), callback);
       return true;
     },
-    std::bind(&wrocksdb_slave::updates_generator_, this, std::placeholders::_1, preq)
+    std::bind(&wrocksdb_slave::updates_generator_, this->shared_from_this(), std::placeholders::_1, preq)
   );
 }
 
 request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
+  std::weak_ptr<wrocksdb_slave> wthis,
   response::get_updates_since::ptr res, 
   std::shared_ptr<request::get_updates_since> preq
 )
 {
+  auto pthis = wthis.lock();
+  if ( pthis == nullptr)
+    return nullptr;
+  
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
 
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    DOMAIN_LOG_FATAL( "Slave replication error. Invalid master responce for '" << this->_name << "'"
+    DOMAIN_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
       << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final 
       << " status="<<res->status) 
     return nullptr;
@@ -141,21 +146,22 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   if ( preq->seq!=0  )
   {
     auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
-    if ( diff > this->_opt.acceptable_loss_seq )
+    if ( diff > pthis->_opt.acceptable_loss_seq )
     {
-      DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence '" << this->_name << "': " 
+      DOMAIN_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': " 
                         << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
       return nullptr;
     }
     else if ( diff > 0)
     {
-      PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence '" << this->_name << "' : " 
+      PREFIXDB_LOG_WARNING( "Slave not acceptable loss sequence '" << pthis->_name << "' : " 
                           << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
-      _lost_counter += diff;
+      pthis->_lost_counter += diff;
     } 
     else if ( diff < 0 )
     {
-      PREFIXDB_LOG_TRACE( _name << " re-entry sequences'"<< this->_name<<"': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      PREFIXDB_LOG_TRACE( "re-entry sequences'"<< pthis->_name<<"': " << diff 
+                  << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
     
     //this->_current_differens = diff;
@@ -163,26 +169,26 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
       
   //this->_current_differens = res->seq_final - res->seq_first;
   
-  this->logs_parser_(res);
-  auto batch = _log_parser->detach();
+  pthis->logs_parser_(res);
+  auto batch = pthis->_log_parser->detach();
   //size_t sn = res->seq_last + 1;
-  uint64_t sn = _log_parser->get_next_seq_number();
-  this->_current_differens = res->seq_final - (sn - 1);
-  _last_sequence = sn;
+  uint64_t sn = pthis->_log_parser->get_next_seq_number();
+  pthis->_current_differens = res->seq_final - (sn - 1);
+  pthis->_last_sequence = sn;
   // batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
-  this->write_sequence_number_(-1);
+  pthis->write_sequence_number_(-1);
   {
-    std::lock_guard<mutex_type> lk(_mutex);
-    if ( is_started )
+    std::lock_guard<mutex_type> lk(pthis->_mutex);
+    if ( pthis->is_started )
     {
-      // TODO: disableWAL wo.
-      this->_db.Write( ::rocksdb::WriteOptions(), batch.get() );
+      ::rocksdb::WriteOptions wo;
+      wo.disableWAL = pthis->_opt.disableWAL;
+      pthis->_db.Write( wo, batch.get() );
     }
   }
-  this->write_sequence_number_(sn);
+  pthis->write_sequence_number_(sn);
 
   preq->seq = sn;
-  
   
   if ( res->seq_last == res->seq_final )
     return nullptr;
@@ -245,20 +251,26 @@ void wrocksdb_slave::create_seq_timer_()
   if ( _opt.seq_log_timeout_ms != 0 )
   {
     auto last_time = std::make_shared< std::atomic<time_t> >( time(0) );
+    std::weak_ptr<wrocksdb_slave> wthis=this->shared_from_this();
     _seq_timer_id = _opt.timer->create_timer(
       std::chrono::milliseconds( _opt.seq_log_timeout_ms ),
-      [this, last_time]()->bool
+      [wthis, last_time]()->bool
       {
+        auto pthis = wthis.lock();
+        if (pthis==nullptr)
+          return false;
+        
         time_t span = std::time(0) - last_time->load();
-        if ( this->_update_counter == 0)
+        if ( pthis->_update_counter == 0)
         {
-          PREFIXDB_LOG_MESSAGE("No updates for '" << this->_name << "' in the last " << span << " seconds. Next seq №" << this->_last_sequence );
+          PREFIXDB_LOG_MESSAGE("No updates for '" << pthis->_name << "' in the last " << span 
+                  << " seconds. Next seq №" << pthis->_last_sequence );
         }
         else
         {
-          PREFIXDB_LOG_MESSAGE( this->_update_counter.load() << " updates for '" << this->_name << "' in the last " << span << " seconds. Next seq №" << this->_last_sequence );
+          PREFIXDB_LOG_MESSAGE( pthis->_update_counter.load() << " updates for '" << pthis->_name << "' in the last " << span << " seconds. Next seq №" << pthis->_last_sequence );
           last_time->store( std::time(0) );
-          this->_update_counter = 0;
+          pthis->_update_counter = 0;
         }
         return true;
       }
@@ -335,7 +347,7 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
         batch.Put( field.first, field.second );
 
       rocksdb::WriteOptions wo;
-      wo.disableWAL = true;
+      wo.disableWAL = pthis->_opt.disableWAL;
       pthis->_db.Write( wo, &batch); 
       PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
       
