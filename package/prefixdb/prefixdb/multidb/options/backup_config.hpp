@@ -10,7 +10,7 @@ struct backup_config
   bool enabled = false;
   
   // Путь к бэкапу базы данных для всех префиксов
-  std::string path   = "./prefixdb_backup";
+  std::string path = "";
   
   std::string start_time  = "03:00:00";
   
