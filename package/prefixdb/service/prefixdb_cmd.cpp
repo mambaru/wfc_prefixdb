@@ -51,6 +51,7 @@ namespace
     std::string prefix;
     for (;;) 
     {
+      prefix.clear();
       ss >> prefix;
       if (prefix.empty()) break;
       req->prefixes.push_back(prefix);
