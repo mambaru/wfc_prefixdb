@@ -31,8 +31,14 @@ struct slave_config
   std::ptrdiff_t wrn_log_diff_seq = 10000;
   time_t wrn_log_timeout_ms = 1000;
   time_t seq_log_timeout_ms = 1000;
+  // Отключить WAL для обновлений 
+  bool disableWAL = false;
+  
   std::shared_ptr<iprefixdb> master;
   std::shared_ptr< ::wfc::workflow > timer;
+  // Не сериеализуеться. Полное вычитывание базы перед стартом
+  bool initial_load = false;
+  size_t initial_range = 1024;
 };
 
 

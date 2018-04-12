@@ -19,6 +19,7 @@ struct slave_config_json
   JSON_NAME(wrn_log_timeout_ms)
   JSON_NAME(seq_log_timeout_ms)
   JSON_NAME(query_prefixes_timeout_ms)
+  JSON_NAME(disableWAL)
 
   typedef ::wfc::json::object<
     slave_config,
@@ -34,7 +35,8 @@ struct slave_config_json
       ::wfc::json::member<n_wrn_log_timeout_ms,  slave_config, time_t,       &slave_config::wrn_log_timeout_ms>,
       ::wfc::json::member<n_seq_log_timeout_ms,  slave_config, time_t,       &slave_config::seq_log_timeout_ms>,
       ::wfc::json::member<n_enable_progress,   slave_config, bool,        &slave_config::enable_progress>,
-      ::wfc::json::member<n_expires_for_req,   slave_config, bool,        &slave_config::expires_for_req>
+      ::wfc::json::member<n_expires_for_req,   slave_config, bool,        &slave_config::expires_for_req>,
+      ::wfc::json::member<n_disableWAL,  slave_config, bool,       &slave_config::disableWAL>
     >
   > type;
 
