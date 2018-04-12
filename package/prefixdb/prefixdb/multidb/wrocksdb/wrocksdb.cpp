@@ -22,6 +22,7 @@
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/iterator.h>
+#include <rocksdb/utilities/db_ttl.h>
 #pragma GCC diagnostic pop
 
 
@@ -223,11 +224,14 @@ wrocksdb::snapshot_ptr wrocksdb::find_snapshot_(size_t id) const
   return nullptr;
 }
 
-size_t wrocksdb::create_snapshot_()
+size_t wrocksdb::create_snapshot_(size_t *seq_num)
 {
   snapshot_ptr ss = _db->GetSnapshot();
   if ( ss == nullptr )
     return 0;
+
+  if ( seq_num!=nullptr )
+    *seq_num = ss->GetSequenceNumber();
   
   std::lock_guard<std::mutex> lk(_mutex);
   ++_snapshot_counter;
@@ -577,7 +581,7 @@ void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::cre
 {
   auto res = std::make_unique<response::create_snapshot>();
   res->prefix = std::move(req->prefix);
-  if ( auto id = this->create_snapshot_() )
+  if ( auto id = this->create_snapshot_( &(res->last_seq) ) )
   {
     res->snapshot = id;
     if ( 0 != req->release_timeout_s )
@@ -744,6 +748,7 @@ void wrocksdb::continue_background( request::continue_background::ptr req, respo
   if ( cb != nullptr ) 
     cb( std::move(res) );  
 }
+
 
 
 

@@ -2,7 +2,7 @@
 
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
 #include <mutex>
-namespace rocksdb{ class DB;}
+namespace rocksdb{ class DBWithTTL;}
 
 namespace wamba{ namespace prefixdb{
   
@@ -14,7 +14,7 @@ class wrocksdb_slave
   typedef wfc::workflow::timer_id_t timer_id_t;
 
 public:
-  typedef ::rocksdb::DB db_type;
+  typedef ::rocksdb::DBWithTTL db_type;
   
   wrocksdb_slave(std::string name, std::string path, const slave_config& opt, db_type& db);
   
@@ -23,6 +23,10 @@ public:
   void stop();
   
 private:
+  void initial_load_();
+  void query_initial_range_(size_t snapshot, size_t offset);
+  
+  void start_();
   
   void create_updates_requester_();
   
@@ -33,6 +37,8 @@ private:
   void create_seq_timer_();
   void     write_sequence_number_(uint64_t seq);
   uint64_t read_sequence_number_();
+  
+  
 private:
   std::string _name;
   std::string _path;

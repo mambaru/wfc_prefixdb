@@ -22,6 +22,7 @@ namespace response
   struct create_snapshot
   {
     size_t snapshot = 0;
+    size_t last_seq = 0;
     std::string prefix;
     common_status status = common_status::OK;
     typedef std::unique_ptr<create_snapshot> ptr;

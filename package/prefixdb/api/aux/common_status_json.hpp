@@ -49,3 +49,11 @@ struct common_status_json
 };
 
 }}
+
+namespace std{
+  inline std::ostream& operator<< (std::ostream& os, wamba::prefixdb::common_status cs)
+  {
+    wamba::prefixdb::common_status_json::serializer()(cs, ostreambuf_iterator<char>(os));
+    return os;
+  }
+}

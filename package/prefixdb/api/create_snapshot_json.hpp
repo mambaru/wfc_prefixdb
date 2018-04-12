@@ -34,12 +34,14 @@ namespace response
     JSON_NAME(prefix)
     JSON_NAME(status)
     JSON_NAME(snapshot)
+    JSON_NAME(last_seq)
 
     typedef wfc::json::object<
       create_snapshot,
       wfc::json::member_list<
         wfc::json::member<n_prefix, create_snapshot, std::string, &create_snapshot::prefix >,
         wfc::json::member<n_snapshot, create_snapshot, size_t, &create_snapshot::snapshot >,
+        wfc::json::member<n_last_seq, create_snapshot, size_t, &create_snapshot::last_seq >,
         wfc::json::member<n_status, create_snapshot, common_status, &create_snapshot::status, common_status_json>
       >
     > type;

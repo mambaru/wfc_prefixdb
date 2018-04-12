@@ -10,6 +10,7 @@
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
+// //#include <rocksdb/utilities/db_ttl.h>
 #include <rocksdb/utilities/db_ttl.h>
 #pragma GCC diagnostic pop
 
@@ -60,6 +61,8 @@ public:
   virtual bool compact() override;
   virtual bool backup() override;
   virtual bool archive(std::string path) override;
+  
+  
 
 private:
 
@@ -79,7 +82,7 @@ private:
   void write_batch_(BatchPtr batch, ReqPtr req, Callback cb);
 
   snapshot_ptr find_snapshot_(size_t id) const;
-  size_t create_snapshot_();
+  size_t create_snapshot_(size_t *seq_num);
   bool release_snapshot_(size_t id);
 private:
   

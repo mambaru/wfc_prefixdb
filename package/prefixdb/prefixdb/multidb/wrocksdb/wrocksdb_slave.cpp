@@ -4,6 +4,7 @@
 #include "../aux/base64.hpp"
 
 #include <prefixdb/logger.hpp>
+#include <prefixdb/api/aux/common_status_json.hpp>
 #include <wfc/wfc_exit.hpp>
 
 
@@ -11,6 +12,11 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/iterator.h>
+#include <rocksdb/write_batch.h>
+#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/db_ttl.h>
+
 #pragma GCC diagnostic pop
 
 #include <ctime>
@@ -46,13 +52,9 @@ void wrocksdb_slave::start()
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
-
-  this->create_updates_requester_();
-  this->create_diff_timer_();
-  this->create_seq_timer_();
-  PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
-  std::lock_guard<mutex_type> lk(_mutex);
-  is_started = true;
+  // TODO: if not initial load
+  initial_load_();
+  //this->start_();
 }
 
 void wrocksdb_slave::stop()
@@ -67,6 +69,16 @@ void wrocksdb_slave::stop()
   _opt.timer->release_timer(_diff_timer_id);
 }
 
+void wrocksdb_slave::start_()
+{
+  this->create_updates_requester_();
+  this->create_diff_timer_();
+  this->create_seq_timer_();
+  PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
+  std::lock_guard<mutex_type> lk(_mutex);
+  is_started = true;
+}
+
 void wrocksdb_slave::create_updates_requester_()
 {
   auto preq = std::make_shared<request::get_updates_since>();
@@ -78,7 +90,7 @@ void wrocksdb_slave::create_updates_requester_()
   
   if ( seq == static_cast<uint64_t>(-1) )
   {
-    wfc_exit_with_error( std::string("Invalid sequence number. Replication is not possible. You must synchronize the database. ") + this->_name);
+    DOMAIN_LOG_FATAL("Invalid sequence number. Replication is not possible. You must synchronize the database: " << this->_name )
   }
   else if ( seq == 0)
   {
@@ -117,8 +129,9 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
 
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    DOMAIN_LOG_FATAL( _name << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final)
-    ::wfc_exit_with_error( std::string("Slave replication error. Invalid master responce for '") + this->_name + "'" );
+    DOMAIN_LOG_FATAL( "Slave replication error. Invalid master responce for '" << this->_name << "'"
+      << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final 
+      << " status="<<res->status) 
     return nullptr;
   }
 
@@ -130,12 +143,14 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
     if ( diff > this->_opt.acceptable_loss_seq )
     {
-      DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence '" << this->_name << "': " << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
+      DOMAIN_LOG_FATAL( _name << " Slave not acceptable loss sequence '" << this->_name << "': " 
+                        << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
       return nullptr;
     }
     else if ( diff > 0)
     {
-      PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence '" << this->_name << "' : " << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
+      PREFIXDB_LOG_WARNING( _name << " Slave not acceptable loss sequence '" << this->_name << "' : " 
+                          << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
       _lost_counter += diff;
     } 
     else if ( diff < 0 )
@@ -159,7 +174,10 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   {
     std::lock_guard<mutex_type> lk(_mutex);
     if ( is_started )
+    {
+      // TODO: disableWAL wo.
       this->_db.Write( ::rocksdb::WriteOptions(), batch.get() );
+    }
   }
   this->write_sequence_number_(sn);
 
@@ -264,5 +282,83 @@ uint64_t wrocksdb_slave::read_sequence_number_()
   ofs >> seq;
   return seq;
 }
+
+void wrocksdb_slave::initial_load_() 
+{
+  PREFIXDB_LOG_BEGIN("Start Initial load..." )
+  auto req = std::make_unique<request::create_snapshot>();
+  req->prefix = this->_name;
+  req->release_timeout_s = 3600 * 24;
+  std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
+  _opt.master->create_snapshot( std::move(req), [wthis](response::create_snapshot::ptr res){
+    if ( res->status==common_status::OK )
+    {
+      if (auto pthis = wthis.lock() )
+      {
+        PREFIXDB_LOG_MESSAGE("Snapshot №" << res->snapshot << " created on master " << pthis->_name);
+        pthis->write_sequence_number_( res->last_seq + 1 );
+        pthis->query_initial_range_(res->snapshot, 0);
+      }
+    }
+    else
+    {
+      PREFIXDB_LOG_FATAL("Initial load FAIL: " << res->status );
+    }
+  });
+}
+
+void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
+{
+  auto req = std::make_unique<request::range>();
+  req->prefix = _name;
+  req->snapshot = snapshot;
+  req->offset = offset;
+  req->limit = 1000;
+  std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
+  _opt.master->range( std::move(req), [wthis, snapshot, offset](response::range::ptr res)
+  {
+    if (auto pthis = wthis.lock() )
+    {
+      if ( res->status != common_status::OK || res==nullptr)
+      {
+        PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name  )
+        return;
+      }
+      
+      if (!res->fin)
+        pthis->query_initial_range_(snapshot, offset + 1000);
+    
+      PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+      rocksdb::WriteBatch batch;
+
+      for ( const auto& field : res->fields)
+        batch.Put( field.first, field.second );
+
+      rocksdb::WriteOptions wo;
+      wo.disableWAL = true;
+      pthis->_db.Write( wo, &batch); 
+      PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+      
+      if ( res->fin )
+      {
+        auto req = std::make_unique<request::release_snapshot>();
+        req->prefix = pthis->_name;
+        req->snapshot = snapshot; 
+        PREFIXDB_LOG_BEGIN("Release snapshot " << snapshot << " " << pthis->_name)
+        
+        pthis->_opt.master->release_snapshot(std::move(req), [wthis](response::release_snapshot::ptr)
+        {
+          if (auto pthis = wthis.lock() )
+          {
+            PREFIXDB_LOG_END("Release snapshot " << pthis->_name)
+            pthis->start_();
+          }
+        });
+        
+      }
+    }
+  });
+}
+
 
 }}
