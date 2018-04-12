@@ -17,13 +17,31 @@ void prefixdb::start()
   if ( this->has_arg("restore") )  
     return this->restore_();
   this->open_prefixdb();
-  _impl->start();
+  if ( _impl!=nullptr )
+    _impl->start();
 }
 
 
 void prefixdb::open_prefixdb()
 {
-  auto opt = this->options();
+  options_type opt = this->options();
+  
+  if ( this->has_arg("load") )  
+  {
+    if ( opt.slave.enabled )
+    {
+      opt.slave.initial_load = true;
+    
+      if ( size_t size = this->get_arg_t<size_t>("load") )  
+        opt.slave.initial_range = size;
+    }
+    else
+    {
+      PREFIXDB_LOG_FATAL("For initial load enable slave (slave.enabled=true) ")
+      return;
+    }
+  }
+
   opt.args.workflow = this->get_workflow();
   
   if ( _impl == nullptr )
@@ -243,7 +261,7 @@ void prefixdb::restore_()
   
   if ( !db->restore() )
   {
-    wfc_exit_with_error("restore fail");
+    PREFIXDB_LOG_FATAL("restore fail")
     return;
   }
   db->stop();
