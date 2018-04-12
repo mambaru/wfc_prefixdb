@@ -258,7 +258,11 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
       auto req1 = std::make_unique<request::detach_prefixes>();
       req1->prefixes.push_back(prefix);
       req1->deny_timeout_s = req->deny_timeout_s;
-      db->detach_prefixes( std::move(req1), [db](response::detach_prefixes::ptr){/*захватываем db, на случай если detach_prefixes работает асинхронно*/});
+      db->detach_prefixes( 
+        std::move(req1), 
+        [db](response::detach_prefixes::ptr){
+          /*захватываем db, на случай если detach_prefixes работает асинхронно*/
+        });
       
       std::lock_guard<std::mutex> lk(_mutex);
       if ( req->deny_timeout_s == 0)
@@ -268,7 +272,7 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
       else
       {
         _db_map[prefix]=nullptr;
-        _flow->create_timer( 
+        _flow->safe_post( 
           std::chrono::seconds(req->deny_timeout_s), 
           [this,prefix]()->bool 
           { 
@@ -745,7 +749,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
   
   if ( _factory == nullptr )
   {
-    DOMAIN_LOG_ERROR("multidb не сконфигурирован!")
+    DOMAIN_LOG_FATAL("multidb is not configured!")
     return nullptr;
   }
   
