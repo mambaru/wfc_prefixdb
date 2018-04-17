@@ -392,6 +392,7 @@ void wrocksdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 
 void wrocksdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
+#warning Попробать SliceParts для частичного слияния (начальное значение + операция )
   this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
 }
 

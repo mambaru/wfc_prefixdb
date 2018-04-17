@@ -90,6 +90,7 @@ bool merge_operator::FullMergeV2(
 ) const
 try
 {
+  
   PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 merge_in.existing_value: " << 
       (merge_in.existing_value!=nullptr ? merge_in.existing_value->ToString() : std::string("nullptr") )
     << " operands: " << 
@@ -128,8 +129,9 @@ try
   } 
   
   merge_out->new_value.clear();
-  
+  // merge_out->existing_operand.clear();
   PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 operands: " << updates.size())
+  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 existing_operand: '" << merge_out->existing_operand.ToString() << "'")
   switch( mode )
   {
     case merge_mode::setnx:
@@ -160,7 +162,11 @@ try
       COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << merge_out->new_value  )
   } // switch( mode )
 
-  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 Done!")
+  /*!*/
+  //merge_out->existing_operand = merge_out->new_value;
+  //merge_out->new_value.clear();
+  /*!*/
+  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 Done!" )
   return true;
 }
 catch(std::exception e)
@@ -198,7 +204,9 @@ bool merge_operator::PartialMerge(const rocksdb::Slice& key,
                                 std::string* new_value,
                                 rocksdb::Logger* /*logger*/) const 
 {
-  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge "<< key.ToString()<< ": " << left_operand.ToString() << " ws " << right_operand.ToString())
+  return false;
+  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge "<< key.ToString()<< ": " 
+                     << left_operand.ToString() << " ws " << right_operand.ToString())
   
   merge mrg1;
   merge mrg2;
@@ -208,7 +216,7 @@ bool merge_operator::PartialMerge(const rocksdb::Slice& key,
   
   if (mrg2.mode != mrg1.mode)
   {
-    *new_value = right_operand.ToString();
+    //*new_value = right_operand.ToString();
     PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge FAIL -1- ")
     return false;
   }
@@ -223,7 +231,7 @@ bool merge_operator::PartialMerge(const rocksdb::Slice& key,
       PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge FAIL -2- : " )
       return false;
   }
-  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge Done!")
+  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge Done! " << *new_value)
   return true;
   /*
   rocksdb::Slice existing_value;
