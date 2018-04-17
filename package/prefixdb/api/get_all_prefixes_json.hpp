@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/api/get_all_prefixes.hpp>
-#include <prefixdb/api/aux/common_status_json.hpp>
+#include <prefixdb/api/common_status_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {

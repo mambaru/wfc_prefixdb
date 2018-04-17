@@ -16,6 +16,7 @@ void prefixdb::start()
 {
   if ( this->has_arg("restore") )  
     return this->restore_();
+  
   this->open_prefixdb();
   if ( _impl!=nullptr )
     _impl->start();
@@ -40,6 +41,12 @@ void prefixdb::open_prefixdb()
       PREFIXDB_LOG_FATAL("For initial load enable slave (slave.enabled=true) ")
       return;
     }
+  }
+  
+  if ( this->has_arg("repair") )  
+  {
+    opt.auto_repair = this->get_arg_t<bool>("repair");
+    PREFIXDB_LOG_MESSAGE("Enable repair " << opt.auto_repair)
   }
 
   opt.args.workflow = this->get_workflow();

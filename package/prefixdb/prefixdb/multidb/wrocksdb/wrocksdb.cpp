@@ -225,6 +225,13 @@ wrocksdb::snapshot_ptr wrocksdb::find_snapshot_(size_t id) const
   return nullptr;
 }
 
+std::string wrocksdb::get_property(const std::string& name) const 
+{
+  std::string res;
+  _db->GetProperty(name, &res);
+  return res;
+}
+
 size_t wrocksdb::create_snapshot_(size_t *seq_num)
 {
   auto db = _db;
@@ -232,15 +239,23 @@ size_t wrocksdb::create_snapshot_(size_t *seq_num)
   
   snapshot_ptr ss = db->GetSnapshot();
   if ( ss == nullptr )
+  {
+    PREFIXDB_LOG_ERROR("Create snapshot FAIL") 
     return 0;
+  }
 
   if ( seq_num!=nullptr )
     *seq_num = ss->GetSequenceNumber();
   
-  std::lock_guard<std::mutex> lk(_mutex);
-  ++_snapshot_counter;
-  _snapshot_map.emplace(_snapshot_counter, ss);
-  PREFIXDB_LOG_MESSAGE( "Create snapshot №" << _snapshot_counter << " total=" << _snapshot_map.size() )
+  size_t size = 0;
+  {
+    std::lock_guard<std::mutex> lk(_mutex);
+    ++_snapshot_counter;
+    _snapshot_map.emplace(_snapshot_counter, ss);
+    size = _snapshot_map.size();
+  }
+  PREFIXDB_LOG_MESSAGE( _name << ". Create snapshot №" << _snapshot_counter << ", snapshot count " << size << " rocksdb::DB::kNumSnapshots=" 
+                      << this->get_property(rocksdb::DB::Properties::kNumSnapshots) )
   return _snapshot_counter;
 }
 
@@ -392,7 +407,6 @@ void wrocksdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 
 void wrocksdb::inc( request::inc::ptr req, response::inc::handler cb) 
 {
-#warning Попробать SliceParts для частичного слияния (начальное значение + операция )
   this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
 }
 
@@ -472,10 +486,8 @@ void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_a
 void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response::detach_prefixes::handler cb)
 {
   auto db = _db;
-  
   if ( db.use_count() > 2 )
   {
-    PREFIXDB_LOG_DEBUG("detach_prefixes db.use_count()=" << db.use_count() )
     db.reset();
     std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
     _flow->safe_post(
@@ -488,6 +500,8 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
   }
  
   this->stop_();
+
+  PREFIXDB_LOG_MESSAGE("Detach Prefix " << _name)
   
   if ( !_conf.detach_path.empty() )
   {
@@ -507,6 +521,7 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
 
 void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response::attach_prefixes::handler cb)
 {
+  PREFIXDB_LOG_MESSAGE("Attach Prefixes " << _name)
   if ( cb!=nullptr ) cb(nullptr);
 }
 
@@ -571,35 +586,39 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 
 void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) 
 {
-  bool compact_res = false;
-  if (req->from.empty() && req->to.empty() )
-  {
-    compact_res = this->compact();
-    PREFIXDB_LOG_DEBUG("wrocksdb::compact_prefix compact_res=" << compact_res)
-  }
-  else
-  {
-    typedef ::rocksdb::Slice slice_type;
-    typedef std::unique_ptr<slice_type> slice_ptr;
-    slice_ptr fromptr = nullptr;
-    slice_ptr toptr = nullptr;
-    if ( !req->from.empty() )
-      fromptr = std::make_unique<slice_type>(req->from);
-    if ( !req->to.empty() )
-      toptr = std::make_unique<slice_type>(req->to);
-    
-    if (auto db = _db)
+  auto preq = std::make_shared<request::compact_prefix>( std::move(*req) );
+  std::thread([preq, this, cb](){
+    PREFIXDB_LOG_BEGIN("Manual Compaction " << this->_name);
+    bool compact_res = false;
+    if (preq->from.empty() && preq->to.empty() )
     {
-      ::rocksdb::CompactRangeOptions opt;
-      ::rocksdb::Status status = db->CompactRange( opt, fromptr.get(), toptr.get() );
-      compact_res = status.ok();
+      compact_res = this->compact();
     }
-  }
-  
-  auto res = std::make_unique<response::compact_prefix>();
-  res->prefix = std::move(req->prefix);
-  res->status = compact_res ? common_status::OK : common_status::CompactFail;
-  cb( std::move(res) );
+    else
+    {
+      typedef ::rocksdb::Slice slice_type;
+      typedef std::unique_ptr<slice_type> slice_ptr;
+      slice_ptr fromptr = nullptr;
+      slice_ptr toptr = nullptr;
+      if ( !preq->from.empty() )
+        fromptr = std::make_unique<slice_type>(preq->from);
+      if ( !preq->to.empty() )
+        toptr = std::make_unique<slice_type>(preq->to);
+      
+      if (auto db = _db)
+      {
+        ::rocksdb::CompactRangeOptions opt;
+        ::rocksdb::Status status = db->CompactRange( opt, fromptr.get(), toptr.get() );
+        compact_res = status.ok();
+      }
+    }
+    
+    auto res = std::make_unique<response::compact_prefix>();
+    res->prefix = std::move(preq->prefix);
+    res->status = compact_res ? common_status::OK : common_status::CompactFail;
+    cb( std::move(res) );
+    PREFIXDB_LOG_END("Manual Compaction " << this->_name);
+  }).detach(); // thread
 }
 
 void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) 
@@ -621,7 +640,9 @@ void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::cre
     }
   }
   else
+  {
     res->status = common_status::CreateSnapshotFail;
+  }
   cb( std::move(res) );
 }
 
@@ -653,7 +674,7 @@ bool wrocksdb::backup()
   }
   else
   {
-    COMMON_LOG_MESSAGE("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
+    COMMON_LOG_ERROR("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
   }
   
   status = _backup->GarbageCollect();
@@ -663,7 +684,7 @@ bool wrocksdb::backup()
   }
   else
   {
-    COMMON_LOG_MESSAGE( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
+    COMMON_LOG_ERROR( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
   }
   
   COMMON_LOG_BEGIN("CreateNewBackup...")
@@ -680,7 +701,7 @@ bool wrocksdb::backup()
   }
   else
   {
-    COMMON_LOG_MESSAGE("Create Backup ERROR for " << _name << ": " << status.ToString() )
+    COMMON_LOG_ERROR("Create Backup ERROR for " << _name << ": " << status.ToString() )
     std::string tmp = _conf.backup.path + ".bak";
     std::string msg;
     delete_dir(tmp, msg);
@@ -757,16 +778,20 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
   ::rocksdb::Status status = db->PauseBackgroundWork();
   if ( status.ok() )
   {
-    PREFIXDB_LOG_BEGIN("Delay Background" )
+    PREFIXDB_LOG_BEGIN("Delay Background. kIsWriteStopped==" << this->get_property(rocksdb::DB::Properties::kIsWriteStopped) )
     bool force = req->contunue_force;
     std::weak_ptr<db_type> wdb = db;
     auto cb_fun = [wdb, force]()
     {
       if ( auto pdb = wdb.lock() )
+      {
         while ( pdb->ContinueBackgroundWork().ok() && force );
-      PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork] " )
+        std::string val;
+        pdb->GetProperty(rocksdb::DB::Properties::kIsWriteStopped, &val);
+        PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork]. kIsWriteStopped==" << val )
+      }
     };
-    _flow->post( std::chrono::seconds(req->delay_timeout_s), cb_fun, cb_fun);
+    _flow->safe_post( std::chrono::seconds(req->delay_timeout_s), cb_fun);
   }
   else
   {
@@ -782,8 +807,15 @@ void wrocksdb::continue_background( request::continue_background::ptr req, respo
   auto res = std::make_unique<response::continue_background>();
   if ( auto db = _db )
   {
-    while ( db->ContinueBackgroundWork().ok() && req->force );
+    ::rocksdb::Status status;
+    do
+    {
+      status = db->ContinueBackgroundWork();
+      PREFIXDB_LOG_DEBUG("ContinueBackgroundWork: " << status.ToString())
+    }
+    while ( status.ok() && req->force );
   }
+  PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork]. kIsWriteStopped==" << this->get_property(rocksdb::DB::Properties::kIsWriteStopped) )
   if ( cb != nullptr ) 
     cb( std::move(res) );  
 }

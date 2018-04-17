@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/api/aux/common_status.hpp>
+#include <prefixdb/api/common_status.hpp>
 #include <memory>
 #include <string>
 #include <functional>

@@ -1,6 +1,7 @@
 
 
 #include "prefixdb_cmd.hpp"
+#include "../api/common_status_json.hpp"
 #include <sstream>
 #include <string>
 #include <iostream>
@@ -18,10 +19,10 @@ namespace
     auto req = std::make_unique<request::delay_background>();
     req->delay_timeout_s = delay_s;
     req->contunue_force = force;
-    db->delay_background(std::move(req), [handler, delay_s, force](response::delay_background::ptr)
+    db->delay_background(std::move(req), [handler, delay_s, force](response::delay_background::ptr res)
     {
       std::stringstream ss;
-      ss << "OK. Background delayed on " << delay_s << " seconds. force=" << force;
+      ss << res->status << ". Backgrounds delayed on " << delay_s << " seconds. force=" << force;
       handler( ::iow::io::make(ss.str()) );
     });
   }
@@ -31,12 +32,12 @@ namespace
     bool force = false;
     
     ss >> force;
-    auto req = std::make_unique<request::delay_background>();
-    req->contunue_force = force;
-    db->delay_background(std::move(req), [handler, force](response::delay_background::ptr)
+    auto req = std::make_unique<request::continue_background>();
+    req->force = force;
+    db->continue_background(std::move(req), [handler, force](response::continue_background::ptr res)
     {
       std::stringstream ss;
-      ss << "OK. Background continue work. force=" << force;
+      ss << res->status << ". Continue backgrounds. force=" << force;
       handler( ::iow::io::make(ss.str()) );
     });
   }
@@ -57,10 +58,10 @@ namespace
       req->prefixes.push_back(prefix);
     }
     
-    db->detach_prefixes( std::move(req), [handler, deny_timeout](response::detach_prefixes::ptr)
+    db->detach_prefixes( std::move(req), [handler, deny_timeout](response::detach_prefixes::ptr res)
     {
       std::stringstream ss;
-      ss << "OK. Prefixes detached. Deny timeout " << deny_timeout << " seconds. ";
+      ss << res->status << ". Prefixes detached. Deny timeout " << deny_timeout << " seconds. ";
       handler( ::iow::io::make(ss.str()) );
     } );
   }
@@ -75,7 +76,7 @@ namespace
       {
         ss << preffix << std::endl;
       }
-      ss << "OK";
+      ss << res->status;
       handler( ::iow::io::make(ss.str()) );
     } );
   }
@@ -98,7 +99,7 @@ namespace
       {
         oss << field.first << "=" << field.second << std::endl;
       }
-      oss << "OK";
+      oss << res->status;
       handler( ::iow::io::make(oss.str()) );
     } );
   }
@@ -124,7 +125,7 @@ namespace
       {
         oss << field.first << "=" << field.second << std::endl;
       }
-      oss << "OK";
+      oss << res->status;
       handler( ::iow::io::make(oss.str()) );
     } );
   }
@@ -157,10 +158,7 @@ namespace
     param << "{\"inc\":"<< inc << ",\"val\":" << val << "}";
     req->fields.back().first = key;
     req->fields.back().second = param.str();
-    /*if ( ss ) { req->fields.back().first = val; ss >> val; }
-    if ( ss ) { req->fields.back().second = val; } 
-    */
-
+    
     db->inc( std::move(req), [handler](response::inc::ptr )
     {
       handler( ::iow::io::make("OK") );
@@ -201,7 +199,7 @@ namespace
       {
         oss << field.first << "=" << field.second << std::endl;
       }
-      oss << "OK";
+      oss << res->status;
       handler( ::iow::io::make(oss.str()) );
     } );
   }
@@ -238,7 +236,6 @@ namespace
     ss >> cmd;
     for (auto hlp: help_str)
     {
-      //std::cout << cmd << ":" << std::string(hlp[0]) << ":" << std::string(hlp[1]) << std::endl;
       if ( cmd.empty() || cmd==std::string(hlp[0]) || cmd==std::string(hlp[1]) )
       {
         if ( !std::string(hlp[0]).empty() )
@@ -263,7 +260,7 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   ss << std::string( d->begin(), d->end() );
   std::string method;
   ss >> method;
-  //std::cout << "method=" << method  << std::endl;
+  
   if ( method == "help" || method == "h")
   {
     help_(db, ss, std::move(handler) );

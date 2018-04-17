@@ -90,13 +90,6 @@ bool merge_operator::FullMergeV2(
 ) const
 try
 {
-  
-  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 merge_in.existing_value: " << 
-      (merge_in.existing_value!=nullptr ? merge_in.existing_value->ToString() : std::string("nullptr") )
-    << " operands: " << 
-      (merge_in.operand_list.empty() ? std::string("EMPTY") :
-      merge_in.operand_list[0].ToString()) )
-  
   const auto& operands = merge_in.operand_list;
   if ( operands.empty() )
     return true;
@@ -108,7 +101,6 @@ try
   updates.reserve(operands.size());
   for (size_t i = 0; i < operands.size(); ++i)
   {
-    //PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 OPERAND: " << i)
     if ( helper::unserialize<merge_json>(mrg, operands[i], false) )
     {
       if ( mrg.mode == merge_mode::setnx && mode!=merge_mode::none )
@@ -129,9 +121,7 @@ try
   } 
   
   merge_out->new_value.clear();
-  // merge_out->existing_operand.clear();
-  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 operands: " << updates.size())
-  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 existing_operand: '" << merge_out->existing_operand.ToString() << "'")
+  
   switch( mode )
   {
     case merge_mode::setnx:
@@ -139,10 +129,6 @@ try
       break;
     case merge_mode::inc:
       this->inc_(merge_in.existing_value,    updates, merge_out->new_value ); 
-      PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 inc: " 
-        << 
-        (merge_in.existing_value!=nullptr ? merge_in.existing_value->ToString() : std::string("nullptr") )
-        << " -> " << merge_out->new_value)
       break;
     case merge_mode::add:
       this->add_(merge_in.existing_value,    updates, merge_out->new_value ); 
@@ -162,11 +148,6 @@ try
       COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << merge_out->new_value  )
   } // switch( mode )
 
-  /*!*/
-  //merge_out->existing_operand = merge_out->new_value;
-  //merge_out->new_value.clear();
-  /*!*/
-  PREFIXDB_LOG_DEBUG("bool merge_operator::FullMergeV2 Done!" )
   return true;
 }
 catch(std::exception e)
@@ -197,17 +178,15 @@ const char* merge_operator::Name() const
   return "PreffixDBMergeOperator";
 }
 
-
+/*
 bool merge_operator::PartialMerge(const rocksdb::Slice& key,
                                 const rocksdb::Slice& left_operand,
                                 const rocksdb::Slice& right_operand,
                                 std::string* new_value,
-                                rocksdb::Logger* /*logger*/) const 
+                                rocksdb::Logger* logger) const 
 {
   return false;
-  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge "<< key.ToString()<< ": " 
-                     << left_operand.ToString() << " ws " << right_operand.ToString())
-  
+ 
   merge mrg1;
   merge mrg2;
   
@@ -216,9 +195,7 @@ bool merge_operator::PartialMerge(const rocksdb::Slice& key,
   
   if (mrg2.mode != mrg1.mode)
   {
-    //*new_value = right_operand.ToString();
-    PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge FAIL -1- ")
-    return false;
+        return false;
   }
   
   switch( mrg2.mode )
@@ -228,38 +205,21 @@ bool merge_operator::PartialMerge(const rocksdb::Slice& key,
       break;
     default:
       *new_value = right_operand.ToString();
-      PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge FAIL -2- : " )
       return false;
   }
-  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge Done! " << *new_value)
   return true;
-  /*
-  rocksdb::Slice existing_value;
-  if ( !helper::unserialize<merge_json>(mrg1, left_operand, true) )
-    existing_value=rocksdb::Slice(left_operand);
-  else
-    updates.push_back(std::move(mrg2.raw));
-  
-  if ( !helper::unserialize<merge_json>(mrg2, right_operand, false) )
-    return false;
-  
-  updates.push_back(std::move(mrg2.raw));
-  
-  this->inc_(&existing_value,    updates, *new_value ); 
-  PREFIXDB_LOG_DEBUG("merge_operator::PartialMerge result: " << *new_value)
-  return true;
-  */
-  
 }
-                                
+*/                                
 
+                                /*
 bool merge_operator::ShouldMerge(const std::vector<slice_type>& operands) const
 {
   PREFIXDB_LOG_FATAL("merge_operator::ShouldMerge operands=" << operands.size() );
   abort();
   return false;
 }
-
+*/
+                                /*
 bool merge_operator::AllowSingleOperand() const 
 {
   PREFIXDB_LOG_FATAL("merge_operator::AllowSingleOperand()" );
@@ -267,6 +227,7 @@ bool merge_operator::AllowSingleOperand() const
   return true; 
 
 }
+*/
 
 void merge_operator::setnx_(const slice_type* value, const update_list& operands, std::string& result) const
 {
@@ -305,6 +266,7 @@ void merge_operator::inc_(const slice_type* value, const update_list& operands, 
   intser()( num, std::inserter(result, result.end()) );
 }
 
+/*
 void merge_operator::partial_inc_(merge&& mrg1, merge&& mrg2, std::string& result) const
 {
   inc_params oper1;
@@ -320,7 +282,7 @@ void merge_operator::partial_inc_(merge&& mrg1, merge&& mrg2, std::string& resul
   result.reserve(mrg2.raw.size() + 32);
   result.clear();
   merge_json::serializer()(mrg2, std::back_inserter(result));
-}
+}*/
 
 void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool exist) const
 {

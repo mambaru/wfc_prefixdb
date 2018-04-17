@@ -233,6 +233,7 @@ void multidb::attach_prefixes( request::attach_prefixes::ptr req, response::atta
     auto itr = this->_db_map.find(prefix);
     if ( itr != this->_db_map.end() && itr->second == nullptr )
     {
+      PREFIXDB_LOG_MESSAGE("Attach Prefix: " << prefix)
       ready = true;
       _db_map.erase(itr);
       if ( req->opendb )
@@ -410,6 +411,7 @@ void multidb::stop()
 
 bool multidb::backup()
 {
+  PREFIXDB_LOG_BEGIN("DB Backup...")
   if ( !::boost::filesystem::exists(_opt.backup.path) )
   {
     ::boost::system::error_code ec;
@@ -442,6 +444,7 @@ bool multidb::backup()
       count += result;
     }
   }
+  PREFIXDB_LOG_BEGIN("DB Backup DONE! " << count  )
   return count == prefixes.size();
 }
 
@@ -628,6 +631,7 @@ void multidb::configure_backup_timer_()
   
   if ( _opt.backup.enabled &&  !_opt.backup.path.empty() )
   {
+    DEBUG_LOG_MESSAGE("Backup timer start '" << _opt.backup.start_time  << "' ws period " << _opt.backup.period_s << " second")
     _backup_timer = _flow->create_timer(
       _opt.backup.start_time,
       std::chrono::seconds( _opt.backup.period_s ),

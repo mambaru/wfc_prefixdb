@@ -1,6 +1,6 @@
 #pragma once
 
-#include <prefixdb/api/aux/common_status.hpp>
+#include <prefixdb/api/common_status.hpp>
 #include <wfc/json.hpp>
 namespace wamba { namespace prefixdb {
 
@@ -53,7 +53,14 @@ struct common_status_json
 namespace std{
   inline std::ostream& operator<< (std::ostream& os, wamba::prefixdb::common_status cs)
   {
-    wamba::prefixdb::common_status_json::serializer()(cs, ostreambuf_iterator<char>(os));
+    std::string status;
+    wamba::prefixdb::common_status_json::serializer()(cs, std::back_inserter(status) );
+    if (!status.empty() && status[0]=='"')
+      status.erase(status.begin());
+    if (!status.empty() && *status.rbegin()=='"')
+      status.pop_back();
+    
+    os << status;
     return os;
   }
 }

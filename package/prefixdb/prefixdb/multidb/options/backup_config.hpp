@@ -12,12 +12,13 @@ struct backup_config
   // Путь к бэкапу базы данных для всех префиксов
   std::string path = "";
   
-  std::string start_time  = "03:00:00";
+  /*03:00:00*/
+  std::string start_time  = "";
   
-  time_t period_s = 600;
+  time_t period_s = 0;
   
   // количество сохраненных backup-ов(точек с которых можно восстановиться ) (создаються каждые period_s)
-  size_t depth = 10;
+  size_t depth = 1;
   
   // не реализовано
   /*time_t start_delay_s = 0;*/

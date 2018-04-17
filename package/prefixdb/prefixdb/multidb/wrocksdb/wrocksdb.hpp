@@ -63,6 +63,7 @@ public:
   virtual bool archive(std::string path) override;
   
   
+  std::string get_property(const std::string& name) const ;
 
 private:
 

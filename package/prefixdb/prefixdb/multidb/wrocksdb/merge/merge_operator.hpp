@@ -33,25 +33,26 @@ public:
                            MergeOperationOutput* merge_out) const override; 
 
   
-  virtual bool AllowSingleOperand() const override ;
+  /*virtual bool AllowSingleOperand() const override ;*/
 
-  virtual bool PartialMerge(const rocksdb::Slice& key,
+  /*virtual bool PartialMerge(const rocksdb::Slice& key,
                                 const rocksdb::Slice& left_operand,
                                 const rocksdb::Slice& right_operand,
                                 std::string* new_value,
                                 rocksdb::Logger* logger) const override ;
+                                */
   // Allows to control when to invoke a full merge during Get.
   // This could be used to limit the number of merge operands that are looked at
   // during a point lookup, thereby helping in limiting the number of levels to
   // read from.
   // Doesn't help with iterators.
-  // For TTL
-  virtual bool ShouldMerge(const std::vector<slice_type>& /*operands*/) const override;
+  
+  /*virtual bool ShouldMerge(const std::vector<slice_type>& ) const override;*/
 private:
 
   void setnx_(const slice_type* value, const update_list& operands, std::string& result) const;
   void inc_(const slice_type* value, const update_list& operands, std::string& result) const;
-  void partial_inc_(merge&& mrg1, merge&& mrg2, std::string& result) const;
+  /*void partial_inc_(merge&& mrg1, merge&& mrg2, std::string& result) const;*/
   void inc_operand_(const std::string& operand, int64_t& num, bool exist) const;
 
   void add_(const slice_type* value, const update_list& operands, std::string& result) const;

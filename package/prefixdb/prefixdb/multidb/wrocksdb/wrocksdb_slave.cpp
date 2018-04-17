@@ -4,7 +4,7 @@
 #include "../aux/base64.hpp"
 
 #include <prefixdb/logger.hpp>
-#include <prefixdb/api/aux/common_status_json.hpp>
+#include <prefixdb/api/common_status_json.hpp>
 #include <wfc/wfc_exit.hpp>
 
 

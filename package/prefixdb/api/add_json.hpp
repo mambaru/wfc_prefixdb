@@ -1,8 +1,8 @@
 #pragma once
 
 #include <prefixdb/api/add.hpp>
-#include <prefixdb/api/aux/fields_json.hpp>
-#include <prefixdb/api/aux/common_status_json.hpp>
+#include <prefixdb/api/fields_json.hpp>
+#include <prefixdb/api/common_status_json.hpp>
 #include <wfc/json.hpp>
 
 namespace wamba { namespace prefixdb {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <prefixdb/api/aux/common_status.hpp>
-#include <prefixdb/api/aux/fields.hpp>
+#include <prefixdb/api/common_status.hpp>
+#include <prefixdb/api/fields.hpp>
 #include <memory>
 #include <string>
 

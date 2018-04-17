@@ -113,7 +113,6 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
   if ( !conf.wal_path.empty() ) conf.wal_path = _context->config.wal_path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
-  //else conf.detach_path = _context->config.detach_path + "/" + dbname + "_detach";
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
 
@@ -141,10 +140,14 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     if ( conf.auto_repair )
     {
       status = ::rocksdb::RepairDB(conf.path, options );
-      PREFIXDB_LOG_MESSAGE("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
+      PREFIXDB_LOG_WARNING("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
       if ( status.ok() )
       {
         status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
+        if ( status.ok() )
+        {
+          PREFIXDB_LOG_MESSAGE ("Repair DB '" << dbname << "' :" << status.ToString());
+        }
       }
     }
   }
@@ -153,7 +156,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     if ( conf.abort_if_open_error )
     {
-      DOMAIN_LOG_FATAL("Can not open DB " << conf.path);
+      DOMAIN_LOG_FATAL("Can not open DB " << conf.path << " " << status.ToString());
     }
     return nullptr;
   }
@@ -166,23 +169,26 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     delete handles[0];
   }
 
-  PREFIXDB_LOG_END("rocksdb::DB::Open '" << dbname << "' " )
+  PREFIXDB_LOG_END("rocksdb::DB::Open '" << dbname << "' " << status.ToString() )
 
   if ( status.ok() )
   {
-    COMMON_LOG_MESSAGE("Backup path: " << conf.backup.path)
-    ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
-    ::rocksdb::BackupEngine* backup_engine;
-    status = ::rocksdb::BackupEngine::Open( 
-      _context->env, 
-      backup_opt, 
-      &backup_engine
-    );
-
-    //auto bdb = new ::rocksdb::BackupEngine(db, backup_opt);
-    if ( !conf.restore.path.empty() )
+    ::rocksdb::BackupEngine* backup_engine = nullptr;
+    if ( !conf.backup.path.empty() &&  conf.backup.enabled )
     {
-      ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
+      COMMON_LOG_MESSAGE("Backup path: " << conf.backup.path)
+      ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
+      
+      status = ::rocksdb::BackupEngine::Open( 
+        _context->env, 
+        backup_opt, 
+        &backup_engine
+      );
+
+      if ( !conf.restore.path.empty() )
+      {
+        ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
+      }
     }
     auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, db, backup_engine);
     return pwrdb;
@@ -209,7 +215,7 @@ wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbnam
       return std::make_shared< wrocksdb_restore >(dbname, conf, backup_engine);
   }
   return nullptr;
-  
 }
+
 
 }}
