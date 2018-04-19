@@ -25,7 +25,7 @@ public:
   typedef std::vector<std::string> update_list;
   typedef std::function< void(const std::string& key)> compact_handler;
   
-  merge_operator(size_t array_limit, size_t packed_limit );
+  merge_operator(const std::string& name, size_t array_limit, size_t packed_limit );
   
   virtual const char* Name() const override;
  
@@ -61,7 +61,8 @@ private:
   void packed_(const slice_type* value, const update_list& operands, std::string& result) const;
   void packed_operand_(const std::string& operand, packed_t& pck) const;
   void packed_inc_(const packed_field_params& upd, std::string& result) const;
-  
+
+  std::string _name;
   std::atomic<size_t> _array_limit;
   std::atomic<size_t> _packed_limit;
 };

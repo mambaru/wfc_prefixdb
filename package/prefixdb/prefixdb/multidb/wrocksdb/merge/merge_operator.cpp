@@ -77,8 +77,8 @@ namespace helper{
   }
 }
   
-merge_operator::merge_operator(size_t array_limit, size_t packed_limit)
- 
+merge_operator::merge_operator(const std::string& name, size_t array_limit, size_t packed_limit)
+  : _name(name)
 {
   _array_limit = array_limit;
   _packed_limit = packed_limit;
@@ -91,6 +91,7 @@ bool merge_operator::FullMergeV2(
 try
 {
   const auto& operands = merge_in.operand_list;
+  DEBUG_LOG_MESSAGE("merge_operator::FullMergeV2 operands.size()=" << operands.size() )
   if ( operands.empty() )
     return true;
   
@@ -101,6 +102,7 @@ try
   updates.reserve(operands.size());
   for (size_t i = 0; i < operands.size(); ++i)
   {
+    DEBUG_LOG_MESSAGE("merge_operator::FullMergeV2 operands[" << i << "]=" << operands[i].ToString() )
     if ( helper::unserialize<merge_json>(mrg, operands[i], false) )
     {
       if ( mrg.mode == merge_mode::setnx && mode!=merge_mode::none )
@@ -116,7 +118,7 @@ try
     }
     else
     {
-      PREFIXDB_LOG_WARNING("Invalid merge operator: " << operands[i].ToString() )
+      PREFIXDB_LOG_WARNING(_name << ": Invalid merge operator: " << merge_in.key.ToString() << "='" << operands[i].ToString() )
     }
   } 
   
@@ -137,15 +139,18 @@ try
       this->packed_(merge_in.existing_value, updates, merge_out->new_value ); 
       break;
     default:
+      
       if ( !updates.empty() )
       {
-        COMMON_LOG_WARNING("merge_operator::Merge: Invalid method merge: " << updates[0]  )
+        COMMON_LOG_WARNING(_name << ": merge_operator::Merge: Invalid method merge: " << merge_in.key.ToString() << "='" << updates[0]  )
       }
+      /*
       if ( merge_in.existing_value!=nullptr )
         merge_out->new_value = merge_in.existing_value->ToString();
-      else
-        merge_out->new_value="\"\"";
-      COMMON_LOG_MESSAGE("merge_operator::Merge: Save old value: " << merge_out->new_value  )
+      else*/
+      merge_out->new_value="\"ERROR\"";
+      COMMON_LOG_MESSAGE(_name << ": merge_operator::Merge: Save old value: " << merge_in.key.ToString() << "='" << merge_out->new_value  )
+      
   } // switch( mode )
 
   return true;

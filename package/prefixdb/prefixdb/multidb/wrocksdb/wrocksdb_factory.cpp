@@ -107,7 +107,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   _context->options.create_if_missing = create_if_missing;
   auto conf = _context->config;
   
-  auto merge = std::make_shared<merge_operator>(conf.array_limit, conf.packed_limit);
+  auto merge = std::make_shared<merge_operator>(dbname, conf.array_limit, conf.packed_limit);
   _context->cdf[0].options.merge_operator = merge;
   
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
