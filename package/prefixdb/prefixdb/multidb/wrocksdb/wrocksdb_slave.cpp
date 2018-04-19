@@ -52,9 +52,11 @@ void wrocksdb_slave::start()
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
-  // TODO: if not initial load
-  initial_load_();
-  //this->start_();
+  
+  if ( _opt.initial_load )
+    initial_load_();
+  else
+    this->start_();
 }
 
 void wrocksdb_slave::stop()
