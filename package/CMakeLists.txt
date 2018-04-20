@@ -31,11 +31,12 @@ add_library(
   ${prefixdb_source_list}
 )
 
-link_directories(${CMAKE_SOURCE_DIR}/luajit-2.0/src)
+#link_directories(${CMAKE_SOURCE_DIR}/luajit-2.0/src)
 #lz4
-target_link_libraries(wfc_prefixdb luajit rocksdb )
-
-add_dependencies(wfc_prefixdb luajit20 facebook-rocksdb )
+#target_link_libraries(wfc_prefixdb luajit rocksdb )
+target_link_libraries(wfc_prefixdb rocksdb )
+#add_dependencies(wfc_prefixdb luajit20 facebook-rocksdb )
+add_dependencies(wfc_prefixdb facebook-rocksdb )
 
 build_info(wfc_prefixdb prefixdb)
 
