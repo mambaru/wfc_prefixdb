@@ -36,9 +36,6 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
 
 void wrocksdb_slave::start()
 {
-  if ( !_opt.enabled )
-    return;
-  
   if ( _opt.master==nullptr )
   {
     PREFIXDB_LOG_WARNING("Slave '" << _name << "' not running. enabled==true but target not set")
@@ -53,11 +50,26 @@ void wrocksdb_slave::start()
   _last_sequence  = 0;
   _lost_counter = 0;
   
+  // Можно загружать при отключенном slave
   if ( _opt.initial_load )
     initial_load_();
   else
     this->start_();
 }
+
+void wrocksdb_slave::start_()
+{
+  if ( !_opt.enabled )
+    return;
+  
+  this->create_updates_requester_();
+  this->create_diff_timer_();
+  this->create_seq_timer_();
+  PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
+  std::lock_guard<mutex_type> lk(_mutex);
+  is_started = true;
+}
+
 
 void wrocksdb_slave::stop()
 {
@@ -71,15 +83,6 @@ void wrocksdb_slave::stop()
   _opt.timer->release_timer(_diff_timer_id);
 }
 
-void wrocksdb_slave::start_()
-{
-  this->create_updates_requester_();
-  this->create_diff_timer_();
-  this->create_seq_timer_();
-  PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
-  std::lock_guard<mutex_type> lk(_mutex);
-  is_started = true;
-}
 
 void wrocksdb_slave::create_updates_requester_()
 {
@@ -346,7 +349,14 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
       PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name )
       if ( res->status != common_status::OK || res==nullptr)
       {
-        PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name  )
+        if ( res==nullptr )
+        {
+          PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name << ": Bad Gateway")
+        }
+        else
+        {
+          PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name << ": " << res->status)
+        }
         return;
       }
       
