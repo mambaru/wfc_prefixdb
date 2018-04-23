@@ -645,20 +645,21 @@ void multidb::configure_prefix_reqester_()
 {
   _flow->release_timer(_prefix_reqester);
 
-  if ( !_opt.slave.enabled ) 
+  if ( !_opt.slave.enabled && !_opt.slave.initial_load) 
     return;
 
+  bool enabled = _opt.slave.enabled;
   std::weak_ptr<iprefixdb> wprefixdb = _opt.slave.master;
   _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
   (
     std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
-    [wprefixdb](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)
+    [wprefixdb, enabled](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)
     {
       auto pprefixdb = wprefixdb.lock();
       if (pprefixdb==nullptr)
         return false;
       pprefixdb->get_all_prefixes(std::move(req), callback);
-      return true;
+      return enabled;
     },
     /*this->_opt.slave.master,
     &iprefixdb::get_all_prefixes,*/
