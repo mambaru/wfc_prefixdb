@@ -15,6 +15,7 @@ namespace request
     std::string prefix;
     std::string from;
     std::string to;
+    bool beg = true;
     size_t offset = 0;
     size_t limit = 10;
     size_t snapshot = 0;

@@ -14,6 +14,7 @@ namespace request
     JSON_NAME(prefix)
     JSON_NAME(noval)
     JSON_NAME(snapshot)
+    JSON_NAME(beg)
     JSON_NAME(from)
     JSON_NAME(to)
     JSON_NAME(limit)
@@ -25,6 +26,7 @@ namespace request
         wfc::json::member<n_prefix, range, std::string, &range::prefix>,
         wfc::json::member<n_noval, range, bool, &range::noval>,
         wfc::json::member<n_snapshot,  range, size_t, &range::snapshot>,
+        wfc::json::member<n_beg, range, bool, &range::beg>,
         wfc::json::member<n_from, range, std::string, &range::from>,
         wfc::json::member<n_to, range, std::string, &range::to>,
         wfc::json::member<n_limit, range, size_t, &range::limit>,

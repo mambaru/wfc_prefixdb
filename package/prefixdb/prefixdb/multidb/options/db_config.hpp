@@ -25,7 +25,8 @@ struct db_config
   uint32_t TTL_seconds = 0;
   size_t packed_limit = 0;
   size_t array_limit  = 0;
-  size_t range_limit  = 0; // range.limit
+  // range.limit + range.offset, для защиты от перебора. Нужно использовать from и to
+  size_t range_limit  = 0; 
   
   // Автоматически попытаться востановить базу при ошибке открытия
   bool auto_repair = false;

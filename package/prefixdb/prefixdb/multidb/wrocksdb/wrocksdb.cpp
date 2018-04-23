@@ -548,6 +548,9 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
   {
     // offset
     itr->Seek( req->from );
+    if ( itr->Valid() && req->beg == false )
+      itr->Next(); 
+    
     while ( req->offset && itr->Valid() ) 
     {
       req->offset--; itr->Next(); 

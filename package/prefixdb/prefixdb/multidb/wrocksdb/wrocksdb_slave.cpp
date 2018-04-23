@@ -314,7 +314,7 @@ void wrocksdb_slave::initial_load_()
       {
         PREFIXDB_LOG_MESSAGE("Snapshot №" << res->snapshot << " created on master " << pthis->_name);
         pthis->write_sequence_number_( res->last_seq + 1 );
-        pthis->query_initial_range_(res->snapshot, 0);
+        pthis->query_initial_range_(res->snapshot, "", true);
       }
     }
     else
@@ -327,22 +327,24 @@ void wrocksdb_slave::initial_load_()
       {
         PREFIXDB_LOG_WARNING("Initial load NOT support.")
         if (auto pthis = wthis.lock() )
-          pthis->query_initial_range_(0, 0);
+          pthis->query_initial_range_(0, "", true);
       }
     }
   });
 }
 
-void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
+void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& from, bool beg)
 {
   auto req = std::make_unique<request::range>();
   req->prefix = _name;
   req->snapshot = snapshot;
-  req->offset = offset;
+  req->beg = beg;
+  req->from = from;
+  req->offset = 0;
   req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
-  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", offset: " << offset << ", limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
-  _opt.master->range( std::move(req), [wthis, snapshot, offset](response::range::ptr res)
+  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
+  _opt.master->range( std::move(req), [wthis, snapshot](response::range::ptr res)
   {
     if (auto pthis = wthis.lock() )
     {
@@ -360,8 +362,8 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
         return;
       }
       
-      if (!res->fin)
-        pthis->query_initial_range_(snapshot, offset + pthis->_opt.initial_range);
+      if (!res->fin && !res->fields.empty())
+        pthis->query_initial_range_(snapshot, res->fields.back().first, false);
     
       PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
       rocksdb::WriteBatch batch;

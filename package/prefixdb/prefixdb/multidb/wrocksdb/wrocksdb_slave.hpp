@@ -24,7 +24,7 @@ public:
   
 private:
   void initial_load_();
-  void query_initial_range_(size_t snapshot, size_t offset);
+  void query_initial_range_(size_t snapshot, const std::string& from, bool beg);
   
   void start_();
   
