@@ -189,7 +189,7 @@ void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void multidb::range( request::range::ptr req, response::range::handler cb)
 {
-  if ( this->_opt.range_limit!=0 && (req->limit + req->offset > this->_opt.range_limit) )
+  if ( this->_opt.range_limit!=0 && (req->limit /*+ req->offset*/ > this->_opt.range_limit) )
   {
     send_error<common_status::RangeLimitExceeded, response::range>(std::move(req), std::move(cb) );
     return;

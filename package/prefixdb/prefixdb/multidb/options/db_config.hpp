@@ -25,7 +25,7 @@ struct db_config
   uint32_t TTL_seconds = 0;
   size_t packed_limit = 0;
   size_t array_limit  = 0;
-  size_t range_limit  = 0; // offset + limit
+  size_t range_limit  = 0; // range.limit
   
   // Автоматически попытаться востановить базу при ошибке открытия
   bool auto_repair = false;
