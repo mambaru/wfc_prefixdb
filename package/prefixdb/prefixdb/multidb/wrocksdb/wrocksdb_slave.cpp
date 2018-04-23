@@ -323,6 +323,8 @@ void wrocksdb_slave::initial_load_()
       else
       {
         PREFIXDB_LOG_WARNING("Initial load NOT support.")
+        if (auto pthis = wthis.lock() )
+          pthis->query_initial_range_(0, 0);
       }
     }
   });
@@ -334,7 +336,7 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
   req->prefix = _name;
   req->snapshot = snapshot;
   req->offset = offset;
-  req->limit = 1000;
+  req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
   _opt.master->range( std::move(req), [wthis, snapshot, offset](response::range::ptr res)
   {
@@ -347,7 +349,7 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
       }
       
       if (!res->fin)
-        pthis->query_initial_range_(snapshot, offset + 1000);
+        pthis->query_initial_range_(snapshot, offset + pthis->_opt.initial_range);
     
       PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
       rocksdb::WriteBatch batch;
