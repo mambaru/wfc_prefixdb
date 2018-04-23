@@ -29,18 +29,10 @@ void prefixdb::open_prefixdb()
   
   if ( this->has_arg("load") )  
   {
-    if ( opt.slave.enabled )
-    {
-      opt.slave.initial_load = true;
+    opt.slave.initial_load = true;
     
-      if ( size_t size = this->get_arg_t<size_t>("load") )  
-        opt.slave.initial_range = size;
-    }
-    else
-    {
-      PREFIXDB_LOG_FATAL("For initial load enable slave (slave.enabled=true) ")
-      return;
-    }
+    if ( size_t size = this->get_arg_t<size_t>("load") )  
+      opt.slave.initial_range = size;
   }
   
   if ( this->has_arg("repair") )  
