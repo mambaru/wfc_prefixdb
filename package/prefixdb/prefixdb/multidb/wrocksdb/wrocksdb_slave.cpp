@@ -349,7 +349,7 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
     if (auto pthis = wthis.lock() )
     {
       PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name )
-      if ( res->status != common_status::OK || res==nullptr)
+      if ( res==nullptr || res->status != common_status::OK)
       {
         if ( res==nullptr )
         {
