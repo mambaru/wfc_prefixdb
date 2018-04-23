@@ -338,10 +338,12 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, size_t offset)
   req->offset = offset;
   req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
+  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", offset: " << offset << ", limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
   _opt.master->range( std::move(req), [wthis, snapshot, offset](response::range::ptr res)
   {
     if (auto pthis = wthis.lock() )
     {
+      PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name )
       if ( res->status != common_status::OK || res==nullptr)
       {
         PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name  )
