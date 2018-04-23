@@ -36,14 +36,6 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
 
 void wrocksdb_slave::start()
 {
-  if ( _opt.master==nullptr )
-  {
-    PREFIXDB_LOG_WARNING("Slave '" << _name << "' not running. enabled==true but target not set")
-    return;
-  }
-
-  PREFIXDB_LOG_BEGIN("Start Slave '" << _name << "' ")
-
   _last_update_time = 0;
   _update_counter  = 0;
   _current_differens  = 0;
@@ -61,6 +53,14 @@ void wrocksdb_slave::start_()
 {
   if ( !_opt.enabled )
     return;
+
+  if ( _opt.master==nullptr )
+  {
+    PREFIXDB_LOG_WARNING("Slave '" << _name << "' not running. enabled==true but target not set")
+    return;
+  }
+
+  PREFIXDB_LOG_BEGIN("Start Slave '" << _name << "' ")
   
   this->create_updates_requester_();
   this->create_diff_timer_();
