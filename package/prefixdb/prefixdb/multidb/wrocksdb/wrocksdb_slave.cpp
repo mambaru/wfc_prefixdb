@@ -318,11 +318,11 @@ void wrocksdb_slave::initial_load_()
     {
       if ( res!=nullptr)
       {
-        PREFIXDB_LOG_WARNING("Initial load ERROR: " << res->status )
+        PREFIXDB_LOG_FATAL("Initial load FAIL: " << res->status)
       }
       else
       {
-        PREFIXDB_LOG_FATAL("Initial load FAIL: result == nullptr ")
+        PREFIXDB_LOG_WARNING("Initial load NOT support.")
       }
     }
   });
