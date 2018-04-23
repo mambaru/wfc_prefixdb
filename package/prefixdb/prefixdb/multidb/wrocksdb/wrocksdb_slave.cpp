@@ -305,7 +305,7 @@ void wrocksdb_slave::initial_load_()
   req->release_timeout_s = 3600 * 24;
   std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
   _opt.master->create_snapshot( std::move(req), [wthis](response::create_snapshot::ptr res){
-    if ( res->status==common_status::OK )
+    if ( res!=nullptr && res->status==common_status::OK )
     {
       if (auto pthis = wthis.lock() )
       {
@@ -316,7 +316,14 @@ void wrocksdb_slave::initial_load_()
     }
     else
     {
-      PREFIXDB_LOG_FATAL("Initial load FAIL: " << res->status );
+      if ( res!=nullptr)
+      {
+        PREFIXDB_LOG_WARNING("Initial load ERROR: " << res->status )
+      }
+      else
+      {
+        PREFIXDB_LOG_FATAL("Initial load FAIL: result == nullptr ")
+      }
     }
   });
 }
