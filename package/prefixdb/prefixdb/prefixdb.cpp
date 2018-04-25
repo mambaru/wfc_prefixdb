@@ -35,7 +35,7 @@ void prefixdb::open_prefixdb()
       opt.slave.initial_range = size;
     
     std::string setnx = this->get_arg("setnx");
-    opt.slave.use_setnx = !setnx.empty() && (setnx=="false" || setnx=="0");
+    opt.slave.use_setnx = setnx.empty() || (setnx!="false" && setnx!="0");
   }
   
   if ( this->has_arg("repair") )  
