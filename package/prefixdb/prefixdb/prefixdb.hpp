@@ -46,6 +46,7 @@ public:
   virtual void perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler) override;
 private:
   void restore_();
+  
   std::shared_ptr<multidb> _impl;
 };
 

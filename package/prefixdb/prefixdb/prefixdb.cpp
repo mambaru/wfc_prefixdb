@@ -22,7 +22,6 @@ void prefixdb::start()
     _impl->start();
 }
 
-
 void prefixdb::open_prefixdb()
 {
   options_type opt = this->options();
@@ -33,6 +32,9 @@ void prefixdb::open_prefixdb()
     
     if ( size_t size = this->get_arg_t<size_t>("load") )  
       opt.slave.initial_range = size;
+    
+    std::string setnx = this->get_arg("setnx");
+    opt.slave.use_setnx = !setnx.empty() && (setnx=="false" || setnx=="0");
   }
   
   if ( this->has_arg("repair") )  
@@ -79,6 +81,8 @@ void prefixdb::open_prefixdb()
     }
   }
 }
+
+
 
 
 void prefixdb::stop() 

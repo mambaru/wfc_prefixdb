@@ -365,16 +365,30 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
       if (!res->fin && !res->fields.empty())
         pthis->query_initial_range_(snapshot, res->fields.back().first, false);
     
-      PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
-      rocksdb::WriteBatch batch;
+      if ( !pthis->_opt.use_setnx )
+      {
+        PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+        rocksdb::WriteBatch batch;
 
-      for ( const auto& field : res->fields)
-        batch.Put( field.first, field.second );
+        for ( const auto& field : res->fields)
+          batch.Put( field.first, field.second );
 
-      rocksdb::WriteOptions wo;
-      wo.disableWAL = pthis->_opt.disableWAL;
-      pthis->_db.Write( wo, &batch); 
-      PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+        rocksdb::WriteOptions wo;
+        wo.disableWAL = pthis->_opt.disableWAL;
+        pthis->_db.Write( wo, &batch); 
+        PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+      }
+      else
+      {
+        PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
+        auto req = std::make_unique<request::setnx>();
+        req->prefix = pthis->_name;
+        req->fields.reserve(res->fields.size());
+        for ( const auto& field : res->fields)
+          req->fields.emplace_back( field.first, field.second );
+        pthis->_opt.slave->setnx(std::move(req), nullptr);
+        PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
+      }
       
       if ( res->fin )
       {
