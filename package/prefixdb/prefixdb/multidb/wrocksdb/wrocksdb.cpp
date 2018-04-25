@@ -44,9 +44,6 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup
   , _backup(bk)
 {
   //if ( conf.slave.enabled )
-  auto slave_opt = conf.slave;
-  slave_opt.slave = this->shared_from_this();
-  _slave = std::make_shared<wrocksdb_slave>(name, conf.path, slave_opt, *db);
   _flow = conf.args.workflow;
 }
 
@@ -54,7 +51,11 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup
 void wrocksdb::start( ) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  if ( _slave )  _slave->start();
+  
+  auto slave_opt = _conf.slave;
+  slave_opt.slave = this->shared_from_this();
+  _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, slave_opt, *_db);
+  _slave->start();
 }
 
 void wrocksdb::stop_()
