@@ -25,6 +25,7 @@ void prefixdb::start()
 void prefixdb::open_prefixdb()
 {
   options_type opt = this->options();
+  opt.args.workflow = this->get_workflow();
   
   if ( this->has_arg("load") )  
   {
@@ -42,8 +43,6 @@ void prefixdb::open_prefixdb()
     opt.auto_repair = this->get_arg_t<bool>("repair");
     PREFIXDB_LOG_MESSAGE("Enable repair " << opt.auto_repair)
   }
-
-  opt.args.workflow = this->get_workflow();
   
   if ( _impl == nullptr )
   {
