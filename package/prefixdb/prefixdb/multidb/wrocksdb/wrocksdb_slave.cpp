@@ -344,16 +344,34 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
   req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
   PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
-  _opt.master->range( std::move(req), [wthis, snapshot](response::range::ptr res)
+  std::string lastkey = from;
+  _opt.master->range( std::move(req), [wthis, snapshot, lastkey](response::range::ptr res) mutable
   {
     if (auto pthis = wthis.lock() )
     {
       PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name )
+      if ( res==nullptr )
+      {
+        PREFIXDB_LOG_ERROR("Initial load (range): " << pthis->_name << ": Bad Gateway")
+      }
+      else if (res->status != common_status::OK)
+      {
+        PREFIXDB_LOG_ERROR("Initial load (range) FAIL: " << pthis->_name << ": " << res->status)
+      }
+      else if (!res->fields.empty())
+      {
+        lastkey = res->fields.back().first;
+      }
+      
+      if (!res->fin )
+        pthis->query_initial_range_(snapshot, lastkey, false);
+        
+      /*
       if ( res==nullptr || res->status != common_status::OK)
       {
         if ( res==nullptr )
         {
-          PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name << ": Bad Gateway")
+          PREFIXDB_LOG_ERROR("Initial load (range) FAIL: " << pthis->_name << ": Bad Gateway")
         }
         else
         {
@@ -364,6 +382,7 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
       
       if (!res->fin && !res->fields.empty())
         pthis->query_initial_range_(snapshot, res->fields.back().first, false);
+      */
     
       if ( !pthis->_opt.use_setnx )
       {
