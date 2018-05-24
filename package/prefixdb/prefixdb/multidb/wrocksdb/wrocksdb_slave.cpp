@@ -343,7 +343,8 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
   req->offset = 0;
   req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
-  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
+  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from 
+                      << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
   std::string lastkey = from;
   _opt.master->range( std::move(req), [wthis, snapshot, lastkey](response::range::ptr res) mutable
   {
@@ -365,7 +366,9 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
       
       if (res==nullptr || !res->fin )
         pthis->query_initial_range_(snapshot, lastkey, false);
-        
+      
+      if ( res==nullptr )
+        return;
       /*
       if ( res==nullptr || res->status != common_status::OK)
       {
