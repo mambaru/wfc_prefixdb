@@ -363,7 +363,7 @@ void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& fr
         lastkey = res->fields.back().first;
       }
       
-      if (!res->fin )
+      if (res==nullptr || !res->fin )
         pthis->query_initial_range_(snapshot, lastkey, false);
         
       /*
