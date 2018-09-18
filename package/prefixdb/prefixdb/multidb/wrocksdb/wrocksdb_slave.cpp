@@ -325,7 +325,7 @@ void wrocksdb_slave::initial_load_()
       }
       else
       {
-        PREFIXDB_LOG_WARNING("Initial load NOT support.")
+        PREFIXDB_LOG_WARNING("Initial load: create_snapshot NOT support. (Load from old version?)")
         if (auto pthis = wthis.lock() )
           pthis->query_initial_range_(0, "", true);
       }

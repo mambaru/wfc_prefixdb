@@ -9,7 +9,6 @@
 
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
-#include <wfc/core/global.hpp>
 #include <iomanip>
 #include <sstream>
 #include <ctime>

@@ -16,7 +16,9 @@ class prefixdb
   : public ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat>
   , public std::enable_shared_from_this< prefixdb >
 {
+  //typedef ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat> super;
 public:
+  //typedef super::custom_options options_type;
   // domain_object
   virtual void start() override;
   void open_prefixdb();
