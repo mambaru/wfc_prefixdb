@@ -140,17 +140,29 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   
   if ( !status.ok() )
   {
-    PREFIXDB_LOG_ERROR("rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
+    if ( !conf.forced_repair )
+    {
+      PREFIXDB_LOG_ERROR("rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
+    }
     if ( conf.auto_repair || conf.forced_repair)
     {
+      PREFIXDB_LOG_BEGIN("rocksdb::RepairDB '" << conf.path << "'...");
       status = ::rocksdb::RepairDB(conf.path, options );
-      PREFIXDB_LOG_WARNING("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
+      if ( status.ok() )
+      {
+         PREFIXDB_LOG_END("rocksdb::RepairDB '" << conf.path << "' " << status.ToString());
+      }
+      else
+      {
+        PREFIXDB_LOG_ERROR("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
+      }
+      
       if ( status.ok() )
       {
         status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
         if ( status.ok() )
         {
-          PREFIXDB_LOG_MESSAGE ("Repair DB '" << dbname << "' :" << status.ToString());
+          PREFIXDB_LOG_MESSAGE ("Open DB '" << dbname << "' after repair:" << status.ToString());
         }
       }
     }
