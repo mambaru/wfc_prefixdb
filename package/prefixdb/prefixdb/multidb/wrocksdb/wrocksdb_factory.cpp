@@ -132,7 +132,11 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
 
   std::vector<int32_t> ttls;
   ttls.push_back(_ttl);
-  auto status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
+  ::rocksdb::Status status;
+  if ( !conf.forced_repair )
+    status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
+  else
+    status = ::rocksdb::Status::Incomplete();
   
   if ( !status.ok() )
   {

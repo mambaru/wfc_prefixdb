@@ -40,8 +40,8 @@ void prefixdb::open_prefixdb()
   
   if ( this->has_arg("repair") )  
   {
-    opt.auto_repair = this->get_arg_t<bool>("repair");
-    PREFIXDB_LOG_MESSAGE("Enable repair " << opt.auto_repair)
+    opt.forced_repair = this->has_arg("repair");
+    PREFIXDB_LOG_MESSAGE("Forced repair " << opt.forced_repair)
   }
   
   if ( _impl == nullptr )
