@@ -141,7 +141,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !status.ok() )
   {
     PREFIXDB_LOG_ERROR("rocksdb::DB::Open '" << dbname << "' :" << status.ToString());
-    if ( conf.auto_repair )
+    if ( conf.auto_repair || conf.forced_repair)
     {
       status = ::rocksdb::RepairDB(conf.path, options );
       PREFIXDB_LOG_WARNING("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
