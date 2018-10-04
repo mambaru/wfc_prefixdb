@@ -30,12 +30,23 @@ void prefixdb::open_prefixdb()
   if ( this->has_arg("load") )  
   {
     opt.initial_load.enabled = true;
+    opt.initial_load.disableWAL = true;
     
     if ( size_t size = this->get_arg_t<size_t>("load") )  
       opt.initial_load.initial_range = size;
     
     std::string setnx = this->get_arg("setnx");
     opt.initial_load.use_setnx = setnx.empty() || (setnx!="false" && setnx!="0");
+    
+    std::string target = this->get_arg_t<std::string>("target");
+    if ( target.empty() )
+      target = opt.slave.target;
+    if (target.empty())
+    {
+      PREFIXDB_LOG_FATAL("'target' is not set for initial load")
+      return;
+    }
+    opt.initial_load.remote = this->get_target<iprefixdb>(target);
   }
   
   if ( this->has_arg("repair") )  
@@ -49,7 +60,7 @@ void prefixdb::open_prefixdb()
     _impl = std::make_shared<multidb>();
     auto factory = god::create("rocksdb", this->global()->io_service );
 
-    opt.slave.master = this->global()->registry.get<iprefixdb>( opt.slave.target );
+    opt.slave.master = this->get_target<iprefixdb>( opt.slave.target );
     _impl->reconfigure( opt, factory );
   }
   else

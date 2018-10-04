@@ -6,6 +6,7 @@
 #include <prefixdb/prefixdb/multidb/options/archive_config.hpp>
 #include <prefixdb/prefixdb/multidb/options/restore_config.hpp>
 #include <prefixdb/prefixdb/multidb/options/compact_config.hpp>
+#include <prefixdb/prefixdb/multidb/options/initial_config.hpp>
 
 namespace wamba{ namespace prefixdb{
   

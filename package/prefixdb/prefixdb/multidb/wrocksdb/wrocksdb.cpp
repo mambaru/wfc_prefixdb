@@ -54,7 +54,7 @@ void wrocksdb::start( )
   {
     using namespace std::placeholders;
     auto opt = _conf.initial_load;
-    opt.slave = this->shared_from_this();
+    opt.local = this->shared_from_this();
     _initial = std::make_shared<wrocksdb_initial>(_name, opt, *_db);
     _initial->load( std::bind( &wrocksdb::slave_start_, this, _1) );
   }
@@ -65,9 +65,7 @@ void wrocksdb::start( )
 void wrocksdb::slave_start_( size_t seq_num ) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  auto slave_opt = _conf.slave;
-  slave_opt.slave = this->shared_from_this();
-  _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, slave_opt, *_db);
+  _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, _conf.slave, *_db);
   _slave->start(seq_num);
 }
 

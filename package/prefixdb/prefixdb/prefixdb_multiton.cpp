@@ -40,7 +40,7 @@ std::string prefixdb_multiton::description() const
   return "Allowed instance params:\n"
             "\t\t\t\trepair[=0|1] - repair and start\n"
             "\t\t\t\trestore[=<<path>>][:bid=<<backup id>>] - restore from backup\n"
-            "\t\t\t\tload[=<<items-per-request>>] - load DB from master (for slave before start)";
+            "\t\t\t\tload[=<<items-per-request>>][:target=<<target>>][:setnx=<<true|false>>] - load DB from master (for slave before start)";
 }
 
 }}

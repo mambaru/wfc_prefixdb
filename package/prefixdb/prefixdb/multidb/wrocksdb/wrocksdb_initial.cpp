@@ -71,7 +71,7 @@ void wrocksdb_initial::load(std::function<void(size_t)> ready)
     }
   };
   
-  _opt.master->create_snapshot( std::move(req), _owner.callback( std::move(create_snapshot_handler) ));
+  _opt.remote->create_snapshot( std::move(req), _owner.callback( std::move(create_snapshot_handler) ));
 }
 
 void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& from, bool beg, std::function<void()> ready)
@@ -87,7 +87,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
   PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from 
                       << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
   std::string lastkey = from;
-  _opt.master->range( std::move(req), _owner.callback([wthis, snapshot, lastkey, ready](response::range::ptr res) mutable
+  _opt.remote->range( std::move(req), _owner.callback([wthis, snapshot, lastkey, ready](response::range::ptr res) mutable
   {
     if (auto pthis = wthis.lock() )
     {
@@ -132,7 +132,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
         req->fields.reserve(res->fields.size());
         for ( const auto& field : res->fields)
           req->fields.emplace_back( field.first, field.second );
-        pthis->_opt.slave->setnx(std::move(req), nullptr);
+        pthis->_opt.remote->setnx(std::move(req), nullptr);
         PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
       }
       
@@ -143,7 +143,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
         req->snapshot = snapshot; 
         PREFIXDB_LOG_BEGIN("Release snapshot " << snapshot << " " << pthis->_name)
         
-        pthis->_opt.master->release_snapshot(std::move(req), pthis->_owner.callback([wthis, ready](response::release_snapshot::ptr)
+        pthis->_opt.remote->release_snapshot(std::move(req), pthis->_owner.callback([wthis, ready](response::release_snapshot::ptr)
         {
           if (auto pthis = wthis.lock() )
           {
