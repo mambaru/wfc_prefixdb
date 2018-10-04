@@ -60,7 +60,7 @@ void wrocksdb_initial::load(std::function<void(size_t)> ready)
     {
       if ( res!=nullptr)
       {
-        PREFIXDB_LOG_FATAL("Initial load FAIL: " << res->status)
+        PREFIXDB_LOG_FATAL("Initial load FAIL: create_snapshot status=" << res->status)
       }
       else
       {
@@ -98,7 +98,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
       }
       else if (res->status != common_status::OK)
       {
-        PREFIXDB_LOG_ERROR("Initial load (range) FAIL: " << pthis->_name << ": " << res->status)
+        PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name << ": " << res->status)
       }
       else if (!res->fields.empty())
       {

@@ -35,8 +35,8 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
-    _flow = opt.args.workflow;
-    _opt.slave.timer = _flow;
+    _workflow = opt.args.workflow;
+    _opt.slave.timer = _workflow;
     if ( !_factory->initialize(_opt) )
       return false;
   }
@@ -273,7 +273,7 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
       else
       {
         _db_map[prefix]=nullptr;
-        _flow->safe_post( 
+        _workflow->safe_post( 
           std::chrono::seconds(req->deny_timeout_s), 
           [this,prefix]()->bool 
           { 
@@ -384,16 +384,16 @@ void  multidb::release_snapshot( request::release_snapshot::ptr req, response::r
 
 void multidb::stop()
 {
-  if ( _flow )
+  if ( _workflow )
   {
-    _flow->release_timer(_archive_timer);
-    _flow->release_timer(_backup_timer);
-    _flow->release_timer(_compact_timer);
-    _flow->release_timer(_prefix_reqester);
+    _workflow->release_timer(_archive_timer);
+    _workflow->release_timer(_backup_timer);
+    _workflow->release_timer(_compact_timer);
+    _workflow->release_timer(_prefix_reqester);
   }
 
   std::lock_guard<std::mutex> lk(_mutex);
-  _flow = nullptr;
+  _workflow = nullptr;
   if ( _factory )
   {
     PREFIXDB_LOG_BEGIN("STOP DB...")
@@ -574,11 +574,11 @@ bool multidb::archive()
 
 void multidb::configure_archive_timer_()
 {
-  _flow->release_timer(_archive_timer);
+  _workflow->release_timer(_archive_timer);
   if ( _opt.archive.enabled && !_opt.archive.path.empty() )
   {
     std::weak_ptr<multidb> wthis = this->shared_from_this();
-    _archive_timer = _flow->create_timer(
+    _archive_timer = _workflow->create_timer(
       _opt.archive.start_time,
       std::chrono::seconds( _opt.archive.period_s ),
       [this]()->bool { this->archive(); return true; }
@@ -612,11 +612,11 @@ bool multidb::preopen_(std::string path, bool create_if_missing)
 
 void multidb::configure_compact_timer_()
 {
-  _flow->release_timer(_compact_timer);
+  _workflow->release_timer(_compact_timer);
   auto c = _opt.compact;
   if ( c.enabled)
   {
-    _compact_timer = _flow->create_timer(
+    _compact_timer = _workflow->create_timer(
       c.start_time,
       std::chrono::seconds( c.period_s ),
       [this]() { this->compact(); return true; }
@@ -627,12 +627,12 @@ void multidb::configure_compact_timer_()
 
 void multidb::configure_backup_timer_()
 {
-  _flow->release_timer(_backup_timer);
+  _workflow->release_timer(_backup_timer);
   
   if ( _opt.backup.enabled &&  !_opt.backup.path.empty() )
   {
     DEBUG_LOG_MESSAGE("Backup timer start '" << _opt.backup.start_time  << "' ws period " << _opt.backup.period_s << " second")
-    _backup_timer = _flow->create_timer(
+    _backup_timer = _workflow->create_timer(
       _opt.backup.start_time,
       std::chrono::seconds( _opt.backup.period_s ),
       [this]() { this->backup(); return true; }
@@ -643,7 +643,7 @@ void multidb::configure_backup_timer_()
 
 void multidb::configure_prefix_reqester_()
 {
-  _flow->release_timer(_prefix_reqester);
+  _workflow->release_timer(_prefix_reqester);
 
   if ( !_opt.slave.enabled && !_opt.initial_load.enabled ) 
     return;
@@ -659,7 +659,7 @@ void multidb::configure_prefix_reqester_()
   if ( _opt.slave.enabled )
   {
     std::weak_ptr<iprefixdb> wprefixdb = _opt.slave.master;
-    _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
+    _prefix_reqester = _workflow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
     (
       std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
       [wprefixdb](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)
@@ -705,7 +705,7 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_
         preq->prefixes.push_back( std::move(x) );
       }
 
-      _flow->post([this, preq]
+      _workflow->post([this, preq]
       {
         this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
       }, nullptr);

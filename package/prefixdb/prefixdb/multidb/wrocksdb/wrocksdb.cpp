@@ -44,7 +44,7 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup
   , _db(db)
   , _backup(bk)
 {
-  _flow = conf.args.workflow;
+  _workflow = conf.args.workflow;
 }
 
 
@@ -172,7 +172,7 @@ void wrocksdb::merge_(ReqPtr req, Callback cb)
 namespace {
 
 template<typename Res, typename ReqPtr>
-std::unique_ptr<Res> create_write_result(ReqPtr& req)
+std::unique_ptr<Res> create_result_ok(ReqPtr& req)
 {
   auto res = std::make_unique<Res>();
   res->prefix = std::move(req->prefix);
@@ -200,23 +200,23 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
   {
     // Если не нужен результат и не нужна синхронная запись, то сначала отправляем ответ
     if ( cb != nullptr && !req->sync )
-      cb( create_write_result<Res>(req) );
+      cb( create_result_ok<Res>(req) );
 
-    // Если вкличена запись через очередь 
+    // Если включена запись через очередь 
     if ( _conf.enable_delayed_write ) 
     {
       if ( !req->sync || cb==nullptr ) 
       {
-        // Если не нужна синхронная запись, от ответ уже отправлили
-        _flow->post([db, wo, batch]() { db->Write( wo, &(*batch)); }, nullptr);
+        // Если не нужна синхронная запись, от ответ уже отправили
+        _workflow->post([db, wo, batch]() { db->Write( wo, &(*batch)); }, nullptr);
       }
       else
       {
         auto preq = std::make_shared<ReqPtr>( std::move(req) );
-        _flow->post([db, wo, batch, preq, cb]() 
+        _workflow->post([db, wo, batch, preq, cb]() 
         {
           db->Write( wo, &(*batch)); 
-          cb( create_write_result<Res>( *preq) );
+          cb( create_result_ok<Res>( *preq) );
         }, [cb](){ cb(nullptr);});
       }
     }
@@ -224,7 +224,7 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
     {
       db->Write( wo, &(*batch));
       if ( cb != nullptr && req->sync )
-        cb( create_write_result<Res>(req) );
+        cb( create_result_ok<Res>(req) );
     }
   }
   else
@@ -350,7 +350,7 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
       field.second = status[i].ok() ? "true" : "false";
     }
     else if ( status[i].ok() )
-    { // Если ключ существет
+    { // Если ключ существует
       field.second = std::move(resvals[i]);
     }
     else
@@ -511,7 +511,7 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
   {
     db.reset();
     std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
-    _flow->safe_post(
+    _workflow->safe_post(
       std::chrono::milliseconds(100),
       [wthis, cb](){
       if (auto pthis = wthis.lock() )
@@ -654,7 +654,7 @@ void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::cre
     res->snapshot = id;
     if ( 0 != req->release_timeout_s )
     {
-      _flow->safe_post(
+      _workflow->safe_post(
         std::chrono::seconds(req->release_timeout_s),
         [this, id]()
         {
@@ -772,7 +772,7 @@ bool wrocksdb::compact()
   
   /*
   std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
-  _flow->post([wthis, key]()
+  _workflow->post([wthis, key]()
   {
     if ( auto pthis = wthis.lock() )
     {
@@ -815,7 +815,7 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
         PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork]. kIsWriteStopped==" << val )
       }
     };
-    _flow->safe_post( std::chrono::seconds(req->delay_timeout_s), cb_fun);
+    _workflow->safe_post( std::chrono::seconds(req->delay_timeout_s), cb_fun);
   }
   else
   {

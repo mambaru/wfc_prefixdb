@@ -75,7 +75,7 @@ private:
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;
-  std::shared_ptr< ::wfc::workflow> _flow;
+  std::shared_ptr< ::wfc::workflow> _workflow;
   
   ::wfc::workflow::timer_id_t _compact_timer  = -1;
   ::wfc::workflow::timer_id_t _backup_timer  = -1;
