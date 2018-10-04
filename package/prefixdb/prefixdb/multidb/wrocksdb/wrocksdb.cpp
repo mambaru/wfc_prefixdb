@@ -15,6 +15,7 @@
 #include <ctime>
 #include <chrono>
 #include <string>
+#include <functional>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -51,8 +52,11 @@ void wrocksdb::start( )
 {
   if ( _conf.initial_load.enabled )
   {
-    _initial = std::make_shared<wrocksdb_initial>(_name, _conf.initial_load, *_db);
-    
+    using namespace std::placeholders;
+    auto opt = _conf.initial_load;
+    opt.slave = this->shared_from_this();
+    _initial = std::make_shared<wrocksdb_initial>(_name, opt, *_db);
+    _initial->load( std::bind( &wrocksdb::slave_start_, this, _1) );
   }
   else
     this->slave_start_(0);
