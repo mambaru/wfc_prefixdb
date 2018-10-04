@@ -132,7 +132,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
         req->fields.reserve(res->fields.size());
         for ( const auto& field : res->fields)
           req->fields.emplace_back( field.first, field.second );
-        pthis->_opt.remote->setnx(std::move(req), nullptr);
+        pthis->_opt.local->setnx(std::move(req), nullptr);
         PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
       }
       
