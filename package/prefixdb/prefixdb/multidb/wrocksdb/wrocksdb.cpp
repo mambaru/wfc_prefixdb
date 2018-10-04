@@ -65,8 +65,11 @@ void wrocksdb::start( )
 void wrocksdb::slave_start_( size_t seq_num ) 
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, _conf.slave, *_db);
-  _slave->start(seq_num);
+  if ( _conf.slave.enabled )
+  {
+    _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, _conf.slave, *_db);
+    _slave->start(seq_num);
+  }
 }
 
 void wrocksdb::stop_()
