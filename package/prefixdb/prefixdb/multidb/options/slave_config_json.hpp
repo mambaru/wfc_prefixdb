@@ -12,7 +12,7 @@ struct slave_config_json
   JSON_NAME(start_time)
   JSON_NAME(pull_timeout_ms)
   JSON_NAME(log_limit_per_req)
-  JSON_NAME(enable_progress)
+  //JSON_NAME(enable_progress)
   JSON_NAME(expires_for_req)
   JSON_NAME(acceptable_loss_seq)
   JSON_NAME(wrn_log_diff_seq)
@@ -34,7 +34,7 @@ struct slave_config_json
       ::wfc::json::member<n_wrn_log_diff_seq,  slave_config, std::ptrdiff_t,       &slave_config::wrn_log_diff_seq>,
       ::wfc::json::member<n_wrn_log_timeout_ms,  slave_config, time_t,       &slave_config::wrn_log_timeout_ms>,
       ::wfc::json::member<n_seq_log_timeout_ms,  slave_config, time_t,       &slave_config::seq_log_timeout_ms>,
-      ::wfc::json::member<n_enable_progress,   slave_config, bool,        &slave_config::enable_progress>,
+      //::wfc::json::member<n_enable_progress,   slave_config, bool,        &slave_config::enable_progress>,
       ::wfc::json::member<n_expires_for_req,   slave_config, bool,        &slave_config::expires_for_req>,
       ::wfc::json::member<n_disableWAL,  slave_config, bool,       &slave_config::disableWAL>
     >

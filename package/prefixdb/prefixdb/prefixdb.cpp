@@ -29,10 +29,10 @@ void prefixdb::open_prefixdb()
   
   if ( this->has_arg("load") )  
   {
-    opt.slave.initial_load = true;
+    opt.initial_load.enabled = true;
     
     if ( size_t size = this->get_arg_t<size_t>("load") )  
-      opt.slave.initial_range = size;
+      opt.initial_load.initial_range = size;
     
     std::string setnx = this->get_arg("setnx");
     opt.slave.use_setnx = setnx.empty() || (setnx!="false" && setnx!="0");

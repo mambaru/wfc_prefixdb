@@ -34,6 +34,14 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
   _log_parser = std::make_shared<since_reader>();
 }
 
+
+void wrocksdb_slave::start(size_t last_sn )
+{
+  if ( last_sn!=0 )
+    this->write_sequence_number_(last_sn);
+  this->start();
+}
+
 void wrocksdb_slave::start()
 {
   _last_update_time = 0;
@@ -41,12 +49,7 @@ void wrocksdb_slave::start()
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
-  
-  // Можно загружать при отключенном slave
-  if ( _opt.initial_load )
-    initial_load_();
-  else
-    this->start_();
+  this->start_();
 }
 
 void wrocksdb_slave::start_()
@@ -299,139 +302,5 @@ uint64_t wrocksdb_slave::read_sequence_number_()
   ofs >> seq;
   return seq;
 }
-
-void wrocksdb_slave::initial_load_() 
-{
-  PREFIXDB_LOG_BEGIN("Start Initial load..." )
-  auto req = std::make_unique<request::create_snapshot>();
-  req->prefix = this->_name;
-  req->release_timeout_s = 3600 * 24;
-  std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
-  _opt.master->create_snapshot( std::move(req), [wthis](response::create_snapshot::ptr res){
-    if ( res!=nullptr && res->status==common_status::OK )
-    {
-      if (auto pthis = wthis.lock() )
-      {
-        PREFIXDB_LOG_MESSAGE("Snapshot №" << res->snapshot << " created on master " << pthis->_name);
-        pthis->write_sequence_number_( res->last_seq + 1 );
-        pthis->query_initial_range_(res->snapshot, "", true);
-      }
-    }
-    else
-    {
-      if ( res!=nullptr)
-      {
-        PREFIXDB_LOG_FATAL("Initial load FAIL: " << res->status)
-      }
-      else
-      {
-        PREFIXDB_LOG_WARNING("Initial load: create_snapshot NOT support. (Load from old version?)")
-        if (auto pthis = wthis.lock() )
-          pthis->query_initial_range_(0, "", true);
-      }
-    }
-  });
-}
-
-void wrocksdb_slave::query_initial_range_(size_t snapshot, const std::string& from, bool beg)
-{
-  auto req = std::make_unique<request::range>();
-  req->prefix = _name;
-  req->snapshot = snapshot;
-  req->beg = beg;
-  req->from = from;
-  req->offset = 0;
-  req->limit = _opt.initial_range;
-  std::weak_ptr<wrocksdb_slave> wthis = this->shared_from_this();
-  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from 
-                      << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
-  std::string lastkey = from;
-  _opt.master->range( std::move(req), [wthis, snapshot, lastkey](response::range::ptr res) mutable
-  {
-    if (auto pthis = wthis.lock() )
-    {
-      PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name )
-      if ( res==nullptr )
-      {
-        PREFIXDB_LOG_ERROR("Initial load (range): " << pthis->_name << ": Bad Gateway")
-      }
-      else if (res->status != common_status::OK)
-      {
-        PREFIXDB_LOG_ERROR("Initial load (range) FAIL: " << pthis->_name << ": " << res->status)
-      }
-      else if (!res->fields.empty())
-      {
-        lastkey = res->fields.back().first;
-      }
-      
-      if (res==nullptr || !res->fin )
-        pthis->query_initial_range_(snapshot, lastkey, false);
-      
-      if ( res==nullptr )
-        return;
-      /*
-      if ( res==nullptr || res->status != common_status::OK)
-      {
-        if ( res==nullptr )
-        {
-          PREFIXDB_LOG_ERROR("Initial load (range) FAIL: " << pthis->_name << ": Bad Gateway")
-        }
-        else
-        {
-          PREFIXDB_LOG_FATAL("Initial load (range) FAIL: " << pthis->_name << ": " << res->status)
-        }
-        return;
-      }
-      
-      if (!res->fin && !res->fields.empty())
-        pthis->query_initial_range_(snapshot, res->fields.back().first, false);
-      */
-    
-      if ( !pthis->_opt.use_setnx )
-      {
-        PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
-        rocksdb::WriteBatch batch;
-
-        for ( const auto& field : res->fields)
-          batch.Put( field.first, field.second );
-
-        rocksdb::WriteOptions wo;
-        wo.disableWAL = pthis->_opt.disableWAL;
-        pthis->_db.Write( wo, &batch); 
-        PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
-      }
-      else
-      {
-        PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
-        auto req = std::make_unique<request::setnx>();
-        req->prefix = pthis->_name;
-        req->fields.reserve(res->fields.size());
-        for ( const auto& field : res->fields)
-          req->fields.emplace_back( field.first, field.second );
-        pthis->_opt.slave->setnx(std::move(req), nullptr);
-        PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
-      }
-      
-      if ( res->fin )
-      {
-        auto req = std::make_unique<request::release_snapshot>();
-        req->prefix = pthis->_name;
-        req->snapshot = snapshot; 
-        PREFIXDB_LOG_BEGIN("Release snapshot " << snapshot << " " << pthis->_name)
-        
-        pthis->_opt.master->release_snapshot(std::move(req), [wthis](response::release_snapshot::ptr)
-        {
-          if (auto pthis = wthis.lock() )
-          {
-            PREFIXDB_LOG_END("Release snapshot " << pthis->_name)
-            pthis->start_();
-          }
-        });
-        
-      }
-    }
-  });
-}
-
 
 }}

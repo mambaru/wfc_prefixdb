@@ -46,6 +46,7 @@ struct db_config
   
   compact_config compact;
   slave_config slave;
+  initial_config initial_load;
   backup_config backup;
   archive_config archive;
   restore_config restore;

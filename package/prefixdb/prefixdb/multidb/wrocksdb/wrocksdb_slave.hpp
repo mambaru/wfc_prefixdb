@@ -19,15 +19,13 @@ public:
   wrocksdb_slave(std::string name, std::string path, const slave_config& opt, db_type& db);
   
   void start();
+  void start(size_t last_sn );
   
   void stop();
   
 private:
-  void initial_load_();
-  void query_initial_range_(size_t snapshot, const std::string& from, bool beg);
   
   void start_();
-  
   void create_updates_requester_();
   
   static request::get_updates_since::ptr updates_generator_(
@@ -60,7 +58,7 @@ private:
   timer_id_t _diff_timer_id = -1;
   timer_id_t _seq_timer_id = -1;
   
-  std::shared_ptr< ::wfc::workflow> _workflow;
+  std::shared_ptr<wfc::workflow> _workflow;
   typedef std::mutex mutex_type;
   mutex_type _mutex;
   bool is_started = false;

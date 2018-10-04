@@ -6,6 +6,7 @@
 #include "merge/packed_params_json.hpp"
 #include "merge/add_params_json.hpp"
 #include "merge/inc_params_json.hpp"
+#include "wrocksdb_initial.hpp"
 
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
@@ -42,19 +43,28 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup
   , _db(db)
   , _backup(bk)
 {
-  //if ( conf.slave.enabled )
   _flow = conf.args.workflow;
 }
 
 
 void wrocksdb::start( ) 
 {
+  if ( _conf.initial_load.enabled )
+  {
+    _initial = std::make_shared<wrocksdb_initial>(_name, _conf.initial_load, *_db);
+    
+  }
+  else
+    this->slave_start_(0);
+}
+
+void wrocksdb::slave_start_( size_t seq_num ) 
+{
   std::lock_guard<std::mutex> lk(_mutex);
-  
   auto slave_opt = _conf.slave;
   slave_opt.slave = this->shared_from_this();
   _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, slave_opt, *_db);
-  _slave->start();
+  _slave->start(seq_num);
 }
 
 void wrocksdb::stop_()
@@ -62,7 +72,10 @@ void wrocksdb::stop_()
   PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
   if ( _slave!=nullptr ) 
     _slave->stop();
+  if ( _initial!=nullptr)
+    _initial->stop();
   _slave = nullptr;
+  _initial = nullptr;
   _db=nullptr;
 }
 
@@ -70,6 +83,7 @@ void wrocksdb::stop()
 {
   std::lock_guard<std::mutex> lk(_mutex);
   this->stop_();
+
 }
 
 namespace{

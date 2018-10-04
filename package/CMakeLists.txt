@@ -14,6 +14,7 @@ SET(
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_restore.cpp
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_slave.cpp
+  prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_initial.cpp
   prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp
   prefixdb/prefixdb/multidb/wrocksdb/merge/merge_operator.cpp
   prefixdb/prefixdb/multidb/god.cpp

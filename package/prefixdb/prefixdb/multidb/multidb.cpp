@@ -645,7 +645,7 @@ void multidb::configure_prefix_reqester_()
 {
   _flow->release_timer(_prefix_reqester);
 
-  if ( !_opt.slave.enabled && !_opt.slave.initial_load) 
+  if ( !_opt.slave.enabled && !_opt.initial_load.enabled ) 
     return;
 
   bool enabled = _opt.slave.enabled;

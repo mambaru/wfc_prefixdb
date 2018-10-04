@@ -22,6 +22,7 @@ namespace rocksdb{ class BackupEngine;}
 namespace wamba{ namespace prefixdb{
   
 class wrocksdb_slave;
+class wrocksdb_initial;
 
 class wrocksdb
   : public iprefixdb_ex
@@ -68,6 +69,7 @@ public:
 private:
 
   void stop_();
+  void slave_start_(size_t seq_num);
 
   bool check_inc_(request::inc::ptr& req, response::inc::handler& cb);
   bool check_add_(request::add::ptr& req, response::add::handler& cb);
@@ -95,7 +97,8 @@ private:
   size_t _snapshot_counter = 0;
   std::map<size_t, snapshot_ptr> _snapshot_map;
   std::shared_ptr<wrocksdb_slave> _slave;
-  std::shared_ptr< ::wfc::workflow> _flow;
+  std::shared_ptr<wrocksdb_initial> _initial;
+  std::shared_ptr<wfc::workflow> _flow;
 };
 
 
