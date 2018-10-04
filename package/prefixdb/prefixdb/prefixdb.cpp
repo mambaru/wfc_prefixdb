@@ -30,13 +30,12 @@ void prefixdb::open_prefixdb()
   if ( this->has_arg("load") )  
   {
     opt.initial_load.enabled = true;
-    opt.initial_load.disableWAL = true;
-    
     if ( size_t size = this->get_arg_t<size_t>("load") )  
       opt.initial_load.initial_range = size;
     
     std::string setnx = this->get_arg("setnx");
     opt.initial_load.use_setnx = setnx.empty() || (setnx!="false" && setnx!="0");
+    opt.initial_load.disableWAL = !opt.initial_load.use_setnx;
     
     std::string target = this->get_arg_t<std::string>("target");
     if ( target.empty() )
