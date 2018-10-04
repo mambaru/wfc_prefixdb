@@ -647,24 +647,32 @@ void multidb::configure_prefix_reqester_()
 
   if ( !_opt.slave.enabled && !_opt.initial_load.enabled ) 
     return;
+  
+  if( _opt.initial_load.enabled )
+  {
+    _opt.initial_load.remote->get_all_prefixes(
+      std::make_unique<request::get_all_prefixes>(), 
+      std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
+    );
+  }
 
-  bool enabled = _opt.slave.enabled;
-  std::weak_ptr<iprefixdb> wprefixdb = _opt.slave.master;
-  _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
-  (
-    std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
-    [wprefixdb, enabled](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)
-    {
-      auto pprefixdb = wprefixdb.lock();
-      if (pprefixdb==nullptr)
-        return false;
-      pprefixdb->get_all_prefixes(std::move(req), callback);
-      return enabled;
-    },
-    /*this->_opt.slave.master,
-    &iprefixdb::get_all_prefixes,*/
-    std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
-  );
+  if ( _opt.slave.enabled )
+  {
+    std::weak_ptr<iprefixdb> wprefixdb = _opt.slave.master;
+    _prefix_reqester = _flow->create_requester<request::get_all_prefixes, response::get_all_prefixes>
+    (
+      std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
+      [wprefixdb](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)
+      {
+        auto pprefixdb = wprefixdb.lock();
+        if (pprefixdb==nullptr)
+          return false;
+        pprefixdb->get_all_prefixes(std::move(req), callback);
+        return true;
+      },
+      std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
+    );
+  }
 }
 
 request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
