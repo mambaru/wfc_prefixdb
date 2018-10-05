@@ -16,7 +16,9 @@ class prefixdb_multiton
 //  class impl;
 public:
   prefixdb_multiton();
+  virtual std::string interface_name() const override;
   virtual std::string description() const override;
+  virtual std::string help() const override;
 };
 
 }}

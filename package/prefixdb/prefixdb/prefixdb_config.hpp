@@ -11,6 +11,7 @@ struct prefixdb_config: multidb_config
 {
   // Список объектов wfc, которые сдедуюет остановить перед запуском 
   std::vector< std::string > stop_list;
+  std::string delayed_write_workflow;
 };
 
 }}

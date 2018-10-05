@@ -99,6 +99,8 @@ private:
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr<wrocksdb_initial> _initial;
   std::shared_ptr<wfc::workflow> _workflow;
+  std::shared_ptr<wfc::workflow> _write_workflow;
+  
 };
 
 

@@ -25,7 +25,10 @@ void prefixdb::start()
 void prefixdb::open_prefixdb()
 {
   options_type opt = this->options();
-  opt.args.workflow = this->get_workflow();
+  opt.args.timers_workflow = this->get_workflow();
+  opt.args.write_workflow = this->get_workflow(opt.delayed_write_workflow, true);
+  if ( opt.args.write_workflow == nullptr )
+    opt.args.write_workflow = opt.args.timers_workflow;
   
   if ( this->has_arg("load") )  
   {
@@ -90,9 +93,6 @@ void prefixdb::open_prefixdb()
     }
   }
 }
-
-
-
 
 void prefixdb::stop() 
 {

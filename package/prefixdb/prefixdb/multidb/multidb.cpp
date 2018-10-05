@@ -35,7 +35,7 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
     _opt = opt;
-    _workflow = opt.args.workflow;
+    _workflow = opt.args.timers_workflow;
     _opt.slave.timer = _workflow;
     if ( !_factory->initialize(_opt) )
       return false;

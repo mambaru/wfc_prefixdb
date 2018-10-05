@@ -32,27 +32,28 @@ struct db_config_json
   JSON_NAME(abort_if_open_error)
   JSON_NAME(check_incoming_merge_json)
 
-  typedef ::wfc::json::object<
+  typedef wfc::json::object<
     db_config,
-    ::wfc::json::member_list<
-      ::wfc::json::member<n_path,    db_config, std::string, &db_config::path>,
-      ::wfc::json::member<n_ini,          db_config, std::string,    &db_config::ini>,
-      ::wfc::json::member<n_wal_path,    db_config, std::string, &db_config::wal_path>,
-      ::wfc::json::member<n_detach_path,    db_config, std::string, &db_config::detach_path>,
-      ::wfc::json::member<n_TTL_seconds, db_config, uint32_t, &db_config::TTL_seconds>,
-      ::wfc::json::member<n_packed_limit, db_config, size_t, &db_config::packed_limit>,
-      ::wfc::json::member<n_array_limit, db_config, size_t, &db_config::array_limit>,
-      ::wfc::json::member<n_range_limit, db_config, size_t, &db_config::range_limit>,
-      ::wfc::json::member<n_enable_delayed_write, db_config, bool, &db_config::enable_delayed_write>,
-      ::wfc::json::member<n_auto_repair, db_config, bool, &db_config::auto_repair>,
-      ::wfc::json::member<n_abort_if_open_error, db_config, bool, &db_config::abort_if_open_error>,
-      ::wfc::json::member<n_check_incoming_merge_json, db_config, bool, &db_config::check_incoming_merge_json>,
-      ::wfc::json::member<n_compact,      db_config, compact_config,   &db_config::compact, compact_config_json>,
-      ::wfc::json::member<n_slave,        db_config, slave_config,   &db_config::slave, slave_config_json>,
-      ::wfc::json::member<n_backup,       db_config, backup_config,  &db_config::backup, backup_config_json>,
-      ::wfc::json::member<n_archive,      db_config, archive_config, &db_config::archive, archive_config_json>,
-      ::wfc::json::member<n_restore,      db_config, restore_config, &db_config::restore, restore_config_json>
-    >
+    wfc::json::member_list<
+      wfc::json::member<n_path,    db_config, std::string, &db_config::path>,
+      wfc::json::member<n_ini,          db_config, std::string,    &db_config::ini>,
+      wfc::json::member<n_wal_path,    db_config, std::string, &db_config::wal_path>,
+      wfc::json::member<n_detach_path,    db_config, std::string, &db_config::detach_path>,
+      wfc::json::member<n_TTL_seconds, db_config, uint32_t, &db_config::TTL_seconds>,
+      wfc::json::member<n_packed_limit, db_config, size_t, &db_config::packed_limit>,
+      wfc::json::member<n_array_limit, db_config, size_t, &db_config::array_limit>,
+      wfc::json::member<n_range_limit, db_config, size_t, &db_config::range_limit>,
+      wfc::json::member<n_enable_delayed_write, db_config, bool, &db_config::enable_delayed_write>,
+      wfc::json::member<n_auto_repair, db_config, bool, &db_config::auto_repair>,
+      wfc::json::member<n_abort_if_open_error, db_config, bool, &db_config::abort_if_open_error>,
+      wfc::json::member<n_check_incoming_merge_json, db_config, bool, &db_config::check_incoming_merge_json>,
+      wfc::json::member<n_compact,      db_config, compact_config,   &db_config::compact, compact_config_json>,
+      wfc::json::member<n_slave,        db_config, slave_config,   &db_config::slave, slave_config_json>,
+      wfc::json::member<n_backup,       db_config, backup_config,  &db_config::backup, backup_config_json>,
+      wfc::json::member<n_archive,      db_config, archive_config, &db_config::archive, archive_config_json>,
+      wfc::json::member<n_restore,      db_config, restore_config, &db_config::restore, restore_config_json>
+    >,
+    wfc::json::strict_mode
   > type;
 
   typedef type::target target;

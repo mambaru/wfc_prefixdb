@@ -44,7 +44,10 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup
   , _db(db)
   , _backup(bk)
 {
-  _workflow = conf.args.workflow;
+  _workflow = conf.args.timers_workflow;
+  _write_workflow = conf.args.write_workflow;
+  if ( _write_workflow == nullptr )
+    _write_workflow = _workflow;
 }
 
 
@@ -203,17 +206,17 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
       cb( create_result_ok<Res>(req) );
 
     // Если включена запись через очередь 
-    if ( _conf.enable_delayed_write ) 
+    if ( !req->sync && _conf.enable_delayed_write ) 
     {
       if ( !req->sync || cb==nullptr ) 
       {
         // Если не нужна синхронная запись, от ответ уже отправили
-        _workflow->post([db, wo, batch]() { db->Write( wo, &(*batch)); }, nullptr);
+        _write_workflow->post([db, wo, batch]() { db->Write( wo, &(*batch)); }, nullptr);
       }
       else
       {
         auto preq = std::make_shared<ReqPtr>( std::move(req) );
-        _workflow->post([db, wo, batch, preq, cb]() 
+        _write_workflow->post([db, wo, batch, preq, cb]() 
         {
           db->Write( wo, &(*batch)); 
           cb( create_result_ok<Res>( *preq) );
@@ -769,25 +772,6 @@ bool wrocksdb::compact()
   }
   
   return result;
-  
-  /*
-  std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
-  _workflow->post([wthis, key]()
-  {
-    if ( auto pthis = wthis.lock() )
-    {
-      ::rocksdb::Slice skey(key);
-      ::rocksdb::Slice skey2(key+"~");
-      ::rocksdb::CompactRangeOptions opt;
-      opt.exclusive_manual_compaction = true;
-      ::rocksdb::Status status = pthis->_db->CompactRange( opt, &skey, &skey);
-      if ( !status.ok())
-      {
-        PREFIXDB_LOG_ERROR("wrocksdb::compact(" << key << "): " << status.ToString() )
-      }
-    }
-  }, nullptr);
-  */
 }
 
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) 

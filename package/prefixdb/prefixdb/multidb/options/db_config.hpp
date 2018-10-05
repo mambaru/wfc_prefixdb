@@ -52,7 +52,11 @@ struct db_config
   archive_config archive;
   restore_config restore;
   
-  struct { std::shared_ptr< ::wfc::workflow > workflow; } args;
+  struct 
+  {
+    std::shared_ptr<wfc::workflow> timers_workflow;
+    std::shared_ptr<wfc::workflow> write_workflow; 
+  } args;
 };
 
 }}

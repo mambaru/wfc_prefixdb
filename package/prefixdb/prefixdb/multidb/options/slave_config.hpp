@@ -35,11 +35,7 @@ struct slave_config
   bool disableWAL = false;
   
   std::shared_ptr<iprefixdb> master;
-  std::shared_ptr< ::wfc::workflow > timer;
-  // Не сериеализуеться. Полное вычитывание базы перед стартом
-  //bool initial_load = false;
-  //bool use_setnx = true;
-  //size_t initial_range = 1024;
+  std::shared_ptr<wfc::workflow> timer;
 };
 
 
