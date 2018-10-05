@@ -98,7 +98,7 @@ void wrocksdb_slave::create_updates_requester_()
   
   if ( seq == static_cast<uint64_t>(-1) )
   {
-    DOMAIN_LOG_FATAL("Invalid sequence number. Replication is not possible. You must synchronize the database: " << this->_name )
+    PREFIXDB_LOG_FATAL("Invalid sequence number. Replication is not possible. You must synchronize the database: " << this->_name )
   }
   else if ( seq == 0)
   {
@@ -142,7 +142,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
 
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    DOMAIN_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
+    PREFIXDB_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
       << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final 
       << " status="<<res->status) 
     return nullptr;
@@ -156,7 +156,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
     if ( diff > pthis->_opt.acceptable_loss_seq )
     {
-      DOMAIN_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': " 
+      PREFIXDB_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': " 
                         << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
       return nullptr;
     }

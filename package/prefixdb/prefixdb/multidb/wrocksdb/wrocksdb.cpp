@@ -698,34 +698,34 @@ bool wrocksdb::backup()
   }
   else
   {
-    COMMON_LOG_ERROR("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
+    PREFIXDB_LOG_ERROR("PurgeOldBackups(" << _conf.backup.depth << ") ERROR for " << _name << ": " << status.ToString() )
   }
   
   status = _backup->GarbageCollect();
   if ( status.ok() )
   {
-    COMMON_LOG_TRACE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
+    PREFIXDB_LOG_TRACE( "GarbageCollect for " << _name <<  ": " << status.ToString() )
   }
   else
   {
-    COMMON_LOG_ERROR( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
+    PREFIXDB_LOG_ERROR( "GarbageCollect ERROR for " << _name << ": " << status.ToString() )
   }
   
-  COMMON_LOG_BEGIN("CreateNewBackup...")
+  PREFIXDB_LOG_BEGIN("CreateNewBackup...")
   int progress = 0;
   if (auto db = _db)
   {
     status = _backup->CreateNewBackup( db.get(), true, 
-      [progress]() mutable { COMMON_LOG_PROGRESS("CreateNewBackup...." << std::string(progress, '.') ) });
+      [progress]() mutable { PREFIXDB_LOG_PROGRESS("CreateNewBackup...." << std::string(progress, '.') ) });
   }
   
   if ( status.ok() )
   {
-    COMMON_LOG_TRACE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
+    PREFIXDB_LOG_TRACE("CreateNewBackup for " << _name <<  ": " << status.ToString() )
   }
   else
   {
-    COMMON_LOG_ERROR("Create Backup ERROR for " << _name << ": " << status.ToString() )
+    PREFIXDB_LOG_ERROR("Create Backup ERROR for " << _name << ": " << status.ToString() )
     std::string tmp = _conf.backup.path + ".bak";
     std::string msg;
     delete_dir(tmp, msg);
@@ -743,11 +743,11 @@ bool wrocksdb::archive(std::string path)
     return false;
   path += "/" + _name;
 
-  COMMON_LOG_MESSAGE("Archive for '" << _name << " from " << _conf.backup.path << " ' to " << path)
+  PREFIXDB_LOG_MESSAGE("Archive for '" << _name << " from " << _conf.backup.path << " ' to " << path)
   std::string error;
   if ( !copy_dir( _conf.backup.path, path, error ) )
   {
-    DOMAIN_LOG_ERROR("Archive for '" << _name << "' fail. " << error );
+    PREFIXDB_LOG_ERROR("Archive for '" << _name << "' fail. " << error );
     return true;
   }
   return false;

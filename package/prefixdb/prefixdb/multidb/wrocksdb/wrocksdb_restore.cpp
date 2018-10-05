@@ -18,9 +18,9 @@ wrocksdb_restore::wrocksdb_restore(std::string name, const db_config conf, resto
 }
 bool wrocksdb_restore::restore() 
 {
-  COMMON_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore.path )
+  PREFIXDB_LOG_BEGIN("Restore for " << _name << " to " << _conf.path << " from " << _conf.restore.path )
   ::rocksdb::Status status = _rdb->RestoreDBFromLatestBackup( _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
-  COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
+  PREFIXDB_LOG_END("Restore for " << _name << " " << status.ToString() )
   if ( status.ok() )
     return true;
   
@@ -33,7 +33,7 @@ bool wrocksdb_restore::restore()
     std::stringstream ss;
     for (auto b : bids)
       ss << b << ",";
-    DOMAIN_LOG_ERROR("Есть поврежденные бэкапы " << ss.str());
+    PREFIXDB_LOG_ERROR("Есть поврежденные бэкапы " << ss.str());
   }
 
   auto bid = _conf.restore.backup_id;
@@ -51,9 +51,9 @@ bool wrocksdb_restore::restore()
 	continue;
       }
     }
-    COMMON_LOG_BEGIN("Restore from backup_id=" << inf.backup_id )
+    PREFIXDB_LOG_BEGIN("Restore from backup_id=" << inf.backup_id )
     ::rocksdb::Status status = _rdb->RestoreDBFromBackup( inf.backup_id, _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
-    COMMON_LOG_END("Restore for " << _name << " " << status.ToString() )
+    PREFIXDB_LOG_END("Restore for " << _name << " " << status.ToString() )
     if ( status.ok() )
       return true;
   }

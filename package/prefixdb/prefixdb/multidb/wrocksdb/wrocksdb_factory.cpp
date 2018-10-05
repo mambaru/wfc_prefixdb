@@ -78,7 +78,7 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
     auto status = ::rocksdb::LoadOptionsFromFile( conf.ini, _context->env, &(_context->options), &(_context->cdf) );
     if ( !status.ok() )
     {
-      DOMAIN_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
+      PREFIXDB_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
       return false;
     }
   }
@@ -172,7 +172,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     if ( conf.abort_if_open_error )
     {
-      DOMAIN_LOG_FATAL("Can not open DB " << conf.path << " " << status.ToString());
+      PREFIXDB_LOG_FATAL("Can not open DB " << conf.path << " " << status.ToString());
     }
     return nullptr;
   }
@@ -192,7 +192,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     ::rocksdb::BackupEngine* backup_engine = nullptr;
     if ( !conf.backup.path.empty() &&  conf.backup.enabled )
     {
-      COMMON_LOG_MESSAGE("Backup path: " << conf.backup.path)
+      PREFIXDB_LOG_MESSAGE("Backup path: " << conf.backup.path)
       ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
       
       status = ::rocksdb::BackupEngine::Open( 
@@ -210,7 +210,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     return pwrdb;
   }
 
-  DOMAIN_LOG_FATAL("rocksdb_factory::create: " << status.ToString());
+  PREFIXDB_LOG_FATAL("rocksdb_factory::create: " << status.ToString());
   return nullptr;
 }
 

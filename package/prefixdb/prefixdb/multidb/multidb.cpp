@@ -47,7 +47,7 @@ bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> f
     ::boost::filesystem::create_directory(opt.path, ec);
     if (ec)
     {
-      COMMON_LOG_ERROR("Create directory fail '" << opt.path << "'" << ec.message() );
+      PREFIXDB_LOG_ERROR("Create directory fail '" << opt.path << "'" << ec.message() );
       return false;
     }
   }
@@ -432,12 +432,12 @@ bool multidb::backup()
       bool result = db->backup();
       if ( !result )
       {
-        // При неудачном бэкапе дериктория перемещаеться 
+        // При неудачном бэкапе директория перемещается 
         this->close_prefix_( prefix );
         db = this->prefix_(prefix, false);
         if ( db != nullptr )
         {
-          // При повторном открытии создаеться полный бэкап (на пустой директории)
+          // При повторном открытии создается полный бэкап (на пустой директории)
           result = db->backup();
         }
       }
@@ -470,7 +470,7 @@ bool multidb::restore()
 {
   if ( !::boost::filesystem::is_directory(this->_opt.restore.path) )
   {
-    DOMAIN_LOG_ERROR( "Restore FAIL: '" << this->_opt.restore.path << "' is not directory" )
+    PREFIXDB_LOG_ERROR( "Restore FAIL: '" << this->_opt.restore.path << "' is not directory" )
     return false;
   }
   
@@ -481,7 +481,7 @@ bool multidb::restore()
     ::boost::filesystem::rename(this->_opt.path, bakpath, ec );
     if ( ec )
     {
-      DOMAIN_LOG_ERROR( "Rename old multidb FAIL: '" << this->_opt.restore.path << "' -> '" << bakpath << "'" )
+      PREFIXDB_LOG_ERROR( "Rename old multidb FAIL: '" << this->_opt.restore.path << "' -> '" << bakpath << "'" )
       return false;
     }
     
@@ -489,20 +489,20 @@ bool multidb::restore()
     ::boost::filesystem::create_directory(this->_opt.path, ec);
     if ( ec )
     {
-      DOMAIN_LOG_ERROR( "Create directory FAIL: '" << this->_opt.path << "'" )
+      PREFIXDB_LOG_ERROR( "Create directory FAIL: '" << this->_opt.path << "'" )
       return false;
     }
   }
   
   bool fail = false;
   auto prefixes = scan_dir(_opt.restore.path, fail);
-  DOMAIN_LOG_MESSAGE("Префиксов найдено: " << prefixes.size() << " в " << _opt.restore.path) 
+  PREFIXDB_LOG_MESSAGE("Префиксов найдено: " << prefixes.size() << " в " << _opt.restore.path) 
   if (fail) return false;
   
   bool result = true;
   for ( const std::string& prefix: prefixes)
   {
-    DOMAIN_LOG_MESSAGE("Востановление для " << prefix) 
+    PREFIXDB_LOG_MESSAGE("Востановление для " << prefix) 
     if ( auto rocks_resor =  _factory->create_restore(prefix) )
     {
       result &= rocks_resor->restore();
@@ -524,7 +524,7 @@ bool multidb::archive()
     ::boost::filesystem::create_directory(path, ec);
     if (ec)
     {
-      COMMON_LOG_ERROR("Create directory fail '" << path << "'" << ec.message() );
+      PREFIXDB_LOG_ERROR("Create directory fail '" << path << "'" << ec.message() );
       return false;
     }
   }
@@ -549,7 +549,7 @@ bool multidb::archive()
   ::boost::system::error_code ec;
   if( !::boost::filesystem::create_directory( path, ec) )
   {
-    COMMON_LOG_ERROR("Create dir " << path << " FAIL: " << ec.message() );
+    PREFIXDB_LOG_ERROR("Create dir " << path << " FAIL: " << ec.message() );
     return false;
   }
   
@@ -762,7 +762,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
   
   if ( _factory == nullptr )
   {
-    DOMAIN_LOG_FATAL("multidb is not configured!")
+    PREFIXDB_LOG_FATAL("multidb is not configured!")
     return nullptr;
   }
   
@@ -793,13 +793,13 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
   
   if ( auto db = _factory->create_db(prefix, create_if_missing) )
   {
-    COMMON_LOG_MESSAGE("Открыт новый префикс: " << prefix)
+    PREFIXDB_LOG_MESSAGE("Open new prefix: " << prefix)
     _db_map.insert(itr, std::make_pair(prefix, db));
     db->start();
     return db;
   }
   
-  // Запоминаем, чтобы не создавать заного
+  // Запоминаем, чтобы не создавать заново
   _db_map[prefix] = nullptr;
   return nullptr;
 }

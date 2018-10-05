@@ -13,7 +13,7 @@ struct initial_config
 {
   bool enabled = false;
   bool disableWAL = false;
-  bool use_setnx = true;
+  bool use_setnx = false;
   size_t initial_range = 1024;
   
   std::shared_ptr<iprefixdb> remote;

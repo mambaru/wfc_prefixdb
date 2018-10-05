@@ -51,7 +51,9 @@ namespace helper{
     if ( e )
     {
       if (!hide)
-        COMMON_LOG_ERROR( "unserialize merge_operator error: " << ::wfc::json::strerror::message_trace(e, beg, end) );
+      {
+        PREFIXDB_LOG_ERROR( "unserialize merge_operator error: " << ::wfc::json::strerror::message_trace(e, beg, end) );
+      }
       return false;
     }
     return true;
@@ -142,14 +144,14 @@ try
       
       if ( !updates.empty() )
       {
-        COMMON_LOG_WARNING(_name << ": merge_operator::Merge: Invalid method merge: " << merge_in.key.ToString() << "='" << updates[0]  )
+        PREFIXDB_LOG_WARNING(_name << ": merge_operator::Merge: Invalid method merge: " << merge_in.key.ToString() << "='" << updates[0]  )
       }
       /*
       if ( merge_in.existing_value!=nullptr )
         merge_out->new_value = merge_in.existing_value->ToString();
       else*/
       merge_out->new_value="\"ERROR\"";
-      COMMON_LOG_MESSAGE(_name << ": merge_operator::Merge: Save old value: " << merge_in.key.ToString() << "='" << merge_out->new_value  )
+      PREFIXDB_LOG_MESSAGE(_name << ": merge_operator::Merge: Save old value: " << merge_in.key.ToString() << "='" << merge_out->new_value  )
       
   } // switch( mode )
 
@@ -160,7 +162,7 @@ catch(std::exception e)
   if ( merge_in.existing_value )
     merge_out->new_value = merge_in.existing_value->ToString();
   
-  DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge exception: "<< e.what() << ": key=" 
+  PREFIXDB_LOG_ERROR("PreffixDB merge_operator::FullMerge exception: "<< e.what() << ": key=" 
                   << merge_in.key.ToString() << " existing=" 
                   << ( merge_in.existing_value ? merge_in.existing_value ->ToString() : std::string("nullptr") )
                   << " operands=" << merge_in.operand_list.size() )
@@ -171,7 +173,7 @@ catch(...)
   if ( merge_in.existing_value )
     merge_out->new_value = merge_in.existing_value->ToString();
 
-  DOMAIN_LOG_ERROR("PreffixDB merge_operator::FullMerge unhandled exception: key=" 
+  PREFIXDB_LOG_ERROR("PreffixDB merge_operator::FullMerge unhandled exception: key=" 
                   << merge_in.key.ToString() << " existing=" 
                   << ( merge_in.existing_value ? merge_in.existing_value ->ToString() : std::string("nullptr") )
                   << " operands=" << merge_in.operand_list.size() )
