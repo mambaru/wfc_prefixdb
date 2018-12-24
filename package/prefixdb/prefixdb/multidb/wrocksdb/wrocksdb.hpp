@@ -4,18 +4,17 @@
 #include <prefixdb/prefixdb/multidb/wrocksdb/merge/merge.hpp>
 #include <prefixdb/prefixdb/multidb/iprefixdb_ex.hpp>
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
+#include <memory>
+#include <mutex>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wlong-long"
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 // //#include <rocksdb/utilities/db_ttl.h>
 #include <rocksdb/utilities/db_ttl.h>
-#pragma GCC diagnostic pop
-
-#include <memory>
-#include <mutex>
 
 namespace rocksdb{ class BackupEngine;}
 
@@ -103,5 +102,6 @@ private:
   
 };
 
-
 }}
+
+#pragma GCC diagnostic pop

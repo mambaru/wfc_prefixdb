@@ -32,11 +32,25 @@ add_library(
   ${prefixdb_source_list}
 )
 
-#link_directories(${CMAKE_SOURCE_DIR}/luajit-2.0/src)
-#lz4
-#target_link_libraries(wfc_prefixdb luajit rocksdb )
+if ( STANDALONE )
+
+  include(FindThreads)
+  find_package(Boost COMPONENTS system program_options filesystem date_time regex REQUIRED)
+
+  target_link_libraries(
+    wfc_prefixdb
+      wfc
+      wlog
+      wflow
+      wjrpc
+      iow
+      wrtstat
+      ${Boost_LIBRARIES} 
+      ${CMAKE_THREAD_LIBS_INIT}
+  )
+endif()
+
 target_link_libraries(wfc_prefixdb rocksdb )
-#add_dependencies(wfc_prefixdb luajit20 facebook-rocksdb )
 add_dependencies(wfc_prefixdb facebook-rocksdb )
 
 build_info(wfc_prefixdb prefixdb)

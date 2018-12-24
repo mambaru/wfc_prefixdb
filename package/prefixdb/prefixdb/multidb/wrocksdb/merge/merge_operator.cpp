@@ -140,6 +140,7 @@ try
     case merge_mode::packed:
       this->packed_(merge_in.existing_value, updates, merge_out->new_value ); 
       break;
+    case merge_mode::none:
     default:
       
       if ( !updates.empty() )

@@ -2,6 +2,8 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 #include <rocksdb/write_batch.h>
 #pragma GCC diagnostic pop
 

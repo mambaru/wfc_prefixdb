@@ -18,6 +18,8 @@
 #include <functional>
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlong-long"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>

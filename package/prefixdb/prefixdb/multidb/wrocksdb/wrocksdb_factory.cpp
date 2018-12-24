@@ -1,7 +1,19 @@
 
 #include "wrocksdb_factory.hpp"
+#include <prefixdb/logger.hpp>
+#include <memory>
+#include <iostream>
+#include <sys/stat.h>
+#include <list>
+#include <string>
+#include "wrocksdb.hpp"
+#include "wrocksdb_restore.hpp"
+#include "merge/merge_operator.hpp"
+#include <wfc/wfc_exit.hpp>
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wlong-long"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/env.h>
@@ -13,20 +25,6 @@
 #include <rocksdb/utilities/db_ttl.h>
 #pragma GCC diagnostic pop
 
-
-#include <prefixdb/logger.hpp>
-#include <memory>
-#include <iostream>
-#include <sys/stat.h>
-#include <list>
-#include <string>
-
-#include "wrocksdb.hpp"
-#include "wrocksdb_restore.hpp"
-#include "merge/merge_operator.hpp"
-
-
-#include <wfc/wfc_exit.hpp>
 
 namespace wamba{ namespace prefixdb{
 

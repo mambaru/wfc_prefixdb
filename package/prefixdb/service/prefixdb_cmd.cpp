@@ -21,9 +21,9 @@ namespace
     req->contunue_force = force;
     db->delay_background(std::move(req), [handler, delay_s, force](response::delay_background::ptr res)
     {
-      std::stringstream ss;
-      ss << res->status << ". Backgrounds delayed on " << delay_s << " seconds. force=" << force;
-      handler( ::iow::io::make(ss.str()) );
+      std::stringstream ss2;
+      ss2 << res->status << ". Backgrounds delayed on " << delay_s << " seconds. force=" << force;
+      handler( iow::io::make(ss2.str()) );
     });
   }
 
@@ -36,9 +36,9 @@ namespace
     req->force = force;
     db->continue_background(std::move(req), [handler, force](response::continue_background::ptr res)
     {
-      std::stringstream ss;
-      ss << res->status << ". Continue backgrounds. force=" << force;
-      handler( ::iow::io::make(ss.str()) );
+      std::stringstream ss2;
+      ss2 << res->status << ". Continue backgrounds. force=" << force;
+      handler( iow::io::make(ss2.str()) );
     });
   }
 
@@ -60,9 +60,9 @@ namespace
     
     db->detach_prefixes( std::move(req), [handler, deny_timeout](response::detach_prefixes::ptr res)
     {
-      std::stringstream ss;
-      ss << res->status << ". Prefixes detached. Deny timeout " << deny_timeout << " seconds. ";
-      handler( ::iow::io::make(ss.str()) );
+      std::stringstream ss2;
+      ss2 << res->status << ". Prefixes detached. Deny timeout " << deny_timeout << " seconds. ";
+      handler( iow::io::make(ss2.str()) );
     } );
   }
 

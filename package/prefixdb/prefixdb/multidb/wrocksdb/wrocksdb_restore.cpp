@@ -2,6 +2,8 @@
 #include <prefixdb/logger.hpp>
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlong-long"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
@@ -52,7 +54,7 @@ bool wrocksdb_restore::restore()
       }
     }
     PREFIXDB_LOG_BEGIN("Restore from backup_id=" << inf.backup_id )
-    ::rocksdb::Status status = _rdb->RestoreDBFromBackup( inf.backup_id, _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
+    status = _rdb->RestoreDBFromBackup( inf.backup_id, _conf.path, _conf.path, ::rocksdb::RestoreOptions() );
     PREFIXDB_LOG_END("Restore for " << _name << " " << status.ToString() )
     if ( status.ok() )
       return true;
