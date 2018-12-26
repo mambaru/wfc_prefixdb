@@ -51,5 +51,5 @@ add_subdirectory(package)
 
 if ( BUILD_TESTING AND STANDALONE)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${UNIT_TEST_BIN_OUTPUT_DIR})                                                                                                                 
-  #add_subdirectory(tests)
+  add_subdirectory(tests)
 endif()
