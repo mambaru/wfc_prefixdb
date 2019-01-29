@@ -28,7 +28,7 @@ multidb::multidb()
 {
 }
 
-bool multidb::reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory)
+bool multidb::reconfigure(const multidb_config& opt, const std::shared_ptr<ifactory>& factory)
 {
   this->stop(); // ??? 
   {
@@ -577,7 +577,6 @@ void multidb::configure_archive_timer_()
   _workflow->release_timer(_archive_timer);
   if ( _opt.archive.enabled && !_opt.archive.path.empty() )
   {
-    std::weak_ptr<multidb> wthis = this->shared_from_this();
     _archive_timer = _workflow->create_timer(
       _opt.archive.start_time,
       std::chrono::seconds( _opt.archive.period_s ),
@@ -586,8 +585,7 @@ void multidb::configure_archive_timer_()
   }
 }
 
-
-bool multidb::preopen_(std::string path, bool create_if_missing)
+bool multidb::preopen_(const std::string& path, bool create_if_missing)
 {
   bool fail = false;
   auto dirs = scan_dir(path, fail);

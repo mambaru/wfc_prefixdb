@@ -255,7 +255,6 @@ namespace
   
 void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d, wfc::iinterface::output_handler_t handler)
 {
-  std::string result;
   std::stringstream ss;
   ss << std::string( d->begin(), d->end() );
   std::string method;

@@ -81,9 +81,9 @@ namespace helper{
   
 merge_operator::merge_operator(const std::string& name, size_t array_limit, size_t packed_limit)
   : _name(name)
+  , _array_limit(array_limit)
+  , _packed_limit(packed_limit)
 {
-  _array_limit = array_limit;
-  _packed_limit = packed_limit;
 }
 
 bool merge_operator::FullMergeV2(
@@ -145,14 +145,12 @@ try
       
       if ( !updates.empty() )
       {
-        PREFIXDB_LOG_WARNING(_name << ": merge_operator::Merge: Invalid method merge: " << merge_in.key.ToString() << "='" << updates[0]  )
+        PREFIXDB_LOG_WARNING(_name << ": merge_operator::Merge: Invalid method merge: " << merge_in.key.ToString() 
+                                   << "='" << updates[0]  )
       }
-      /*
-      if ( merge_in.existing_value!=nullptr )
-        merge_out->new_value = merge_in.existing_value->ToString();
-      else*/
       merge_out->new_value="\"ERROR\"";
-      PREFIXDB_LOG_MESSAGE(_name << ": merge_operator::Merge: Save old value: " << merge_in.key.ToString() << "='" << merge_out->new_value  )
+      PREFIXDB_LOG_MESSAGE(_name << ": merge_operator::Merge: Save old value: " << merge_in.key.ToString() 
+                                 << "='" << merge_out->new_value  )
       
   } // switch( mode )
 
@@ -185,57 +183,6 @@ const char* merge_operator::Name() const
 {
   return "PreffixDBMergeOperator";
 }
-
-/*
-bool merge_operator::PartialMerge(const rocksdb::Slice& key,
-                                const rocksdb::Slice& left_operand,
-                                const rocksdb::Slice& right_operand,
-                                std::string* new_value,
-                                rocksdb::Logger* logger) const 
-{
-  return false;
- 
-  merge mrg1;
-  merge mrg2;
-  
-  helper::unserialize<merge_json>(mrg1, left_operand, false);
-  helper::unserialize<merge_json>(mrg2, right_operand, false);
-  
-  if (mrg2.mode != mrg1.mode)
-  {
-        return false;
-  }
-  
-  switch( mrg2.mode )
-  {
-    case merge_mode::inc:
-      this->partial_inc_( std::move(mrg1), std::move(mrg2), *new_value);
-      break;
-    default:
-      *new_value = right_operand.ToString();
-      return false;
-  }
-  return true;
-}
-*/                                
-
-                                /*
-bool merge_operator::ShouldMerge(const std::vector<slice_type>& operands) const
-{
-  PREFIXDB_LOG_FATAL("merge_operator::ShouldMerge operands=" << operands.size() );
-  abort();
-  return false;
-}
-*/
-                                /*
-bool merge_operator::AllowSingleOperand() const 
-{
-  PREFIXDB_LOG_FATAL("merge_operator::AllowSingleOperand()" );
-  abort();
-  return true; 
-
-}
-*/
 
 void merge_operator::setnx_(const slice_type* value, const update_list& operands, std::string& result) const
 {
@@ -274,30 +221,12 @@ void merge_operator::inc_(const slice_type* value, const update_list& operands, 
   intser()( num, std::inserter(result, result.end()) );
 }
 
-/*
-void merge_operator::partial_inc_(merge&& mrg1, merge&& mrg2, std::string& result) const
-{
-  inc_params oper1;
-  inc_params oper2;
-  int64_t num = 0;
-  this->inc_operand_(mrg1.raw, num, false);
-  this->inc_operand_(mrg2.raw, num, true);
-  oper2.inc.clear();
-  wjson::value<int64_t>::serializer()(num, std::back_inserter(oper2.inc) );
-  oper2.val = "0";
-  mrg2.raw.clear();
-  inc_params_json::serializer()(oper2, std::back_inserter(mrg2.raw));
-  result.reserve(mrg2.raw.size() + 32);
-  result.clear();
-  merge_json::serializer()(mrg2, std::back_inserter(result));
-}*/
-
-void merge_operator::inc_operand_(const std::string& oper, int64_t& num, bool exist) const
+void merge_operator::inc_operand_(const std::string& operand, int64_t& num, bool exist) const
 {
   typedef ::wfc::json::value<int64_t> int64json;
   inc_params params;
 
-  if ( !helper::unserialize<inc_params_json>(params, oper, false) )
+  if ( !helper::unserialize<inc_params_json>(params, operand, false) )
     return;
   
   if ( !exist )
@@ -342,10 +271,10 @@ void merge_operator::add_(const slice_type* value, const update_list& operands, 
   arr_json::serializer()( arr, std::inserter(result, result.end()) );
 }
 
-void merge_operator::add_operand_(const std::string& oper, std::deque<std::string>& arr) const
+void merge_operator::add_operand_(const std::string& operand, std::deque<std::string>& arr) const
 {
   add_params update;
-  if ( !helper::unserialize<add_params_json>(update, oper, false) )
+  if ( !helper::unserialize<add_params_json>(update, operand, false) )
     return;
   
   if ( update.lim == 0 )
@@ -383,10 +312,10 @@ void merge_operator::packed_(const slice_type* value, const update_list& operand
   packed_json::serializer()( pck, std::inserter(result, result.end()) );
 }
 
-void merge_operator::packed_operand_(const std::string& oper, packed_t& pck) const
+void merge_operator::packed_operand_(const std::string& operand, packed_t& pck) const
 {
   packed_params_t update;
-  if ( !helper::unserialize<packed_params_json>(update, oper, false) )
+  if ( !helper::unserialize<packed_params_json>(update, operand, false) )
     return;
     
   static auto less = []( const packed_field& l, const packed_field& r) { return l.first < r.first; };
@@ -450,7 +379,6 @@ void merge_operator::packed_inc_(const packed_field_params& upd, std::string& re
   val += inc;
   result.clear();
   
-  // немного быстрее, чем std::back_inserter
   intser(val, std::inserter(result, result.end()) );
 }
 

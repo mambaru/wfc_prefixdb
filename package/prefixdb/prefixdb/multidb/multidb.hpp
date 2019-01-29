@@ -19,7 +19,7 @@ class multidb
   typedef std::map<std::string, prefixdb_ptr> db_map;
 public:
   multidb();
-  bool reconfigure(const multidb_config& opt, std::shared_ptr<ifactory> factory);
+  bool reconfigure(const multidb_config& opt, const std::shared_ptr<ifactory>& factory);
   virtual void start();
 
   virtual void set( request::set::ptr req, response::set::handler cb) override;
@@ -56,7 +56,7 @@ private:
   request::get_all_prefixes::ptr get_all_prefixes_handler_(response::get_all_prefixes::ptr res);
 
   std::vector< std::string > all_prefixes_();
-  bool preopen_(std::string path, bool create_if_missing);
+  bool preopen_(const std::string& path, bool create_if_missing);
   
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   bool close_prefix_(const std::string& prefix);
