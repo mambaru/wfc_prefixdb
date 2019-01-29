@@ -84,9 +84,9 @@ void prefixdb::open_prefixdb()
       PREFIXDB_LOG_FATAL("prefixdb open DB abort!");
     }
     
-    for ( const std::string& name : stop_list )
+    for ( const std::string& name1 : stop_list )
     {
-      if ( auto obj = this->global()->registry.get_object<wfc::iinstance>("instance", name) )
+      if ( auto obj = this->global()->registry.get_object<wfc::iinstance>("instance", name1) )
       {
         obj->start("");
       }

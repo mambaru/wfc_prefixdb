@@ -15,6 +15,7 @@
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wlong-long"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wswitch-default"
 #include <rocksdb/db.h>
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
@@ -43,8 +44,7 @@ wrocksdb_factory::~wrocksdb_factory()
   _context->env = nullptr;
 }
 
-wrocksdb_factory::wrocksdb_factory( ::iow::asio::io_service& io)
-  : _io(io)
+wrocksdb_factory::wrocksdb_factory()
 {
 }
 

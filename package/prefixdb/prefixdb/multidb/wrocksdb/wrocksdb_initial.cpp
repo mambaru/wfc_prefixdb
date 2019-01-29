@@ -12,6 +12,9 @@
 #pragma GCC diagnostic ignored "-Wlong-long"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wgnu-redeclared-enum"
+#endif
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/iterator.h>
@@ -129,27 +132,27 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
       else
       {
         PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
-        auto req = std::make_unique<request::setnx>();
-        req->prefix = pthis->_name;
-        req->fields.reserve(res->fields.size());
+        auto req1 = std::make_unique<request::setnx>();
+        req1->prefix = pthis->_name;
+        req1->fields.reserve(res->fields.size());
         for ( const auto& field : res->fields)
-          req->fields.emplace_back( field.first, field.second );
-        pthis->_opt.local->setnx(std::move(req), nullptr);
+          req1->fields.emplace_back( field.first, field.second );
+        pthis->_opt.local->setnx(std::move(req1), nullptr);
         PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
       }
       
       if ( res->fin )
       {
-        auto req = std::make_unique<request::release_snapshot>();
-        req->prefix = pthis->_name;
-        req->snapshot = snapshot; 
+        auto req2 = std::make_unique<request::release_snapshot>();
+        req2->prefix = pthis->_name;
+        req2->snapshot = snapshot; 
         PREFIXDB_LOG_BEGIN("Release snapshot " << snapshot << " " << pthis->_name)
         
-        pthis->_opt.remote->release_snapshot(std::move(req), pthis->_owner.callback([wthis, ready](response::release_snapshot::ptr)
+        pthis->_opt.remote->release_snapshot(std::move(req2), pthis->_owner.callback([wthis, ready](response::release_snapshot::ptr)
         {
-          if (auto pthis = wthis.lock() )
+          if (auto pthis1 = wthis.lock() )
           {
-            PREFIXDB_LOG_END("Release snapshot " << pthis->_name)
+            PREFIXDB_LOG_END("Release snapshot " << pthis1->_name)
             if (ready) ready();
           }
         }));

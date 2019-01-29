@@ -697,7 +697,7 @@ bool wrocksdb::backup()
   if ( _backup == nullptr ) return false;
 
   ::rocksdb::Status status;
-  status = _backup->PurgeOldBackups( _conf.backup.depth -1 );
+  status = _backup->PurgeOldBackups( _conf.backup.depth - 1 );
   if ( status.ok() )
   {
   }

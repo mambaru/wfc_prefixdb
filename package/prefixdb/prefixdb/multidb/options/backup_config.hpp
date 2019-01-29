@@ -18,11 +18,7 @@ struct backup_config
   time_t period_s = 0;
   
   // количество сохраненных backup-ов(точек с которых можно восстановиться ) (создаються каждые period_s)
-  size_t depth = 1;
-  
-  // не реализовано
-  /*time_t start_delay_s = 0;*/
-  
+  uint32_t depth = 1;
 };
 
 

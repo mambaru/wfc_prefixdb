@@ -277,7 +277,7 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
           std::chrono::seconds(req->deny_timeout_s), 
           [this,prefix]()->bool 
           { 
-            std::lock_guard<std::mutex> lk(this->_mutex);
+            std::lock_guard<std::mutex> lk2(this->_mutex);
             auto itr = this->_db_map.find(prefix);
             if ( itr != this->_db_map.end() && itr->second == nullptr )
             {
@@ -343,9 +343,9 @@ void multidb::compact_prefix( request::compact_prefix::ptr req, response::compac
     bool result = this->compact();
     if (cb!=nullptr)
     {
-      auto req = std::make_unique<response::compact_prefix>();
-      req->status = result? common_status::OK : common_status::CompactFail;
-      cb( std::move(req) );
+      auto res = std::make_unique<response::compact_prefix>();
+      res->status = result? common_status::OK : common_status::CompactFail;
+      cb( std::move(res) );
     }
   }
   else if ( auto db = this->prefix_(req->prefix, false) )
@@ -730,7 +730,7 @@ std::vector< std::string > multidb::all_prefixes_()
       result.push_back(p.first);
     }
   }
-  return std::move(result);
+  return result;
 }
 
 

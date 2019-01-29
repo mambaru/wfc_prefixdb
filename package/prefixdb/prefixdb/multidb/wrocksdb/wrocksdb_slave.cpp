@@ -12,6 +12,9 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wlong-long"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wgnu-redeclared-enum"
+#endif
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/iterator.h>
