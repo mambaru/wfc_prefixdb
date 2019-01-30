@@ -6,6 +6,9 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wgnu-redeclared-enum"
+#endif
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 #pragma GCC diagnostic pop

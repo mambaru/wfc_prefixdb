@@ -18,6 +18,8 @@
 #include <functional>
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlong-long"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
@@ -695,7 +697,7 @@ bool wrocksdb::backup()
   if ( _backup == nullptr ) return false;
 
   ::rocksdb::Status status;
-  status = _backup->PurgeOldBackups( _conf.backup.depth -1 );
+  status = _backup->PurgeOldBackups( _conf.backup.depth - 1 );
   if ( status.ok() )
   {
   }
@@ -715,11 +717,11 @@ bool wrocksdb::backup()
   }
   
   PREFIXDB_LOG_BEGIN("CreateNewBackup...")
-  int progress = 0;
   if (auto db = _db)
   {
+    int progress = 0;
     status = _backup->CreateNewBackup( db.get(), true, 
-      [progress]() mutable { PREFIXDB_LOG_PROGRESS("CreateNewBackup...." << std::string(progress, '.') ) });
+      [progress]() mutable { PREFIXDB_LOG_PROGRESS("CreateNewBackup...." << std::string(progress++, '.') ) });
   }
   
   if ( status.ok() )

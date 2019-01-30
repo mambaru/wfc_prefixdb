@@ -2,6 +2,8 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 #include <rocksdb/write_batch.h>
 #pragma GCC diagnostic pop
 
@@ -16,31 +18,12 @@ class since_reader
 {
 public:
   typedef std::vector<char> data_type;
-  /*
-  enum class item_type
-  {
-    None  = -1,
-    Del   = 0,
-    Put   = 1,
-    Merge = 2
-  };
-  */
-  
   enum class status
   {
     Error = 0,
     Ready = 1
   };
   
-  /*
-  struct item_info
-  {
-    item_type type = item_type::None;
-    data_type key;
-    data_type value;
-  };
-  typedef std::deque<item_info> item_list;
-  */
   typedef ::rocksdb::WriteBatch batch_type;
   typedef std::unique_ptr<batch_type> batch_ptr;
   

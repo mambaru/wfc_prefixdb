@@ -16,14 +16,13 @@ class wrocksdb_factory
 public:
   typedef wfc::asio::io_service io_service_type;
   virtual ~wrocksdb_factory();
-  wrocksdb_factory( io_service_type& io);
+  explicit wrocksdb_factory();
   typedef ifactory::prefixdb_ptr prefixdb_ptr;
-  virtual bool initialize(const db_config& conf) override;
+  virtual bool initialize(const db_config& db_conf) override;
   virtual ifactory::prefixdb_ptr create_db(std::string dbname, bool create_if_missing) override;
-  virtual restore_ptr create_restore(std::string prefix) override;
+  virtual restore_ptr create_restore(std::string dbname) override;
 private:
   struct context;
-  io_service_type& _io;
   std::shared_ptr<context> _context;
   mutable std::mutex _mutex;
   int32_t _ttl=0;

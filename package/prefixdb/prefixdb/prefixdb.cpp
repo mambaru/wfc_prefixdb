@@ -36,8 +36,8 @@ void prefixdb::open_prefixdb()
     if ( size_t size = this->get_arg_t<size_t>("load") )  
       opt.initial_load.initial_range = size;
     
-    std::string setnx = this->get_arg("setnx");
-    opt.initial_load.use_setnx = setnx.empty() || (setnx!="false" && setnx!="0");
+    std::string setnx_arg = this->get_arg("setnx");
+    opt.initial_load.use_setnx = setnx_arg.empty() || (setnx_arg!="false" && setnx_arg!="0");
     opt.initial_load.disableWAL = !opt.initial_load.use_setnx;
     
     std::string target = this->get_arg_t<std::string>("target");
@@ -68,9 +68,9 @@ void prefixdb::open_prefixdb()
   else
   {
     auto& stop_list = opt.stop_list;
-    for ( const std::string& name : stop_list )
+    for ( const std::string& sname : stop_list )
     {
-      if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
+      if ( auto obj = this->global()->registry.get_object<wfc::iinstance>("instance", sname) )
       {
         obj->stop("");
       }
@@ -84,9 +84,9 @@ void prefixdb::open_prefixdb()
       PREFIXDB_LOG_FATAL("prefixdb open DB abort!");
     }
     
-    for ( const std::string& name : stop_list )
+    for ( const std::string& name1 : stop_list )
     {
-      if ( auto obj = this->global()->registry.get< ::wfc::iinstance >("instance", name) )
+      if ( auto obj = this->global()->registry.get_object<wfc::iinstance>("instance", name1) )
       {
         obj->start("");
       }
