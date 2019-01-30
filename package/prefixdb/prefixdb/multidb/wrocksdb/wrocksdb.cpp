@@ -819,7 +819,7 @@ void wrocksdb::continue_background( request::continue_background::ptr req, respo
     do
     {
       status = db->ContinueBackgroundWork();
-      PREFIXDB_LOG_DEBUG("ContinueBackgroundWork: " << status.ToString())
+      PREFIXDB_LOG_MESSAGE("ContinueBackgroundWork: " << status.ToString())
     }
     while ( status.ok() && req->force );
   }
