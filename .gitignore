@@ -14,3 +14,4 @@ autom4te.cache
 *build_info.h
 config.h
 *_build.counter
+docs
