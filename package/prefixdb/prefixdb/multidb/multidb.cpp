@@ -580,7 +580,8 @@ void multidb::configure_archive_timer_()
     _archive_timer = _workflow->create_timer(
       _opt.archive.start_time,
       std::chrono::seconds( _opt.archive.period_s ),
-      [this]()->bool { this->archive(); return true; }
+      [this]()->bool { this->archive(); return true; },
+      ::wflow::expires_at::before
     );
   }
 }
@@ -617,7 +618,8 @@ void multidb::configure_compact_timer_()
     _compact_timer = _workflow->create_timer(
       c.start_time,
       std::chrono::seconds( c.period_s ),
-      [this]() { this->compact(); return true; }
+      [this]() { this->compact(); return true; },
+      ::wflow::expires_at::before
     );
   }
 }
@@ -633,7 +635,8 @@ void multidb::configure_backup_timer_()
     _backup_timer = _workflow->create_timer(
       _opt.backup.start_time,
       std::chrono::seconds( _opt.backup.period_s ),
-      [this]() { this->backup(); return true; }
+      [this]() { this->backup(); return true; },
+      ::wflow::expires_at::before
     );
   }
 }
