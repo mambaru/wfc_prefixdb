@@ -59,4 +59,5 @@ wfc_prefixdb - пакет модулей префиксного key-value хра
 
 # API
 
-[PrefixDB API](http://github.lan/cpp/wfc_prefixdb/wikis/wfc_prefixdb)
+[PrefixDB API](docs-md/api.md)
+[Список методов](docs-md/methods.md)
