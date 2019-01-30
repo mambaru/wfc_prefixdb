@@ -566,11 +566,9 @@ bool multidb::archive()
 }
 
 
-
 //
 // ---------------------------
 //
-
 
 void multidb::configure_archive_timer_()
 {
@@ -624,7 +622,6 @@ void multidb::configure_compact_timer_()
   }
 }
 
-
 void multidb::configure_backup_timer_()
 {
   _workflow->release_timer(_backup_timer);
@@ -640,7 +637,6 @@ void multidb::configure_backup_timer_()
     );
   }
 }
-
 
 void multidb::configure_prefix_reqester_()
 {
@@ -719,7 +715,6 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_
   return nullptr;
 }
 
-
 std::vector< std::string > multidb::all_prefixes_()
 {
   std::lock_guard<std::mutex> lk(_mutex);
@@ -735,7 +730,6 @@ std::vector< std::string > multidb::all_prefixes_()
   }
   return result;
 }
-
 
 bool multidb::close_prefix_(const std::string& prefix)
 {
