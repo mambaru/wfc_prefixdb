@@ -6,10 +6,21 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(ci)
 
 if ( STANDALONE )
+
+  execute_process(
+    COMMAND 
+      git submodule update --init -- "external/facebook-rocksdb"
+    WORKING_DIRECTORY 
+      ${CMAKE_CURRENT_SOURCE_DIR}
+    RESULT_VARIABLE
+      EXIT_CODE
+    ERROR_QUIET
+  )
+
   getlibs(faslib wjson wlog wflow iow wjrpc wrtstat wfc)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/wfc/cmake)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/facebook-rocksdb/cmake/modules)
-  message(STATUS "--> ${CMAKE_MODULE_PATH}")
+  
   # https://github.com/facebook/rocksdb/blob/d1b26507bd97791437d870665277b55eb9e7ce95/INSTALL.md
   # zlib - a library for data compression.
   # bzip2 - a library for data compression.
