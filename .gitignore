@@ -1,0 +1,17 @@
+*~
+*.kdev4
+*.pyc
+.cproject
+.project
+*.o
+*/build
+build
+.tup
+*.kch
+autom4te.cache
+*.deps
+*.kate-swp
+*build_info.h
+config.h
+*_build.counter
+docs
