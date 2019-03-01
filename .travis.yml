@@ -13,6 +13,13 @@ install:
   - sudo apt-get install -y libc++-dev libboost-dev 
   - sudo apt-get install -y libboost-system-dev libboost-program-options-dev 
   - sudo apt-get install -y libboost-filesystem-dev libboost-date-time-dev libboost-regex-dev valgrind doxygen
+  # for rocksdb
+  - sudo apt-get install libgflags-dev
+  - sudo apt-get install libsnappy-dev
+  - sudo apt-get install zlib1g-dev
+  - sudo apt-get install libbz2-dev
+  - sudo apt-get install liblz4-dev
+  - sudo apt-get install libzstd-dev
 
 compiler:
   - g++
