@@ -168,7 +168,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     {
       PREFIXDB_LOG_WARNING( "Slave not acceptable loss sequence '" << pthis->_name << "' : " 
                           << diff << " request segment=" << preq->seq << " response=" << res->seq_first );
-      pthis->_lost_counter += diff;
+      pthis->_lost_counter += static_cast<size_t>(diff);
     } 
     else if ( diff < 0 )
     {
@@ -185,10 +185,10 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   auto batch = pthis->_log_parser->detach();
   //size_t sn = res->seq_last + 1;
   uint64_t sn = pthis->_log_parser->get_next_seq_number();
-  pthis->_current_differens = res->seq_final - (sn - 1);
+  pthis->_current_differens = static_cast<std::ptrdiff_t>( res->seq_final - (sn - 1) );
   pthis->_last_sequence = sn;
   // batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
-  pthis->write_sequence_number_(-1);
+  pthis->write_sequence_number_( static_cast<uint64_t>(-1) );
   {
     std::lock_guard<mutex_type> lk(pthis->_mutex);
     if ( pthis->is_started )

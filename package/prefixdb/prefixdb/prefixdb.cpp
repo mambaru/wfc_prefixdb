@@ -266,7 +266,7 @@ void prefixdb::restore_()
   if ( !path.empty() )
     opt.restore.path = path;
   if ( this->has_arg("bid") )
-    opt.restore.backup_id = this->get_arg_t<uint64_t>("bid");
+    opt.restore.backup_id = this->get_arg_t<int64_t>("bid");
   opt.preopen = false;
   factory->initialize(opt);
   db->reconfigure( opt, factory );

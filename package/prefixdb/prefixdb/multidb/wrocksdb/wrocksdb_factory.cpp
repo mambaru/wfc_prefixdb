@@ -129,7 +129,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   PREFIXDB_LOG_BEGIN("rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << _ttl << " ...");
 
   std::vector<int32_t> ttls;
-  ttls.push_back(_ttl);
+  ttls.push_back( static_cast<int32_t>(_ttl) );
   ::rocksdb::Status status;
   if ( !conf.forced_repair )
     status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);

@@ -25,7 +25,7 @@ private:
   struct context;
   std::shared_ptr<context> _context;
   mutable std::mutex _mutex;
-  int32_t _ttl=0;
+  uint32_t _ttl=0;
 };
 
 }}

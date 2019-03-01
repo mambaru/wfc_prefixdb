@@ -27,7 +27,7 @@ inline Out decode64(I beg, I end, Out out, size_t& tail)
   using namespace boost::archive::iterators;
   typedef transform_width<binary_from_base64< remove_whitespace<I> >, 8, 6> iterator;
   std::reverse_iterator<I> rend(end);
-  for ( tail=0; tail < 2 && *rend == '='; ++tail, ++rend, *(end-tail)='A' );
+  for ( tail=0; tail < 2 && *rend == '='; ++tail, ++rend, *( end - static_cast<std::ptrdiff_t>(tail) )='A' );
   return std::copy( iterator(beg), iterator(end), out);
 }
    

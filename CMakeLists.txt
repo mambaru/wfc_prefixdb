@@ -13,5 +13,6 @@ include_directories(.)
 add_subdirectory(package)
 
 if ( BUILD_TESTING )
+  enable_testing()
   add_subdirectory(tests)
 endif()

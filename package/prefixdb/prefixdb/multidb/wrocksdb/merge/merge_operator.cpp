@@ -286,7 +286,7 @@ void merge_operator::add_operand_(const std::string& operand, std::deque<std::st
   arr.insert( arr.end(), update.arr.begin(), update.arr.end() );
   if ( arr.size() > update.lim )
   {
-    size_t pos = arr.size() - update.lim;
+    std::ptrdiff_t pos = static_cast<std::ptrdiff_t>(arr.size() - update.lim);
     arr.erase( arr.begin(), arr.begin() + pos );
   }
 }

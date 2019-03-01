@@ -7,11 +7,6 @@ add_executable(
     ${FAS_TESTING_CPP}
 )
 
-target_link_libraries(
-  prefixdb_test 
-    wfc_prefixdb
-)
+target_link_libraries(prefixdb_test wfc_prefixdb)
 
 add_test(NAME prefixdb_test COMMAND prefixdb_test)
-
-

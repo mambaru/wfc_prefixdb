@@ -1,10 +1,15 @@
 
 #include "since_reader.hpp"
-#include "db/log_format.h"
+
 #include <iostream>
 #include <prefixdb/logger.hpp>
 #include <wfc/memory.hpp>
 #include <wfc/wfc_exit.hpp>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#include <db/log_format.h>
+#pragma GCC diagnostic pop
 
 namespace wamba{ namespace prefixdb {
 
@@ -20,7 +25,7 @@ namespace
     {
       size_t cnk = static_cast<size_t>( *reinterpret_cast<const uint8_t*>(*pbeg) );
       fin = ((cnk >> 7) & 1) == 0;
-      cnk &= ~(1 << 7);
+      cnk &= ~( static_cast<size_t>(1) << 7);
       cnk <<= 7*i;
       size |= cnk;
       (*pbeg)++;
@@ -163,7 +168,7 @@ const char*  since_reader::read_op_(const char* beg, const char* end, bool ignor
 unsigned int since_reader::read_record_(const char *beg, const char *end)
 {
   uint64_t sn = *reinterpret_cast<const uint64_t *>(beg);
-  const unsigned int type = beg[8];
+  const unsigned int type = static_cast<unsigned int>(beg[8]);
   size_t head = 12;
   beg += head;
   while ( nullptr != (beg = this->read_op_(beg, end, sn < _next_seq_number)) ) ++sn;
@@ -179,7 +184,7 @@ size_t since_reader::parse_()
   const char *end = beg + _buffer.size();
   
   this->read_record_(beg, end);
-  return std::distance(beg, end);
+  return static_cast<size_t>( std::distance(beg, end) );
 }
 
 void since_reader::reset()
@@ -195,7 +200,7 @@ bool since_reader::parse(const data_type& data)
   std::copy( data.begin(), data.end(), std::inserter(_buffer, _buffer.end()) );
   if ( size_t s = this->parse_() )
   {
-    _buffer.erase( _buffer.begin(), _buffer.begin() + s);
+    _buffer.erase( _buffer.begin(), _buffer.begin() + static_cast<ptrdiff_t>(s) );
   }
   return _status != status::Error;
 }

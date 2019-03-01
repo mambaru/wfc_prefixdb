@@ -534,7 +534,7 @@ bool multidb::archive()
   if ( _opt.archive.depth <= dirs.size() )
   {
     std::sort(dirs.begin(), dirs.end() );
-    std::for_each( dirs.begin(), dirs.begin() + dirs.size() - _opt.archive.depth, [path](const std::string& name)
+    std::for_each( dirs.begin(), dirs.begin() + static_cast<std::ptrdiff_t>( dirs.size() - _opt.archive.depth ) , [path](const std::string& name)
     {
       auto dir = path + '/' + name;
       std::string message;
