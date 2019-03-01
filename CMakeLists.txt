@@ -2,10 +2,32 @@ cmake_minimum_required(VERSION 3.1)
 
 project(wfc_prefixdb)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(ci)
+include(cmake/ci.cmake)
 
-if ( STANDALONE )
+FUNCTION(third_party_libs libs)
+  set(CMAKE_CXX_FLAGS "-fpic")
+  getlibs( ${libs} )
+ENDFUNCTION()
+
+FUNCTION(get_rocksdb)
+  set(WITH_TESTS OFF)
+  set(WITH_TOOLS OFF)
+  set(WITH_JEMALLOC OFF)
+  set(WITH_GFLAGS OFF)
+  set(WITH_SNAPPY ON)
+  set(WITH_LZ4 ON)
+  set(WITH_ZLIB ON)
+  set(WITH_BZ2 ON)
+  set(WITH_ZSTD ON)
+  third_party_libs(facebook-rocksdb)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/facebook-rocksdb)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/facebook-rocksdb/include)
+ENDFUNCTION ()
+
+wfc_libs()
+get_rocksdb()
+
+if ( STANDALONE_OLD )
 
   execute_process(
     COMMAND 
@@ -31,9 +53,10 @@ if ( STANDALONE )
   if ( NOT IGNORE_COMPRESS_LIBS )
     message(STATUS "Use IGNORE_COMPRESS_LIBS=ON for disable 'REQUIRED' for compression library")
     find_package(snappy REQUIRED)
-    find_package(ZLIB REQUIRED)
-    find_package(BZip2 REQUIRED)
     find_package(lz4 REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    find_package(BZip2 REQUIRED)
     find_package(zstd)
   endif()
 
@@ -60,7 +83,6 @@ include_directories(.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-undef -Wno-sign-conversion")
 add_subdirectory(package)
 
-if ( BUILD_TESTING AND STANDALONE)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${UNIT_TEST_BIN_OUTPUT_DIR})                                                                                                                 
+if ( BUILD_TESTING )
   add_subdirectory(tests)
 endif()

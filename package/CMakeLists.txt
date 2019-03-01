@@ -27,12 +27,9 @@ SET(
   
 )
 
-add_library(
-  wfc_prefixdb
-  ${prefixdb_source_list}
-)
+add_library(wfc_prefixdb ${prefixdb_source_list})
 
-if ( STANDALONE )
+if ( STANDALONEX )
 
   include(FindThreads)
   find_package(Boost COMPONENTS system program_options filesystem date_time regex REQUIRED)
@@ -50,8 +47,8 @@ if ( STANDALONE )
   )
 endif()
 
-target_link_libraries(wfc_prefixdb rocksdb )
-add_dependencies(wfc_prefixdb facebook-rocksdb )
+target_link_libraries(wfc_prefixdb rocksdb ${WFC_LIBRARIES} )
+add_dependencies(wfc_prefixdb rocksdb )
 
 build_info(wfc_prefixdb prefixdb)
 
