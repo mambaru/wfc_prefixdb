@@ -24,30 +24,12 @@ SET(
   prefixdb/service/prefixdb_service_multiton.cpp
   prefixdb/service/prefixdb_cmd.cpp
   prefixdb/gateway/prefixdb_gateway_multiton.cpp
-  
 )
 
 add_library(wfc_prefixdb ${prefixdb_source_list})
 
-if ( STANDALONEX )
-
-  include(FindThreads)
-  find_package(Boost COMPONENTS system program_options filesystem date_time regex REQUIRED)
-
-  target_link_libraries(
-    wfc_prefixdb
-      wfc
-      wlog
-      wflow
-      wjrpc
-      iow
-      wrtstat
-      ${Boost_LIBRARIES} 
-      ${CMAKE_THREAD_LIBS_INIT}
-  )
-endif()
-
 target_link_libraries(wfc_prefixdb rocksdb ${WFC_LIBRARIES} )
+
 add_dependencies(wfc_prefixdb rocksdb )
 
 build_info(wfc_prefixdb prefixdb)
