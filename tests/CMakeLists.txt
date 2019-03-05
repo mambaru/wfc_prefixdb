@@ -1,5 +1,5 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${UNIT_TEST_BIN_OUTPUT_DIR})
-
+include_directories(prefixdb)
 add_executable(
   prefixdb_test
     prefixdb_suite.cpp
@@ -7,6 +7,6 @@ add_executable(
     ${FAS_TESTING_CPP}
 )
 
-target_link_libraries(prefixdb_test wfc_prefixdb)
+target_link_libraries(prefixdb_test rocksdb wfc_prefixdb )
 
 add_test(NAME prefixdb_test COMMAND prefixdb_test)

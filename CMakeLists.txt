@@ -15,5 +15,6 @@ add_subdirectory(package)
 
 if ( BUILD_TESTING )
   enable_testing()
+  include_directories(package)
   add_subdirectory(tests)
 endif()
