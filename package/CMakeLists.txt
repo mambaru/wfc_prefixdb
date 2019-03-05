@@ -29,8 +29,7 @@ SET(
 add_library(wfc_prefixdb ${prefixdb_source_list})
 
 target_link_libraries(wfc_prefixdb rocksdb ${WFC_LIBRARIES} )
-
-add_dependencies(wfc_prefixdb rocksdb )
+add_dependencies(wfc_prefixdb rocksdb)
 
 build_info(wfc_prefixdb prefixdb)
 
