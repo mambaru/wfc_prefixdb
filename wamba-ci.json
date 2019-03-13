@@ -2,7 +2,7 @@
   "tag":"0.8.0",
   "release":"release-0.8",
   
-  "public":false,
+  "public":public,
   "paranoid":true,
   "coverage":true,
   "build_threads": 4,
@@ -31,7 +31,7 @@
     "compiler":"g++",
     
     "Release":{
-      "static":false,
+      "static":true,
       "shared":false,
       
       "production":false,
@@ -45,7 +45,7 @@
       "devel":false
     },
     "Debug":{
-      "static":false,
+      "static":true,
       "shared":false,
       
       "production":false,
