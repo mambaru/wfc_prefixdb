@@ -1,6 +1,6 @@
 #include <fas/testing.hpp>
 #include <wfc/module/testing_domain.hpp>
-#include <package/prefixdb/prefixdb/prefixdb.hpp>
+#include <prefixdb/prefixdb/prefixdb.hpp>
 
 
 namespace {

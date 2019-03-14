@@ -8,8 +8,6 @@ include(rocksdb)
 wfc_libs()
 get_rocksdb()
 
-include_directories(.)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-undef")
 add_subdirectory(package)
 

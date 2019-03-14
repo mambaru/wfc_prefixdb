@@ -5,7 +5,7 @@
 .project
 *.o
 */build
-build
+build/
 .tup
 *.kch
 autom4te.cache
@@ -14,4 +14,4 @@ autom4te.cache
 *build_info.h
 config.h
 *_build.counter
-docs
+docs/
