@@ -16,7 +16,7 @@ namespace {
   std::string time_string()
   {
     std::tm ti;
-    std::time_t now = time(0);
+    std::time_t now = time(nullptr);
     localtime_r( &now, &ti );
     char buf[80]={0};
     strftime( buf, 80, "%Y%m%d-%H%M%S", &ti);
