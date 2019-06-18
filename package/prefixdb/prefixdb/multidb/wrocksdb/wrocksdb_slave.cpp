@@ -262,7 +262,7 @@ void wrocksdb_slave::create_seq_timer_()
   auto update_counter = std::make_shared< std::atomic<size_t> >(0);
   if ( _opt.seq_log_timeout_ms != 0 )
   {
-    auto last_time = std::make_shared< std::atomic<time_t> >( time(0) );
+    auto last_time = std::make_shared< std::atomic<time_t> >( time(nullptr) );
     std::weak_ptr<wrocksdb_slave> wthis=this->shared_from_this();
     _seq_timer_id = _opt.timer->create_timer(
       std::chrono::milliseconds( _opt.seq_log_timeout_ms ),
@@ -272,7 +272,7 @@ void wrocksdb_slave::create_seq_timer_()
         if (pthis==nullptr)
           return false;
         
-        time_t span = std::time(0) - last_time->load();
+        time_t span = std::time(nullptr) - last_time->load();
         if ( pthis->_update_counter == 0)
         {
           PREFIXDB_LOG_MESSAGE("No updates for '" << pthis->_name << "' in the last " << span 
@@ -281,7 +281,7 @@ void wrocksdb_slave::create_seq_timer_()
         else
         {
           PREFIXDB_LOG_MESSAGE( pthis->_update_counter.load() << " updates for '" << pthis->_name << "' in the last " << span << " seconds. Next seq №" << pthis->_last_sequence );
-          last_time->store( std::time(0) );
+          last_time->store( std::time(nullptr) );
           pthis->_update_counter = 0;
         }
         return true;
