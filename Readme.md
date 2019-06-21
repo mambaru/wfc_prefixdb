@@ -1,5 +1,9 @@
-wfc_prefixdb - пакет модулей префиксного key-value хранилища на базе RocksDB
+wfc_prefixdb - пакет WFC префиксного key-value хранилища на базе RocksDB
 =========
+
+* Репозитарий на [github.com](https://github.com/mambaru/wfc_prefixdb).
+* Документация [doxygen](https://mambaru.github.io/wfc_prefixdb/index.html).
+* Отчет [coverage](https://mambaru.github.io/wfc_prefixdb/cov-report/index.html)
 
 На данный момент реализован один модуль, собсвенно prefixdb, состоящий из трех компонент:
 

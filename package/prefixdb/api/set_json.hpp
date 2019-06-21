@@ -9,6 +9,24 @@ namespace wamba { namespace prefixdb {
 
 namespace request 
 {
+  /**
+   *  @brief set json
+      @code{.json}
+      {
+        "prefix":"префикс",
+        "nores":true,
+        "noval":false,
+        "sync" :false,
+        "fields":
+          {
+            "ключ1":<<json>>,
+            "ключ2":<<json>>,
+            "ключ3":<<json>>
+          }
+      }
+      @endcode
+      @see request::set
+   */
   struct set_json
   {
     JSON_NAME(prefix)
@@ -26,7 +44,7 @@ namespace request
         wfc::json::member<n_nores,  set, bool, &set::nores>,
         wfc::json::member<n_noval,  set, bool, &set::noval>,
         wfc::json::member<n_snapshot,  set, size_t, &set::snapshot>,
-        wfc::json::member<n_fields, set, set::field_list_t, &set::fields, raw_fields_list_json >
+        wfc::json::member<n_fields, set, field_list_t, &set::fields, fields_list_json >
       >
     > type;
     typedef type::target target;
@@ -37,6 +55,21 @@ namespace request
 
 namespace response
 {
+  /**
+    * @brief set json
+      @code{.json}
+      {
+        "prefix":"префикс",
+        "status":"OK",
+        "fields":{
+          "ключ1":<<json>>,
+          "ключ2":<<json>>,
+          "ключ3":<<json>>
+        }
+      }
+      @endcode
+  */
+
   struct set_json
   {
     JSON_NAME(prefix)
@@ -48,7 +81,7 @@ namespace response
       wfc::json::member_list<
         wfc::json::member<n_prefix, set, std::string, &set::prefix>,
         wfc::json::member<n_status, set, common_status, &set::status, common_status_json>,
-        wfc::json::member<n_fields, set, set::field_list_t, &set::fields, raw_fields_list_json>
+        wfc::json::member<n_fields, set, field_list_t, &set::fields, fields_list_json>
       >
     > type;
     typedef type::target target;

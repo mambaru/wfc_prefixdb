@@ -11,7 +11,6 @@ namespace request
 {
   struct packed
   {
-    typedef raw_field_list_t field_list_t;
     std::string prefix;
     bool sync = false;
     bool nores = true;  // no result пустой результат, prefix="", status=OK
@@ -27,7 +26,6 @@ namespace response
 {
   struct packed
   {
-    typedef raw_field_list_t field_list_t;
     
     common_status status =  common_status::OK;
     std::string prefix;

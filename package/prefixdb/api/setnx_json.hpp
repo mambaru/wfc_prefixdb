@@ -26,7 +26,7 @@ namespace request
         wfc::json::member<n_nores,  setnx, bool, &setnx::nores>,
         wfc::json::member<n_noval,  setnx, bool, &setnx::noval>,
         wfc::json::member<n_snapshot, setnx, size_t, &setnx::snapshot>,
-        wfc::json::member<n_fields, setnx, setnx::field_list_t, &setnx::fields, raw_fields_list_json >
+        wfc::json::member<n_fields, setnx, field_list_t, &setnx::fields, fields_list_json >
       >
     > type;
     typedef type::target target;
@@ -48,7 +48,7 @@ namespace response
       wfc::json::member_list<
         wfc::json::member<n_prefix, setnx, std::string,       &setnx::prefix>,
         wfc::json::member<n_status, setnx, common_status,     &setnx::status, common_status_json>,
-        wfc::json::member<n_fields, setnx, set::field_list_t, &setnx::fields, raw_fields_list_json>
+        wfc::json::member<n_fields, setnx, field_list_t, &setnx::fields, fields_list_json>
       >
     > type;
     typedef type::target target;

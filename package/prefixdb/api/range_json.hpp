@@ -54,7 +54,7 @@ namespace response
         wfc::json::member<n_final,  range, bool, &range::fin>,
         wfc::json::member<n_prefix, range, std::string, &range::prefix>,
         wfc::json::member<n_status, range, common_status, &range::status, common_status_json>,
-        wfc::json::member<n_fields, range, range::field_list_t, &range::fields, raw_fields_list_json>
+        wfc::json::member<n_fields, range, field_list_t, &range::fields, fields_list_json>
       >
     > type;
     typedef type::target target;

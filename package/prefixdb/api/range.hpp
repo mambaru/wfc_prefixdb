@@ -27,8 +27,6 @@ namespace response
 {
   struct range
   {
-    typedef raw_field_list_t field_list_t;
-
     bool fin = true;
     common_status status = common_status::OK ;
     std::string prefix;
