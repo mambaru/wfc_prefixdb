@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - package/prefixdb/prefixdb/multidb/aux/multidb.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">package/prefixdb/prefixdb/multidb/aux</a> - multidb.hpp<span style="font-size: 80%;"> (source / <a href="multidb.hpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2019-06-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">64</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #include &lt;wfc/memory.hpp&gt;</a>
+<span class="lineNum">       2 </span>            : #include &lt;prefixdb/api/common_status.hpp&gt;
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : namespace wamba{ namespace prefixdb { namespace{
+<a name="5"><span class="lineNum">       5 </span>            :   </a>
+<span class="lineNum">       6 </span>            : template&lt;common_status Status, typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">       7 </span><span class="lineNoCov">          0 : inline bool send_error(const ReqPtr&amp; req, const Callback&amp; cb)</span>
+<span class="lineNum">       8 </span>            : {
+<span class="lineNum">       9 </span><span class="lineNoCov">          0 :   if ( cb!=nullptr )</span>
+<span class="lineNum">      10 </span>            :   {
+<span class="lineNum">      11 </span><span class="lineNoCov">          0 :     auto res = std::make_unique&lt;Res&gt;();</span>
+<span class="lineNum">      12 </span><span class="lineNoCov">          0 :     res-&gt;prefix = std::move(req-&gt;prefix);</span>
+<span class="lineNum">      13 </span><span class="lineNoCov">          0 :     res-&gt;status = Status;</span>
+<span class="lineNum">      14 </span><span class="lineNoCov">          0 :     cb( std::move(res) );</span>
+<span class="lineNum">      15 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">      16 </span>            :   }
+<span class="lineNum">      17 </span><span class="lineNoCov">          0 :   return false;</span>
+<span class="lineNum">      18 </span>            : }
+<a name="19"><span class="lineNum">      19 </span>            : </a>
+<span class="lineNum">      20 </span>            : template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">      21 </span><span class="lineNoCov">          0 : inline bool prefix_not_found(const ReqPtr&amp; req, const Callback&amp; cb)</span>
+<span class="lineNum">      22 </span>            : {
+<span class="lineNum">      23 </span><span class="lineNoCov">          0 :   return send_error&lt;common_status::PrefixNotFound, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">      24 </span>            : }
+<a name="25"><span class="lineNum">      25 </span>            : </a>
+<span class="lineNum">      26 </span>            : template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">      27 </span><span class="lineNoCov">          0 : inline bool create_prefix_fail(const ReqPtr&amp; req, const Callback&amp; cb)</span>
+<span class="lineNum">      28 </span>            : {
+<span class="lineNum">      29 </span><span class="lineNoCov">          0 :   return send_error&lt;common_status::CreatePrefixFail, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">      30 </span>            : }
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : /*
+<span class="lineNum">      33 </span>            : template&lt;typename Req, typename Callback&gt;
+<span class="lineNum">      34 </span>            : inline bool req_null(const Req&amp; req, const Callback&amp; cb)
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            :   if ( req==nullptr )
+<span class="lineNum">      37 </span>            :   {
+<span class="lineNum">      38 </span>            :     if ( cb!=nullptr )
+<span class="lineNum">      39 </span>            :     {
+<span class="lineNum">      40 </span>            :       cb(nullptr);
+<span class="lineNum">      41 </span>            :     }
+<span class="lineNum">      42 </span>            :     return true;
+<span class="lineNum">      43 </span>            :   }
+<span class="lineNum">      44 </span>            :   return false;
+<span class="lineNum">      45 </span>            : }
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : template&lt;typename Req, typename Callback&gt;
+<span class="lineNum">      48 </span>            : inline bool notify_ban(const Req&amp; req, const Callback&amp; cb)
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span>            :   return cb==nullptr || req_null(req, cb);
+<span class="lineNum">      51 </span>            : }
+<span class="lineNum">      52 </span>            : */
+<a name="53"><span class="lineNum">      53 </span>            : </a>
+<span class="lineNum">      54 </span>            : template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 : inline bool empty_fields(const ReqPtr&amp; req, const Callback&amp; cb)</span>
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            :   // if ( req_null(req, cb) ) return true; 
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :   if ( req-&gt;fields.empty() )</span>
+<span class="lineNum">      60 </span>            :   {
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :     send_error&lt;common_status::EmptyFields, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">      63 </span>            :   }
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :   return false;</span>
+<span class="lineNum">      65 </span>            : }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     
+<span class="lineNum">      68 </span>            : }}}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

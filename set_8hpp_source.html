@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.15"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wfc_prefixdb: Исходный файл package/prefixdb/api/set.hpp</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">wfc_prefixdb
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.15 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_49723ebcbd6fe8f0b24287e7094945fb.html">package</a></li><li class="navelem"><a class="el" href="dir_5ddace9f1317d7706c2c45b897e0496b.html">prefixdb</a></li><li class="navelem"><a class="el" href="dir_2a6d7d032061742448b72c0b1fe8d2f0.html">api</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">set.hpp</div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div><div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;</div><div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/common_status.hpp&gt;</span></div><div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/fields.hpp&gt;</span></div><div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div><div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div><div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div><div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacewamba.html">wamba</a> { <span class="keyword">namespace </span>prefixdb {</div><div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div><div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">namespace </span>request</div><div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;{</div><div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="structwamba_1_1prefixdb_1_1request_1_1set.html">   19</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structwamba_1_1prefixdb_1_1request_1_1set.html">set</a></div><div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  {</div><div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;   </div><div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a18d3f23451ddaed2338df77526a15dc1">   22</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a18d3f23451ddaed2338df77526a15dc1">sync</a> = <span class="keyword">false</span>;   </div><div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">bool</span> nores = <span class="keyword">true</span>;</div><div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordtype">bool</span> noval = <span class="keyword">false</span>;</div><div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a6cb53503fdbf95111e249348c5eee065">   25</a></span>&#160;    std::string <a class="code" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a6cb53503fdbf95111e249348c5eee065">prefix</a>;  </div><div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="structwamba_1_1prefixdb_1_1request_1_1set.html#aaaf8f6ad6d4607f9802192c809d2a8ff">   26</a></span>&#160;    <a class="code" href="namespacewamba_1_1prefixdb.html#a9c949240c82e52d1cd4ba4eb63a5ab49">field_list_t</a> <a class="code" href="structwamba_1_1prefixdb_1_1request_1_1set.html#aaaf8f6ad6d4607f9802192c809d2a8ff">fields</a>; </div><div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="comment">// Только для noval=false, пишет в базу, а значение из snapshot_id</span></div><div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordtype">size_t</span> snapshot = 0;</div><div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keyword">typedef</span> std::unique_ptr&lt;set&gt; ptr;</div><div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  };</div><div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;}</div><div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div><div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keyword">namespace </span>response</div><div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;{</div><div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="structwamba_1_1prefixdb_1_1response_1_1set.html">   42</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structwamba_1_1prefixdb_1_1response_1_1set.html">set</a></div><div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  {</div><div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    common_status status =  common_status::OK;</div><div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    std::string prefix;</div><div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <a class="code" href="namespacewamba_1_1prefixdb.html#a9c949240c82e52d1cd4ba4eb63a5ab49">field_list_t</a> fields;</div><div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div><div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keyword">typedef</span> std::unique_ptr&lt;set&gt; ptr;</div><div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keyword">typedef</span> std::function&lt; void(ptr) &gt; handler;</div><div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  };</div><div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div><div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;}</div><div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div><div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;}}</div><div class="ttc" id="structwamba_1_1prefixdb_1_1request_1_1set_html_a6cb53503fdbf95111e249348c5eee065"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1request_1_1set.html#a6cb53503fdbf95111e249348c5eee065">wamba::prefixdb::request::set::prefix</a></div><div class="ttdeci">std::string prefix</div><div class="ttdoc">имя префикса </div><div class="ttdef"><b>Definition:</b> set.hpp:25</div></div>
+<div class="ttc" id="structwamba_1_1prefixdb_1_1request_1_1set_html_a18d3f23451ddaed2338df77526a15dc1"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1request_1_1set.html#a18d3f23451ddaed2338df77526a15dc1">wamba::prefixdb::request::set::sync</a></div><div class="ttdeci">bool sync</div><div class="ttdoc">синхронная запись на диск (без кэширования) </div><div class="ttdef"><b>Definition:</b> set.hpp:22</div></div>
+<div class="ttc" id="structwamba_1_1prefixdb_1_1request_1_1set_html_aaaf8f6ad6d4607f9802192c809d2a8ff"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1request_1_1set.html#aaaf8f6ad6d4607f9802192c809d2a8ff">wamba::prefixdb::request::set::fields</a></div><div class="ttdeci">field_list_t fields</div><div class="ttdoc">список пар ключ-значение для записи </div><div class="ttdef"><b>Definition:</b> set.hpp:26</div></div>
+<div class="ttc" id="namespacewamba_html"><div class="ttname"><a href="namespacewamba.html">wamba</a></div><div class="ttdoc">wamba </div><div class="ttdef"><b>Definition:</b> fields.hpp:8</div></div>
+<div class="ttc" id="structwamba_1_1prefixdb_1_1response_1_1set_html"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1response_1_1set.html">wamba::prefixdb::response::set</a></div><div class="ttdoc">Ответ Установка значений для нескольких ключей. </div><div class="ttdef"><b>Definition:</b> set.hpp:42</div></div>
+<div class="ttc" id="structwamba_1_1prefixdb_1_1request_1_1set_html"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1request_1_1set.html">wamba::prefixdb::request::set</a></div><div class="ttdoc">Установка значений для нескольких ключей. </div><div class="ttdef"><b>Definition:</b> set.hpp:19</div></div>
+<div class="ttc" id="namespacewamba_1_1prefixdb_html_a9c949240c82e52d1cd4ba4eb63a5ab49"><div class="ttname"><a href="namespacewamba_1_1prefixdb.html#a9c949240c82e52d1cd4ba4eb63a5ab49">wamba::prefixdb::field_list_t</a></div><div class="ttdeci">std::vector&lt; field_pair &gt; field_list_t</div><div class="ttdoc">список пар ключ-значение </div><div class="ttdef"><b>Definition:</b> fields.hpp:21</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.15
+</small></address>
+</body>
+</html>

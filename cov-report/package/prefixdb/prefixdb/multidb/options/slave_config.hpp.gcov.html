@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - package/prefixdb/prefixdb/multidb/options/slave_config.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">package/prefixdb/prefixdb/multidb/options</a> - slave_config.hpp<span style="font-size: 80%;"> (source / <a href="slave_config.hpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2019-06-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : #include &lt;prefixdb/iprefixdb.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;wfc/workflow.hpp&gt;
+<span class="lineNum">       6 </span>            : #include &lt;memory&gt;
+<span class="lineNum">       7 </span>            : #include &lt;string&gt;
+<span class="lineNum">       8 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">       9 </span>            : 
+<a name="10"><span class="lineNum">      10 </span>            : namespace wamba{ namespace prefixdb{</a>
+<span class="lineNum">      11 </span>            :   
+<span class="lineNum">      12 </span><span class="lineCov">          8 : struct slave_config</span>
+<span class="lineNum">      13 </span>            : {
+<span class="lineNum">      14 </span>            :   bool enabled = false;
+<span class="lineNum">      15 </span>            :   
+<span class="lineNum">      16 </span>            :   std::string target;
+<span class="lineNum">      17 </span>            :   std::string start_time;
+<span class="lineNum">      18 </span>            :   
+<span class="lineNum">      19 </span>            :   // интервал запросов к мастеру в милисекундах 
+<span class="lineNum">      20 </span>            :   time_t pull_timeout_ms           = 1000;
+<span class="lineNum">      21 </span>            :   time_t query_prefixes_timeout_ms = 2000;
+<span class="lineNum">      22 </span>            :   // ограничение на количество элементов в ответе на один запрос к мастеру
+<span class="lineNum">      23 </span>            :   size_t log_limit_per_req = 100;
+<span class="lineNum">      24 </span>            :   // отображать в логе процесс загрузки 
+<span class="lineNum">      25 </span>            :   bool enable_progress = false;
+<span class="lineNum">      26 </span>            :   // выдерживать интервал после каждого запроса. В противном случае, если не достигнут конец лога, следующий запрос
+<span class="lineNum">      27 </span>            :   bool expires_for_req = true;
+<span class="lineNum">      28 </span>            :   // допустимые потери последовательностей. При превышении этого значения демон завершает работу
+<span class="lineNum">      29 </span>            :   std::ptrdiff_t acceptable_loss_seq = 0;
+<span class="lineNum">      30 </span>            :   // при каком отставании ругатся в логи
+<span class="lineNum">      31 </span>            :   std::ptrdiff_t wrn_log_diff_seq = 10000;
+<span class="lineNum">      32 </span>            :   time_t wrn_log_timeout_ms = 1000;
+<span class="lineNum">      33 </span>            :   time_t seq_log_timeout_ms = 1000;
+<span class="lineNum">      34 </span>            :   // Отключить WAL для обновлений 
+<span class="lineNum">      35 </span>            :   bool disableWAL = false;
+<span class="lineNum">      36 </span>            :   
+<span class="lineNum">      37 </span>            :   std::shared_ptr&lt;iprefixdb&gt; master;
+<span class="lineNum">      38 </span>            :   std::shared_ptr&lt;wfc::workflow&gt; timer;
+<span class="lineNum">      39 </span>            : };
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

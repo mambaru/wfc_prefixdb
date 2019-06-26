@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - package/prefixdb/prefixdb/multidb/options/multidb_config_json.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">package/prefixdb/prefixdb/multidb/options</a> - multidb_config_json.hpp<span style="font-size: 80%;"> (source / <a href="multidb_config_json.hpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2019-06-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;prefixdb/prefixdb/multidb/options/multidb_config.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;prefixdb/prefixdb/multidb/options/db_config_json.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;wfc/json.hpp&gt;
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : namespace wamba{ namespace prefixdb{
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : struct multidb_config_json
+<a name="10"><span class="lineNum">      10 </span>            : {</a>
+<a name="11"><span class="lineNum">      11 </span>            :   // Предварительное открытие всех баз префиксов</a>
+<a name="12"><span class="lineNum">      12 </span><span class="lineNoCov">          0 :   JSON_NAME(preopen)</span></a>
+<a name="13"><span class="lineNum">      13 </span><span class="lineNoCov">          0 :   JSON_NAME(keys_per_req)</span></a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineNoCov">          0 :   JSON_NAME(key_size_limit)</span></a>
+<a name="15"><span class="lineNum">      15 </span><span class="lineNoCov">          0 :   JSON_NAME(value_size_limit)</span></a>
+<span class="lineNum">      16 </span><span class="lineNoCov">          0 :   JSON_NAME(prefix_size_limit)</span>
+<span class="lineNum">      17 </span><span class="lineNoCov">          0 :   JSON_NAME(max_prefixes)</span>
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :   typedef wfc::json::object&lt;
+<span class="lineNum">      20 </span>            :     multidb_config,
+<span class="lineNum">      21 </span>            :     wfc::json::member_list&lt;
+<span class="lineNum">      22 </span>            :       wfc::json::member&lt;n_preopen, multidb_config, bool,        &amp;multidb_config::preopen&gt;,
+<span class="lineNum">      23 </span>            :       wfc::json::member&lt;n_keys_per_req, multidb_config, size_t, &amp;multidb_config::keys_per_req&gt;,
+<span class="lineNum">      24 </span>            :       wfc::json::member&lt;n_key_size_limit, multidb_config, size_t, &amp;multidb_config::key_size_limit&gt;,
+<span class="lineNum">      25 </span>            :       wfc::json::member&lt;n_value_size_limit, multidb_config, size_t, &amp;multidb_config::value_size_limit&gt;,
+<span class="lineNum">      26 </span>            :       wfc::json::member&lt;n_prefix_size_limit, multidb_config, size_t, &amp;multidb_config::prefix_size_limit&gt;,
+<span class="lineNum">      27 </span>            :       wfc::json::member&lt;n_max_prefixes, multidb_config, size_t, &amp;multidb_config::max_prefixes&gt;,
+<span class="lineNum">      28 </span>            :       wfc::json::base&lt;db_config_json&gt;
+<span class="lineNum">      29 </span>            :     &gt;,
+<span class="lineNum">      30 </span>            :     wfc::json::strict_mode
+<span class="lineNum">      31 </span>            :   &gt; type;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            :   typedef type::target target;
+<span class="lineNum">      34 </span>            :   typedef type::serializer serializer;
+<span class="lineNum">      35 </span>            :   typedef type::member_list member_list;
+<span class="lineNum">      36 </span>            : };
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : }}
+<span class="lineNum">      39 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

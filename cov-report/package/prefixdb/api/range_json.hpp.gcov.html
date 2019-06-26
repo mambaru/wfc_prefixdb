@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - package/prefixdb/api/range_json.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">package/prefixdb/api</a> - range_json.hpp<span style="font-size: 80%;"> (source / <a href="range_json.hpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2019-06-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;prefixdb/api/range.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;prefixdb/api/fields_json.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;prefixdb/api/common_status_json.hpp&gt;
+<span class="lineNum">       6 </span>            : #include &lt;wfc/json.hpp&gt;
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : namespace wamba { namespace prefixdb {
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : namespace request 
+<span class="lineNum">      11 </span>            : {
+<a name="12"><span class="lineNum">      12 </span>            :   struct range_json</a>
+<a name="13"><span class="lineNum">      13 </span>            :   {</a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineNoCov">          0 :     JSON_NAME(prefix)</span></a>
+<a name="15"><span class="lineNum">      15 </span><span class="lineNoCov">          0 :     JSON_NAME(noval)</span></a>
+<a name="16"><span class="lineNum">      16 </span><span class="lineNoCov">          0 :     JSON_NAME(snapshot)</span></a>
+<a name="17"><span class="lineNum">      17 </span><span class="lineNoCov">          0 :     JSON_NAME(beg)</span></a>
+<a name="18"><span class="lineNum">      18 </span><span class="lineNoCov">          0 :     JSON_NAME(from)</span></a>
+<a name="19"><span class="lineNum">      19 </span><span class="lineNoCov">          0 :     JSON_NAME(to)</span></a>
+<span class="lineNum">      20 </span><span class="lineNoCov">          0 :     JSON_NAME(limit)</span>
+<span class="lineNum">      21 </span><span class="lineNoCov">          0 :     JSON_NAME(offset)</span>
+<span class="lineNum">      22 </span>            :     
+<span class="lineNum">      23 </span>            :     typedef wfc::json::object&lt;
+<span class="lineNum">      24 </span>            :       range,
+<span class="lineNum">      25 </span>            :       wfc::json::member_list&lt;
+<span class="lineNum">      26 </span>            :         wfc::json::member&lt;n_prefix, range, std::string, &amp;range::prefix&gt;,
+<span class="lineNum">      27 </span>            :         wfc::json::member&lt;n_noval, range, bool, &amp;range::noval&gt;,
+<span class="lineNum">      28 </span>            :         wfc::json::member&lt;n_snapshot,  range, size_t, &amp;range::snapshot&gt;,
+<span class="lineNum">      29 </span>            :         wfc::json::member&lt;n_beg, range, bool, &amp;range::beg&gt;,
+<span class="lineNum">      30 </span>            :         wfc::json::member&lt;n_from, range, std::string, &amp;range::from&gt;,
+<span class="lineNum">      31 </span>            :         wfc::json::member&lt;n_to, range, std::string, &amp;range::to&gt;,
+<span class="lineNum">      32 </span>            :         wfc::json::member&lt;n_limit, range, size_t, &amp;range::limit&gt;,
+<span class="lineNum">      33 </span>            :         wfc::json::member&lt;n_offset, range, size_t, &amp;range::offset&gt;
+<span class="lineNum">      34 </span>            :       &gt;
+<span class="lineNum">      35 </span>            :     &gt; type;
+<span class="lineNum">      36 </span>            :     
+<span class="lineNum">      37 </span>            :     typedef type::target target;
+<span class="lineNum">      38 </span>            :     typedef type::serializer serializer;
+<span class="lineNum">      39 </span>            :   };
+<span class="lineNum">      40 </span>            : }
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : namespace response
+<span class="lineNum">      43 </span>            : {
+<a name="44"><span class="lineNum">      44 </span>            :   struct range_json</a>
+<a name="45"><span class="lineNum">      45 </span>            :   {</a>
+<a name="46"><span class="lineNum">      46 </span><span class="lineNoCov">          0 :     JSON_NAME(prefix)</span></a>
+<a name="47"><span class="lineNum">      47 </span><span class="lineNoCov">          0 :     JSON_NAME2(n_final, &quot;final&quot;)</span></a>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :     JSON_NAME(status)</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :     JSON_NAME(fields)</span>
+<span class="lineNum">      50 </span>            :     
+<span class="lineNum">      51 </span>            :     typedef wfc::json::object&lt;
+<span class="lineNum">      52 </span>            :       range,
+<span class="lineNum">      53 </span>            :       wfc::json::member_list&lt;
+<span class="lineNum">      54 </span>            :         wfc::json::member&lt;n_final,  range, bool, &amp;range::fin&gt;,
+<span class="lineNum">      55 </span>            :         wfc::json::member&lt;n_prefix, range, std::string, &amp;range::prefix&gt;,
+<span class="lineNum">      56 </span>            :         wfc::json::member&lt;n_status, range, common_status, &amp;range::status, common_status_json&gt;,
+<span class="lineNum">      57 </span>            :         wfc::json::member&lt;n_fields, range, field_list_t, &amp;range::fields, fields_list_json&gt;
+<span class="lineNum">      58 </span>            :       &gt;
+<span class="lineNum">      59 </span>            :     &gt; type;
+<span class="lineNum">      60 </span>            :     typedef type::target target;
+<span class="lineNum">      61 </span>            :     typedef type::serializer serializer;
+<span class="lineNum">      62 </span>            :     typedef type::member_list member_list;
+<span class="lineNum">      63 </span>            :   };
+<span class="lineNum">      64 </span>            : }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

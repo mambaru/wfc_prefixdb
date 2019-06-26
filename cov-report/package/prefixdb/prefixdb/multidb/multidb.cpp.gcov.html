@@ -1,0 +1,918 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - package/prefixdb/prefixdb/multidb/multidb.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">package/prefixdb/prefixdb/multidb</a> - multidb.cpp<span style="font-size: 80%;"> (source / <a href="multidb.cpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">464</td>
+            <td class="headerCovTableEntryLo">0.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2019-06-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntryLo">2.9 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #define BOOST_NO_CXX11_SCOPED_ENUMS</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &quot;multidb.hpp&quot;
+<span class="lineNum">       4 </span>            : #include &quot;ifactory.hpp&quot;
+<span class="lineNum">       5 </span>            : #include &quot;god.hpp&quot;
+<span class="lineNum">       6 </span>            : #include &quot;aux/multidb.hpp&quot;
+<span class="lineNum">       7 </span>            : #include &quot;aux/scan_dir.hpp&quot;
+<span class="lineNum">       8 </span>            : #include &quot;aux/copy_dir.hpp&quot;
+<span class="lineNum">       9 </span>            : #include &lt;wfc/logger.hpp&gt;
+<span class="lineNum">      10 </span>            : #include &lt;wfc/boost.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;prefixdb/logger.hpp&gt;
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : namespace wamba{ namespace prefixdb {
+<a name="14"><span class="lineNum">      14 </span>            : </a>
+<span class="lineNum">      15 </span>            : namespace {
+<span class="lineNum">      16 </span><span class="lineNoCov">          0 :   std::string time_string()</span>
+<span class="lineNum">      17 </span>            :   {
+<span class="lineNum">      18 </span>            :     std::tm ti;
+<span class="lineNum">      19 </span><span class="lineNoCov">          0 :     std::time_t now = time(nullptr);</span>
+<span class="lineNum">      20 </span><span class="lineNoCov">          0 :     localtime_r( &amp;now, &amp;ti );</span>
+<span class="lineNum">      21 </span><span class="lineNoCov">          0 :     char buf[80]={0};</span>
+<span class="lineNum">      22 </span><span class="lineNoCov">          0 :     strftime( buf, 80, &quot;%Y%m%d-%H%M%S&quot;, &amp;ti);</span>
+<span class="lineNum">      23 </span><span class="lineNoCov">          0 :     return std::string(buf);</span>
+<span class="lineNum">      24 </span>            :   }
+<a name="25"><span class="lineNum">      25 </span>            : }</a>
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span><span class="lineNoCov">          0 : multidb::multidb()</span>
+<span class="lineNum">      28 </span>            : {
+<a name="29"><span class="lineNum">      29 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineNoCov">          0 : bool multidb::reconfigure(const multidb_config&amp; opt, const std::shared_ptr&lt;ifactory&gt;&amp; factory)</span>
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :   this-&gt;stop(); // ??? </span>
+<span class="lineNum">      34 </span>            :   {
+<span class="lineNum">      35 </span><span class="lineNoCov">          0 :     std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">      36 </span><span class="lineNoCov">          0 :     _factory = factory;</span>
+<span class="lineNum">      37 </span><span class="lineNoCov">          0 :     _opt = opt;</span>
+<span class="lineNum">      38 </span><span class="lineNoCov">          0 :     _workflow = opt.args.timers_workflow;</span>
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 :     _opt.slave.timer = _workflow;</span>
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :     if ( !_factory-&gt;initialize(_opt) )</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">      42 </span>            :   }
+<span class="lineNum">      43 </span>            :     
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :   if ( !::boost::filesystem::exists(opt.path) )</span>
+<span class="lineNum">      45 </span>            :   {
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :     ::boost::system::error_code ec;</span>
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :     ::boost::filesystem::create_directory(opt.path, ec);</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :     if (ec)</span>
+<span class="lineNum">      49 </span>            :     {
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_ERROR(&quot;Create directory fail '&quot; &lt;&lt; opt.path &lt;&lt; &quot;'&quot; &lt;&lt; ec.message() );</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">      52 </span>            :     }
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span>            :   
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :   if (!opt.preopen)</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :   if ( !this-&gt;preopen_(opt.path, false) )</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :   if (_opt.compact.startup_compact)</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :     return this-&gt;compact();</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :   return true;</span>
+<a name="62"><span class="lineNum">      62 </span>            : }</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 : void multidb::start() </span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :   std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :   this-&gt;configure_backup_timer_();</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :   this-&gt;configure_archive_timer_();</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :   this-&gt;configure_prefix_reqester_();</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :   this-&gt;configure_compact_timer_();</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 : }</span>
+<a name="72"><span class="lineNum">      72 </span>            : </a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 : void multidb::set( request::set::ptr req, response::set::handler cb)</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :   if ( !check_fields_&lt;response::set&gt;(req, cb) ) </span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, true) )</span>
+<span class="lineNum">      80 </span>            :   {
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :     db-&gt;set( std::move(req), std::move(cb) );</span>
+<span class="lineNum">      82 </span>            :   } 
+<span class="lineNum">      83 </span>            :   else 
+<span class="lineNum">      84 </span>            :   {
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     create_prefix_fail&lt;response::set&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">      87 </span>            : }
+<a name="88"><span class="lineNum">      88 </span>            : </a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 : void multidb::setnx( request::setnx::ptr req, response::setnx::handler cb)</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :   if ( !check_fields_&lt;response::setnx&gt;(req, cb) ) </span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, true) )</span>
+<span class="lineNum">      96 </span>            :   {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     db-&gt;setnx( std::move(req), std::move(cb) );</span>
+<span class="lineNum">      98 </span>            :   } 
+<span class="lineNum">      99 </span>            :   else 
+<span class="lineNum">     100 </span>            :   {
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     create_prefix_fail&lt;response::setnx&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :   }</span>
+<a name="103"><span class="lineNum">     103 </span>            : }</a>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 : void multidb::get( request::get::ptr req, response::get::handler cb)</span>
+<span class="lineNum">     106 </span>            : {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     108 </span>            :   {
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     db-&gt;get( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     110 </span>            :   }
+<span class="lineNum">     111 </span>            :   else
+<span class="lineNum">     112 </span>            :   {
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::get&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :   }</span>
+<a name="115"><span class="lineNum">     115 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 : void multidb::has( request::has::ptr req, response::has::handler cb)</span>
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     120 </span>            :   {
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :     db-&gt;has( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span>            :   else
+<span class="lineNum">     124 </span>            :   {
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::has&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 : }</span>
+<a name="128"><span class="lineNum">     128 </span>            : </a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 : void multidb::del( request::del::ptr req, response::del::handler cb) </span>
+<span class="lineNum">     131 </span>            : {
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   if ( empty_fields&lt;response::del&gt;(req, cb) ) </span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     136 </span>            :   {
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :     db-&gt;del( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     138 </span>            :   }
+<span class="lineNum">     139 </span>            :   else
+<span class="lineNum">     140 </span>            :   {
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::del&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   }</span>
+<a name="143"><span class="lineNum">     143 </span>            : }</a>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 : void multidb::inc( request::inc::ptr req, response::inc::handler cb) </span>
+<span class="lineNum">     146 </span>            : {
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :   if ( !check_fields_&lt;response::inc&gt;(req, cb) )</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, true) )</span>
+<span class="lineNum">     151 </span>            :   {
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :     db-&gt;inc( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     153 </span>            :   }
+<span class="lineNum">     154 </span>            :   else 
+<span class="lineNum">     155 </span>            :   {
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :     create_prefix_fail&lt;response::inc&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :   }</span>
+<a name="158"><span class="lineNum">     158 </span>            : }</a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 : void multidb::add( request::add::ptr req, response::add::handler cb) </span>
+<span class="lineNum">     161 </span>            : {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   if ( !check_fields_&lt;response::add&gt;(req, cb) )</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, true) )</span>
+<span class="lineNum">     166 </span>            :   {
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     db-&gt;add( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span>            :   else 
+<span class="lineNum">     170 </span>            :   {
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     create_prefix_fail&lt;response::add&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :   }</span>
+<a name="173"><span class="lineNum">     173 </span>            : }</a>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 : void multidb::packed( request::packed::ptr req, response::packed::handler cb)</span>
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :   if ( !check_fields_&lt;response::packed&gt;(req, cb) )</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, true) )</span>
+<span class="lineNum">     181 </span>            :   {
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     db-&gt;packed( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span>            :   else 
+<span class="lineNum">     185 </span>            :   {
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :     create_prefix_fail&lt;response::packed&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   }</span>
+<a name="188"><span class="lineNum">     188 </span>            : }</a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 : void multidb::range( request::range::ptr req, response::range::handler cb)</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :   if ( this-&gt;_opt.range_limit!=0 &amp;&amp; (req-&gt;limit + req-&gt;offset &gt; this-&gt;_opt.range_limit) )</span>
+<span class="lineNum">     193 </span>            :   {
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :     send_error&lt;common_status::RangeLimitExceeded, response::range&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     196 </span>            :   }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     199 </span>            :   {
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :     db-&gt;range( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     201 </span>            :   }
+<span class="lineNum">     202 </span>            :   else
+<span class="lineNum">     203 </span>            :   {
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::range&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :   }</span>
+<a name="206"><span class="lineNum">     206 </span>            : }</a>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 : void multidb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)</span>
+<span class="lineNum">     209 </span>            : {
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     211 </span>            :   {
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     db-&gt;get_updates_since( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     213 </span>            :   }
+<span class="lineNum">     214 </span>            :   else
+<span class="lineNum">     215 </span>            :   {
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::get_updates_since&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :   }  </span>
+<a name="218"><span class="lineNum">     218 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 : void multidb::get_all_prefixes( request::get_all_prefixes::ptr /*req*/, response::get_all_prefixes::handler cb)</span>
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :   auto res = std::make_unique&lt;response::get_all_prefixes&gt;();</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :   res-&gt;prefixes = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :   cb(std::move(res));</span>
+<a name="225"><span class="lineNum">     225 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 : void multidb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)</span>
+<span class="lineNum">     228 </span>            : {
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :   bool ready = false;</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :   for (const auto&amp; prefix : req-&gt;prefixes )</span>
+<span class="lineNum">     231 </span>            :   {
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :     std::lock_guard&lt;std::mutex&gt; lk(this-&gt;_mutex);</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :     auto itr = this-&gt;_db_map.find(prefix);</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :     if ( itr != this-&gt;_db_map.end() &amp;&amp; itr-&gt;second == nullptr )</span>
+<span class="lineNum">     235 </span>            :     {
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_MESSAGE(&quot;Attach Prefix: &quot; &lt;&lt; prefix)</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :       ready = true;</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :       _db_map.erase(itr);</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :       if ( req-&gt;opendb )</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         this-&gt;prefix_(prefix, false);</span>
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :   if ( cb!=nullptr )</span>
+<span class="lineNum">     245 </span>            :   {
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :     auto res = std::make_unique&lt;response::attach_prefixes&gt;();</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :     res-&gt;status = ready </span>
+<span class="lineNum">     248 </span>            :       ? common_status::OK
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :       : common_status::CreatePrefixFail;</span>
+<span class="lineNum">     250 </span>            :   }
+<a name="251"><span class="lineNum">     251 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 : void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)</span>
+<span class="lineNum">     254 </span>            : {
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :   for (const auto&amp; prefix : req-&gt;prefixes )</span>
+<span class="lineNum">     256 </span>            :   {
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :     if ( auto db = this-&gt;prefix_(prefix, false) )</span>
+<span class="lineNum">     258 </span>            :     {
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :       auto req1 = std::make_unique&lt;request::detach_prefixes&gt;();</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :       req1-&gt;prefixes.push_back(prefix);</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :       req1-&gt;deny_timeout_s = req-&gt;deny_timeout_s;</span>
+<a name="262"><span class="lineNum">     262 </span><span class="lineNoCov">          0 :       db-&gt;detach_prefixes( </span></a>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :         std::move(req1), </span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :         [db](response::detach_prefixes::ptr){</span>
+<span class="lineNum">     265 </span>            :           /*захватываем db, на случай если detach_prefixes работает асинхронно*/
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :         });</span>
+<span class="lineNum">     267 </span>            :       
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :       std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :       if ( req-&gt;deny_timeout_s == 0)</span>
+<span class="lineNum">     270 </span>            :       {
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :         _db_map.erase( prefix );</span>
+<span class="lineNum">     272 </span>            :       }
+<span class="lineNum">     273 </span>            :       else
+<span class="lineNum">     274 </span>            :       {
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :         _db_map[prefix]=nullptr;</span>
+<a name="276"><span class="lineNum">     276 </span><span class="lineNoCov">          0 :         _workflow-&gt;safe_post( </span></a>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :           std::chrono::seconds(req-&gt;deny_timeout_s), </span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :           [this,prefix]()-&gt;bool </span>
+<span class="lineNum">     279 </span>            :           { 
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :             std::lock_guard&lt;std::mutex&gt; lk2(this-&gt;_mutex);</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :             auto itr = this-&gt;_db_map.find(prefix);</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :             if ( itr != this-&gt;_db_map.end() &amp;&amp; itr-&gt;second == nullptr )</span>
+<span class="lineNum">     283 </span>            :             {
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :               _db_map.erase(itr);</span>
+<span class="lineNum">     285 </span>            :             }
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :             return false;</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :           }</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :         );</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :       }</span>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     291 </span>            :   }
+<span class="lineNum">     292 </span>            :   
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :   if ( cb!= nullptr )</span>
+<span class="lineNum">     294 </span>            :   {
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     auto res = std::make_unique&lt;response::detach_prefixes&gt;();</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :     cb( std::move(res) );</span>
+<span class="lineNum">     297 </span>            :   }
+<a name="298"><span class="lineNum">     298 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 : void multidb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb)</span>
+<span class="lineNum">     301 </span>            : {
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :   auto prefixes = std::move(req-&gt;prefixes);</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :   if ( prefixes.empty() )</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :     prefixes = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :   for ( const std::string&amp; prefix: prefixes)</span>
+<span class="lineNum">     308 </span>            :   {
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :     if ( auto db = this-&gt;prefix_(prefix, false) )</span>
+<span class="lineNum">     310 </span>            :     {
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :       db-&gt;delay_background( std::make_unique&lt;request::delay_background&gt;(*req), nullptr );</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     313 </span>            :   }
+<span class="lineNum">     314 </span>            :   
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :   if ( cb != nullptr )</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :     cb(std::make_unique&lt;response::delay_background&gt;());</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 : }</span>
+<a name="318"><span class="lineNum">     318 </span>            : </a>
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 : void multidb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb)</span>
+<span class="lineNum">     321 </span>            : {
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :   auto prefixes = std::move(req-&gt;prefixes);</span>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :   if ( prefixes.empty() )</span>
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 :     prefixes = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :   for ( const std::string&amp; prefix: prefixes)</span>
+<span class="lineNum">     328 </span>            :   {
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :     if ( auto db = this-&gt;prefix_(prefix, false) )</span>
+<span class="lineNum">     330 </span>            :     {
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :       db-&gt;continue_background( std::make_unique&lt;request::continue_background&gt;(*req), nullptr );</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     333 </span>            :   }
+<span class="lineNum">     334 </span>            :   
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :   if ( cb != nullptr )</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :     cb(std::make_unique&lt;response::continue_background&gt;());</span>
+<a name="337"><span class="lineNum">     337 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 : void multidb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) </span>
+<span class="lineNum">     340 </span>            : {
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :   if ( req-&gt;prefix.empty() )</span>
+<span class="lineNum">     342 </span>            :   {
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :     bool result = this-&gt;compact();</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :     if (cb!=nullptr)</span>
+<span class="lineNum">     345 </span>            :     {
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :       auto res = std::make_unique&lt;response::compact_prefix&gt;();</span>
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :       res-&gt;status = result? common_status::OK : common_status::CompactFail;</span>
+<span class="lineNum">     348 </span><span class="lineNoCov">          0 :       cb( std::move(res) );</span>
+<span class="lineNum">     349 </span>            :     }
+<span class="lineNum">     350 </span>            :   }
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :   else if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     352 </span>            :   {
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :     db-&gt;compact_prefix( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     354 </span>            :   }
+<span class="lineNum">     355 </span>            :   else
+<span class="lineNum">     356 </span>            :   {
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::compact_prefix&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :   }  </span>
+<a name="359"><span class="lineNum">     359 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 : void multidb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) </span>
+<span class="lineNum">     362 </span>            : {
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     364 </span>            :   {
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :     db-&gt;create_snapshot( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     366 </span>            :   }
+<span class="lineNum">     367 </span>            :   else
+<span class="lineNum">     368 </span>            :   {
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::create_snapshot&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :   }  </span>
+<a name="371"><span class="lineNum">     371 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 : void  multidb::release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb)</span>
+<span class="lineNum">     374 </span>            : {
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :   if ( auto db = this-&gt;prefix_(req-&gt;prefix, false) )</span>
+<span class="lineNum">     376 </span>            :   {
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :     db-&gt;release_snapshot( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     378 </span>            :   }
+<span class="lineNum">     379 </span>            :   else
+<span class="lineNum">     380 </span>            :   {
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :     prefix_not_found&lt;response::release_snapshot&gt;( std::move(req), std::move(cb) );</span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :   }  </span>
+<a name="383"><span class="lineNum">     383 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 : void multidb::stop()</span>
+<span class="lineNum">     386 </span>            : {
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :   if ( _workflow )</span>
+<span class="lineNum">     388 </span>            :   {
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :     _workflow-&gt;release_timer(_archive_timer);</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :     _workflow-&gt;release_timer(_backup_timer);</span>
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :     _workflow-&gt;release_timer(_compact_timer);</span>
+<span class="lineNum">     392 </span><span class="lineNoCov">          0 :     _workflow-&gt;release_timer(_prefix_reqester);</span>
+<span class="lineNum">     393 </span>            :   }
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :   std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :   _workflow = nullptr;</span>
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :   if ( _factory )</span>
+<span class="lineNum">     398 </span>            :   {
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_BEGIN(&quot;STOP DB...&quot;)</span>
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :     _factory = nullptr;</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :     for (auto&amp; db : _db_map)</span>
+<span class="lineNum">     402 </span>            :     {
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :       if ( db.second!= nullptr )</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :         db.second-&gt;stop();</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :       db.second=nullptr;</span>
+<span class="lineNum">     406 </span>            :     }
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :     _db_map.clear();</span>
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_END(&quot;STOP DB!&quot;)</span>
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :   }</span>
+<a name="410"><span class="lineNum">     410 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 : bool multidb::backup()</span>
+<span class="lineNum">     413 </span>            : {
+<span class="lineNum">     414 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_BEGIN(&quot;DB Backup...&quot;)</span>
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :   if ( !::boost::filesystem::exists(_opt.backup.path) )</span>
+<span class="lineNum">     416 </span>            :   {
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :     ::boost::system::error_code ec;</span>
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 :     ::boost::filesystem::create_directory(_opt.backup.path, ec);</span>
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :     if (ec)</span>
+<span class="lineNum">     420 </span>            :     {
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_ERROR(&quot;Create directory fail '&quot; &lt;&lt; _opt.backup.path &lt;&lt; &quot;'&quot; &lt;&lt; ec.message() );</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :       return true;</span>
+<span class="lineNum">     423 </span>            :     }
+<span class="lineNum">     424 </span>            :   }
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :   auto prefixes = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :   size_t count = 0;</span>
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :   for ( const std::string&amp; prefix: prefixes)</span>
+<span class="lineNum">     429 </span>            :   {
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :     if ( auto db = this-&gt;prefix_(prefix, false) )</span>
+<span class="lineNum">     431 </span>            :     {
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :       bool result = db-&gt;backup();</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :       if ( !result )</span>
+<span class="lineNum">     434 </span>            :       {
+<span class="lineNum">     435 </span>            :         // При неудачном бэкапе директория перемещается 
+<span class="lineNum">     436 </span><span class="lineNoCov">          0 :         this-&gt;close_prefix_( prefix );</span>
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :         db = this-&gt;prefix_(prefix, false);</span>
+<span class="lineNum">     438 </span><span class="lineNoCov">          0 :         if ( db != nullptr )</span>
+<span class="lineNum">     439 </span>            :         {
+<span class="lineNum">     440 </span>            :           // При повторном открытии создается полный бэкап (на пустой директории)
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :           result = db-&gt;backup();</span>
+<span class="lineNum">     442 </span>            :         }
+<span class="lineNum">     443 </span>            :       }
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :       count += result;</span>
+<span class="lineNum">     445 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     446 </span>            :   }
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_BEGIN(&quot;DB Backup DONE! &quot; &lt;&lt; count  )</span>
+<span class="lineNum">     448 </span><span class="lineNoCov">          0 :   return count == prefixes.size();</span>
+<a name="449"><span class="lineNum">     449 </span>            : }</a>
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 : bool multidb::compact()</span>
+<span class="lineNum">     452 </span>            : {
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_BEGIN(&quot;Compact the underlying storage for all prefixes &quot;)</span>
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :   auto prefixes = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :   bool result = true;</span>
+<span class="lineNum">     456 </span><span class="lineNoCov">          0 :   for ( const std::string&amp; prefix: prefixes)</span>
+<span class="lineNum">     457 </span>            :   {
+<span class="lineNum">     458 </span><span class="lineNoCov">          0 :     if ( auto db = this-&gt;prefix_(prefix, false) )</span>
+<span class="lineNum">     459 </span>            :     {
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_BEGIN(&quot;Compact the underlying storage for the prefix '&quot; &lt;&lt; prefix &lt;&lt; &quot;'&quot;)</span>
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :       result &amp;= db-&gt;compact();</span>
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_END(&quot;Compact the underlying storage for the prefix '&quot; &lt;&lt; prefix &lt;&lt; &quot;'&quot;)</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     464 </span>            :   }
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_END(&quot;Compact the underlying storage for all prefixes &quot;)</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :   return result;</span>
+<a name="467"><span class="lineNum">     467 </span>            : }</a>
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 : bool multidb::restore()</span>
+<span class="lineNum">     470 </span>            : {
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :   if ( !::boost::filesystem::is_directory(this-&gt;_opt.restore.path) )</span>
+<span class="lineNum">     472 </span>            :   {
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_ERROR( &quot;Restore FAIL: '&quot; &lt;&lt; this-&gt;_opt.restore.path &lt;&lt; &quot;' is not directory&quot; )</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     475 </span>            :   }
+<span class="lineNum">     476 </span>            :   
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :   if ( ::boost::filesystem::exists(this-&gt;_opt.path) )</span>
+<span class="lineNum">     478 </span>            :   {
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :     ::boost::system::error_code ec;</span>
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :     std::string bakpath = this-&gt;_opt.path + &quot;_&quot; + time_string();</span>
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :     ::boost::filesystem::rename(this-&gt;_opt.path, bakpath, ec );</span>
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 :     if ( ec )</span>
+<span class="lineNum">     483 </span>            :     {
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_ERROR( &quot;Rename old multidb FAIL: '&quot; &lt;&lt; this-&gt;_opt.restore.path &lt;&lt; &quot;' -&gt; '&quot; &lt;&lt; bakpath &lt;&lt; &quot;'&quot; )</span>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">     486 </span>            :     }
+<span class="lineNum">     487 </span>            :     
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :     ec.clear();</span>
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :     ::boost::filesystem::create_directory(this-&gt;_opt.path, ec);</span>
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 :     if ( ec )</span>
+<span class="lineNum">     491 </span>            :     {
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_ERROR( &quot;Create directory FAIL: '&quot; &lt;&lt; this-&gt;_opt.path &lt;&lt; &quot;'&quot; )</span>
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     495 </span>            :   }
+<span class="lineNum">     496 </span>            :   
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 :   bool fail = false;</span>
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :   auto prefixes = scan_dir(_opt.restore.path, fail);</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_MESSAGE(&quot;Префиксов найдено: &quot; &lt;&lt; prefixes.size() &lt;&lt; &quot; в &quot; &lt;&lt; _opt.restore.path) </span>
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :   if (fail) return false;</span>
+<span class="lineNum">     501 </span>            :   
+<span class="lineNum">     502 </span><span class="lineNoCov">          0 :   bool result = true;</span>
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :   for ( const std::string&amp; prefix: prefixes)</span>
+<span class="lineNum">     504 </span>            :   {
+<span class="lineNum">     505 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_MESSAGE(&quot;Востановление для &quot; &lt;&lt; prefix) </span>
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 :     if ( auto rocks_resor =  _factory-&gt;create_restore(prefix) )</span>
+<span class="lineNum">     507 </span>            :     {
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 :       result &amp;= rocks_resor-&gt;restore();</span>
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     510 </span>            :   }
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :   return result;</span>
+<span class="lineNum">     512 </span>            : }
+<a name="513"><span class="lineNum">     513 </span>            : </a>
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 : bool multidb::archive()</span>
+<span class="lineNum">     516 </span>            : {
+<span class="lineNum">     517 </span><span class="lineNoCov">          0 :   if ( !_opt.archive.enabled )</span>
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     519 </span>            :   
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :   auto path = _opt.archive.path;</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :   if ( !::boost::filesystem::exists(path) )</span>
+<span class="lineNum">     522 </span>            :   {
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :     ::boost::system::error_code ec;</span>
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 :     ::boost::filesystem::create_directory(path, ec);</span>
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :     if (ec)</span>
+<span class="lineNum">     526 </span>            :     {
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_ERROR(&quot;Create directory fail '&quot; &lt;&lt; path &lt;&lt; &quot;'&quot; &lt;&lt; ec.message() );</span>
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">     529 </span>            :     }
+<span class="lineNum">     530 </span>            :   }
+<span class="lineNum">     531 </span>            :   
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :   bool fail = false;</span>
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :   auto dirs = scan_dir(path, fail);</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :   if ( _opt.archive.depth &lt;= dirs.size() )</span>
+<a name="535"><span class="lineNum">     535 </span>            :   {</a>
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :     std::sort(dirs.begin(), dirs.end() );</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :     std::for_each( dirs.begin(), dirs.begin() + static_cast&lt;std::ptrdiff_t&gt;( dirs.size() - _opt.archive.depth ) , [path](const std::string&amp; name)</span>
+<span class="lineNum">     538 </span>            :     {
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 :       auto dir = path + '/' + name;</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :       std::string message;</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :       if ( !delete_dir(dir, message) )</span>
+<span class="lineNum">     542 </span>            :       {
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :         PREFIXDB_LOG_ERROR(&quot;Delete old archive '&quot; &lt;&lt; path &lt;&lt; &quot;': &quot; &lt;&lt; message)</span>
+<span class="lineNum">     544 </span>            :       }
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :     });</span>
+<span class="lineNum">     546 </span>            :   }
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :   path += &quot;/&quot; + time_string();</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :   ::boost::system::error_code ec;</span>
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :   if( !::boost::filesystem::create_directory( path, ec) )</span>
+<span class="lineNum">     551 </span>            :   {
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_ERROR(&quot;Create dir &quot; &lt;&lt; path &lt;&lt; &quot; FAIL: &quot; &lt;&lt; ec.message() );</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     554 </span>            :   }
+<span class="lineNum">     555 </span>            :   
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :   auto prefixes = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :   bool result = true;</span>
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :   for ( const std::string&amp; prefix: prefixes)</span>
+<span class="lineNum">     559 </span>            :   {
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :     if ( auto db = this-&gt;prefix_(prefix, false) )</span>
+<span class="lineNum">     561 </span>            :     {
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :       result &amp;= db-&gt;archive(path);</span>
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     564 </span>            :   }
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :   return result;</span>
+<span class="lineNum">     566 </span>            : }
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            : //
+<span class="lineNum">     570 </span>            : // ---------------------------
+<a name="571"><span class="lineNum">     571 </span>            : //</a>
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 : void multidb::configure_archive_timer_()</span>
+<span class="lineNum">     574 </span>            : {
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :   _workflow-&gt;release_timer(_archive_timer);</span>
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 :   if ( _opt.archive.enabled &amp;&amp; !_opt.archive.path.empty() )</span>
+<span class="lineNum">     577 </span>            :   {
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 :     _archive_timer = _workflow-&gt;create_timer(</span>
+<a name="579"><span class="lineNum">     579 </span>            :       _opt.archive.start_time,</a>
+<span class="lineNum">     580 </span>            :       std::chrono::seconds( _opt.archive.period_s ),
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :       [this]()-&gt;bool { this-&gt;archive(); return true; },</span>
+<span class="lineNum">     582 </span>            :       ::wflow::expires_at::before
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :     );</span>
+<span class="lineNum">     584 </span>            :   }
+<a name="585"><span class="lineNum">     585 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 : bool multidb::preopen_(const std::string&amp; path, bool create_if_missing)</span>
+<span class="lineNum">     588 </span>            : {
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 :   bool fail = false;</span>
+<span class="lineNum">     590 </span><span class="lineNoCov">          0 :   auto dirs = scan_dir(path, fail);</span>
+<span class="lineNum">     591 </span><span class="lineNoCov">          0 :   if (fail)</span>
+<span class="lineNum">     592 </span>            :   {
+<span class="lineNum">     593 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_FATAL(&quot;Directory &quot; &lt;&lt; path &lt;&lt; &quot; is missing&quot;);</span>
+<span class="lineNum">     594 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     595 </span>            :   }
+<span class="lineNum">     596 </span>            :   
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_BEGIN(&quot;Pre open prefixes ...&quot;)</span>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :   for (auto name: dirs)</span>
+<span class="lineNum">     599 </span>            :   {
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_MESSAGE(&quot;Pre open prefix &quot; &lt;&lt; name &lt;&lt; &quot;...&quot;)</span>
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :     if ( nullptr == this-&gt;prefix_(name, create_if_missing) )</span>
+<span class="lineNum">     602 </span>            :     {
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_WARNING(&quot;Pre open prefix FAIL&quot;)</span>
+<span class="lineNum">     604 </span>            :     }
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_END(&quot;Pre open prefixes&quot;)</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :   return true;</span>
+<a name="608"><span class="lineNum">     608 </span>            : }</a>
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 : void multidb::configure_compact_timer_()</span>
+<span class="lineNum">     611 </span>            : {
+<span class="lineNum">     612 </span><span class="lineNoCov">          0 :   _workflow-&gt;release_timer(_compact_timer);</span>
+<span class="lineNum">     613 </span><span class="lineNoCov">          0 :   auto c = _opt.compact;</span>
+<span class="lineNum">     614 </span><span class="lineNoCov">          0 :   if ( c.enabled)</span>
+<span class="lineNum">     615 </span>            :   {
+<span class="lineNum">     616 </span><span class="lineNoCov">          0 :     _compact_timer = _workflow-&gt;create_timer(</span>
+<a name="617"><span class="lineNum">     617 </span>            :       c.start_time,</a>
+<span class="lineNum">     618 </span>            :       std::chrono::seconds( c.period_s ),
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 :       [this]() { this-&gt;compact(); return true; },</span>
+<span class="lineNum">     620 </span>            :       ::wflow::expires_at::before
+<span class="lineNum">     621 </span><span class="lineNoCov">          0 :     );</span>
+<span class="lineNum">     622 </span><span class="lineNoCov">          0 :   }</span>
+<a name="623"><span class="lineNum">     623 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span><span class="lineNoCov">          0 : void multidb::configure_backup_timer_()</span>
+<span class="lineNum">     626 </span>            : {
+<span class="lineNum">     627 </span><span class="lineNoCov">          0 :   _workflow-&gt;release_timer(_backup_timer);</span>
+<span class="lineNum">     628 </span>            :   
+<span class="lineNum">     629 </span><span class="lineNoCov">          0 :   if ( _opt.backup.enabled &amp;&amp;  !_opt.backup.path.empty() )</span>
+<span class="lineNum">     630 </span>            :   {
+<span class="lineNum">     631 </span><span class="lineNoCov">          0 :     DEBUG_LOG_MESSAGE(&quot;Backup timer start '&quot; &lt;&lt; _opt.backup.start_time  &lt;&lt; &quot;' ws period &quot; &lt;&lt; _opt.backup.period_s &lt;&lt; &quot; second&quot;)</span>
+<span class="lineNum">     632 </span><span class="lineNoCov">          0 :     _backup_timer = _workflow-&gt;create_timer(</span>
+<a name="633"><span class="lineNum">     633 </span>            :       _opt.backup.start_time,</a>
+<span class="lineNum">     634 </span>            :       std::chrono::seconds( _opt.backup.period_s ),
+<span class="lineNum">     635 </span><span class="lineNoCov">          0 :       [this]() { this-&gt;backup(); return true; },</span>
+<span class="lineNum">     636 </span>            :       ::wflow::expires_at::before
+<span class="lineNum">     637 </span><span class="lineNoCov">          0 :     );</span>
+<span class="lineNum">     638 </span>            :   }
+<a name="639"><span class="lineNum">     639 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span><span class="lineNoCov">          0 : void multidb::configure_prefix_reqester_()</span>
+<span class="lineNum">     642 </span>            : {
+<span class="lineNum">     643 </span><span class="lineNoCov">          0 :   _workflow-&gt;release_timer(_prefix_reqester);</span>
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span><span class="lineNoCov">          0 :   if ( !_opt.slave.enabled &amp;&amp; !_opt.initial_load.enabled ) </span>
+<span class="lineNum">     646 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     647 </span>            :   
+<span class="lineNum">     648 </span><span class="lineNoCov">          0 :   if( _opt.initial_load.enabled )</span>
+<span class="lineNum">     649 </span>            :   {
+<span class="lineNum">     650 </span><span class="lineNoCov">          0 :     _opt.initial_load.remote-&gt;get_all_prefixes(</span>
+<span class="lineNum">     651 </span>            :       std::make_unique&lt;request::get_all_prefixes&gt;(), 
+<span class="lineNum">     652 </span>            :       std::bind( &amp;multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
+<span class="lineNum">     653 </span><span class="lineNoCov">          0 :     );</span>
+<span class="lineNum">     654 </span>            :   }
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span><span class="lineNoCov">          0 :   if ( _opt.slave.enabled )</span>
+<span class="lineNum">     657 </span>            :   {
+<span class="lineNum">     658 </span><span class="lineNoCov">          0 :     std::weak_ptr&lt;iprefixdb&gt; wprefixdb = _opt.slave.master;</span>
+<span class="lineNum">     659 </span><span class="lineNoCov">          0 :     _prefix_reqester = _workflow-&gt;create_requester&lt;request::get_all_prefixes, response::get_all_prefixes&gt;</span>
+<a name="660"><span class="lineNum">     660 </span>            :     (</a>
+<span class="lineNum">     661 </span>            :       std::chrono::milliseconds( _opt.slave.query_prefixes_timeout_ms ),
+<span class="lineNum">     662 </span><span class="lineNoCov">          0 :       [wprefixdb](request::get_all_prefixes::ptr req, response::get_all_prefixes::handler callback)</span>
+<span class="lineNum">     663 </span>            :       {
+<span class="lineNum">     664 </span><span class="lineNoCov">          0 :         auto pprefixdb = wprefixdb.lock();</span>
+<span class="lineNum">     665 </span><span class="lineNoCov">          0 :         if (pprefixdb==nullptr)</span>
+<span class="lineNum">     666 </span><span class="lineNoCov">          0 :           return false;</span>
+<span class="lineNum">     667 </span><span class="lineNoCov">          0 :         pprefixdb-&gt;get_all_prefixes(std::move(req), callback);</span>
+<span class="lineNum">     668 </span><span class="lineNoCov">          0 :         return true;</span>
+<span class="lineNum">     669 </span><span class="lineNoCov">          0 :       },</span>
+<span class="lineNum">     670 </span>            :       std::bind( &amp;multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
+<span class="lineNum">     671 </span><span class="lineNoCov">          0 :     );</span>
+<span class="lineNum">     672 </span>            :   }
+<a name="673"><span class="lineNum">     673 </span>            : }</a>
+<span class="lineNum">     674 </span>            : 
+<span class="lineNum">     675 </span><span class="lineNoCov">          0 : request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)</span>
+<span class="lineNum">     676 </span>            : {
+<span class="lineNum">     677 </span><span class="lineNoCov">          0 :   if ( res == nullptr )</span>
+<span class="lineNum">     678 </span><span class="lineNoCov">          0 :     return std::make_unique&lt;request::get_all_prefixes&gt;();</span>
+<span class="lineNum">     679 </span>            : 
+<span class="lineNum">     680 </span><span class="lineNoCov">          0 :   auto preflist = this-&gt;all_prefixes_();</span>
+<span class="lineNum">     681 </span><span class="lineNoCov">          0 :   std::set&lt;std::string&gt; prefset( preflist.begin(), preflist.end() );</span>
+<span class="lineNum">     682 </span><span class="lineNoCov">          0 :   if ( res-&gt;status == common_status::OK)</span>
+<span class="lineNum">     683 </span>            :   {
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :     for ( const auto&amp; x : res-&gt;prefixes )</span>
+<span class="lineNum">     685 </span>            :     {
+<span class="lineNum">     686 </span><span class="lineNoCov">          0 :       if ( x.empty() )</span>
+<span class="lineNum">     687 </span>            :       {
+<span class="lineNum">     688 </span><span class="lineNoCov">          0 :         PREFIXDB_LOG_WARNING(&quot;get_all_prefixes: empty prefix&quot;)</span>
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :         continue;</span>
+<span class="lineNum">     690 </span>            :       }
+<span class="lineNum">     691 </span><span class="lineNoCov">          0 :       this-&gt;prefix_(x, true);</span>
+<span class="lineNum">     692 </span><span class="lineNoCov">          0 :       prefset.erase(x);</span>
+<span class="lineNum">     693 </span>            :     }
+<span class="lineNum">     694 </span>            :         
+<span class="lineNum">     695 </span><span class="lineNoCov">          0 :     if ( !prefset.empty() )</span>
+<span class="lineNum">     696 </span>            :     {
+<span class="lineNum">     697 </span><span class="lineNoCov">          0 :       auto preq = std::make_shared&lt;request::detach_prefixes&gt;();</span>
+<span class="lineNum">     698 </span><span class="lineNoCov">          0 :       preq-&gt;deny_timeout_s = 0;</span>
+<span class="lineNum">     699 </span><span class="lineNoCov">          0 :       preq-&gt;prefixes.reserve(prefset.size());</span>
+<span class="lineNum">     700 </span><span class="lineNoCov">          0 :       for ( auto&amp; x : prefset )</span>
+<span class="lineNum">     701 </span>            :       {
+<span class="lineNum">     702 </span><span class="lineNoCov">          0 :         preq-&gt;prefixes.push_back( std::move(x) );</span>
+<a name="703"><span class="lineNum">     703 </span>            :       }</a>
+<span class="lineNum">     704 </span>            : 
+<span class="lineNum">     705 </span><span class="lineNoCov">          0 :       _workflow-&gt;post([this, preq]</span>
+<span class="lineNum">     706 </span>            :       {
+<span class="lineNum">     707 </span><span class="lineNoCov">          0 :         this-&gt;detach_prefixes( std::make_unique&lt;request::detach_prefixes&gt;(*preq), nullptr );</span>
+<span class="lineNum">     708 </span><span class="lineNoCov">          0 :       }, nullptr);</span>
+<span class="lineNum">     709 </span>            :     }
+<span class="lineNum">     710 </span>            :   }
+<span class="lineNum">     711 </span><span class="lineNoCov">          0 :   else if ( res != nullptr )</span>
+<span class="lineNum">     712 </span>            :   {
+<span class="lineNum">     713 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_WARNING( &quot;multidb::configure_prefix_reqester_ result get_all_prefixes not valid status &quot; &lt;&lt; int(res-&gt;status) );</span>
+<span class="lineNum">     714 </span>            :   }
+<span class="lineNum">     715 </span><span class="lineNoCov">          0 :   return nullptr;</span>
+<a name="716"><span class="lineNum">     716 </span>            : }</a>
+<span class="lineNum">     717 </span>            : 
+<span class="lineNum">     718 </span><span class="lineNoCov">          0 : std::vector&lt; std::string &gt; multidb::all_prefixes_()</span>
+<span class="lineNum">     719 </span>            : {
+<span class="lineNum">     720 </span><span class="lineNoCov">          0 :   std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">     721 </span>            :   
+<span class="lineNum">     722 </span><span class="lineNoCov">          0 :   std::vector&lt; std::string &gt; result;</span>
+<span class="lineNum">     723 </span><span class="lineNoCov">          0 :   result.reserve( _db_map.size() );</span>
+<span class="lineNum">     724 </span><span class="lineNoCov">          0 :   for (const auto&amp; p : _db_map)</span>
+<span class="lineNum">     725 </span>            :   {
+<span class="lineNum">     726 </span><span class="lineNoCov">          0 :     if ( p.second != nullptr &amp;&amp; !p.first.empty() )</span>
+<span class="lineNum">     727 </span>            :     {
+<span class="lineNum">     728 </span><span class="lineNoCov">          0 :       result.push_back(p.first);</span>
+<span class="lineNum">     729 </span>            :     }
+<span class="lineNum">     730 </span>            :   }
+<span class="lineNum">     731 </span><span class="lineNoCov">          0 :   return result;</span>
+<a name="732"><span class="lineNum">     732 </span>            : }</a>
+<span class="lineNum">     733 </span>            : 
+<span class="lineNum">     734 </span><span class="lineNoCov">          0 : bool multidb::close_prefix_(const std::string&amp; prefix)</span>
+<span class="lineNum">     735 </span>            : {
+<span class="lineNum">     736 </span><span class="lineNoCov">          0 :   std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">     737 </span><span class="lineNoCov">          0 :   auto itr = _db_map.find(prefix);</span>
+<span class="lineNum">     738 </span><span class="lineNoCov">          0 :   if ( itr == _db_map.end())</span>
+<span class="lineNum">     739 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     740 </span><span class="lineNoCov">          0 :   if ( itr-&gt;second != nullptr )</span>
+<span class="lineNum">     741 </span>            :   {
+<span class="lineNum">     742 </span><span class="lineNoCov">          0 :     itr-&gt;second-&gt;stop();</span>
+<span class="lineNum">     743 </span><span class="lineNoCov">          0 :     itr-&gt;second = nullptr;</span>
+<span class="lineNum">     744 </span>            :   }
+<span class="lineNum">     745 </span><span class="lineNoCov">          0 :   _db_map.erase(itr);</span>
+<span class="lineNum">     746 </span><span class="lineNoCov">          0 :   return true;</span>
+<span class="lineNum">     747 </span>            : }
+<span class="lineNum">     748 </span>            : 
+<a name="749"><span class="lineNum">     749 </span>            : /// Если create_if_missing всегда возвращает объект,</a>
+<span class="lineNum">     750 </span>            : /// в противном случае, только если база существует 
+<span class="lineNum">     751 </span><span class="lineNoCov">          0 : multidb::prefixdb_ptr multidb::prefix_(const std::string&amp; prefix,  bool create_if_missing)</span>
+<span class="lineNum">     752 </span>            : {
+<span class="lineNum">     753 </span><span class="lineNoCov">          0 :   if ( prefix.empty() )</span>
+<span class="lineNum">     754 </span><span class="lineNoCov">          0 :     return nullptr;</span>
+<span class="lineNum">     755 </span>            :   
+<span class="lineNum">     756 </span><span class="lineNoCov">          0 :   std::lock_guard&lt;std::mutex&gt; lk(_mutex);</span>
+<span class="lineNum">     757 </span>            :   
+<span class="lineNum">     758 </span><span class="lineNoCov">          0 :   if ( _factory == nullptr )</span>
+<span class="lineNum">     759 </span>            :   {
+<span class="lineNum">     760 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_FATAL(&quot;multidb is not configured!&quot;)</span>
+<span class="lineNum">     761 </span><span class="lineNoCov">          0 :     return nullptr;</span>
+<span class="lineNum">     762 </span>            :   }
+<span class="lineNum">     763 </span>            :   
+<span class="lineNum">     764 </span><span class="lineNoCov">          0 :   prefixdb_ptr result = nullptr;</span>
+<span class="lineNum">     765 </span>            :   
+<span class="lineNum">     766 </span><span class="lineNoCov">          0 :   auto itr = _db_map.find(prefix);</span>
+<span class="lineNum">     767 </span><span class="lineNoCov">          0 :   if ( itr != _db_map.end() )</span>
+<span class="lineNum">     768 </span>            :   {
+<span class="lineNum">     769 </span><span class="lineNoCov">          0 :     if ( itr-&gt;second)</span>
+<span class="lineNum">     770 </span><span class="lineNoCov">          0 :       return itr-&gt;second;</span>
+<span class="lineNum">     771 </span>            :     
+<span class="lineNum">     772 </span>            :     // Для get не создаем для несуществующих префиксов
+<span class="lineNum">     773 </span><span class="lineNoCov">          0 :     if ( !create_if_missing )</span>
+<span class="lineNum">     774 </span><span class="lineNoCov">          0 :       return nullptr;</span>
+<span class="lineNum">     775 </span>            :   }
+<span class="lineNum">     776 </span>            :   
+<span class="lineNum">     777 </span><span class="lineNoCov">          0 :   if ( _opt.max_prefixes!=0 &amp;&amp; _db_map.size() &gt;= _opt.max_prefixes )</span>
+<span class="lineNum">     778 </span><span class="lineNoCov">          0 :     return nullptr;</span>
+<span class="lineNum">     779 </span>            :   
+<span class="lineNum">     780 </span><span class="lineNoCov">          0 :   if ( !create_if_missing )</span>
+<span class="lineNum">     781 </span>            :   {
+<span class="lineNum">     782 </span>            :     // Сначала проверяем, что директория существует
+<span class="lineNum">     783 </span>            :     // чтобы rockdb не оставляла мусор, при открытии без флага create_if_missing
+<span class="lineNum">     784 </span><span class="lineNoCov">          0 :     auto path = _opt.path + &quot;/&quot; + prefix;</span>
+<span class="lineNum">     785 </span><span class="lineNoCov">          0 :     if ( !::boost::filesystem::exists(path) )</span>
+<span class="lineNum">     786 </span><span class="lineNoCov">          0 :       return nullptr;</span>
+<span class="lineNum">     787 </span>            :   }
+<span class="lineNum">     788 </span>            :   
+<span class="lineNum">     789 </span><span class="lineNoCov">          0 :   if ( auto db = _factory-&gt;create_db(prefix, create_if_missing) )</span>
+<span class="lineNum">     790 </span>            :   {
+<span class="lineNum">     791 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_MESSAGE(&quot;Open new prefix: &quot; &lt;&lt; prefix)</span>
+<span class="lineNum">     792 </span><span class="lineNoCov">          0 :     _db_map.insert(itr, std::make_pair(prefix, db));</span>
+<span class="lineNum">     793 </span><span class="lineNoCov">          0 :     db-&gt;start();</span>
+<span class="lineNum">     794 </span><span class="lineNoCov">          0 :     return db;</span>
+<span class="lineNum">     795 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     796 </span>            :   
+<span class="lineNum">     797 </span>            :   // Запоминаем, чтобы не создавать заново
+<span class="lineNum">     798 </span><span class="lineNoCov">          0 :   _db_map[prefix] = nullptr;</span>
+<span class="lineNum">     799 </span><span class="lineNoCov">          0 :   return nullptr;</span>
+<span class="lineNum">     800 </span>            : }
+<span class="lineNum">     801 </span>            : 
+<a name="802"><span class="lineNum">     802 </span>            : </a>
+<span class="lineNum">     803 </span>            : template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">     804 </span><span class="lineNoCov">          0 : bool multidb::check_prefix_(const ReqPtr&amp; req, const Callback&amp; cb)</span>
+<span class="lineNum">     805 </span>            : {
+<span class="lineNum">     806 </span><span class="lineNoCov">          0 :   if ( req-&gt;prefix.empty() )</span>
+<span class="lineNum">     807 </span><span class="lineNoCov">          0 :     return send_error&lt;common_status::EmptyPrefix, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">     808 </span>            :   
+<span class="lineNum">     809 </span><span class="lineNoCov">          0 :   if ( _opt.prefix_size_limit!=0 &amp;&amp; req-&gt;prefix.size() &gt; _opt.prefix_size_limit )</span>
+<span class="lineNum">     810 </span><span class="lineNoCov">          0 :     return send_error&lt;common_status::PrefixLengthExceeded, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">     811 </span>            :   
+<span class="lineNum">     812 </span><span class="lineNoCov">          0 :   return true;</span>
+<span class="lineNum">     813 </span>            : }
+<span class="lineNum">     814 </span>            : 
+<a name="815"><span class="lineNum">     815 </span>            : </a>
+<span class="lineNum">     816 </span>            : template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">     817 </span><span class="lineNoCov">          0 : bool multidb::check_fields_(const ReqPtr&amp; req, const Callback&amp; cb)</span>
+<span class="lineNum">     818 </span>            : {
+<span class="lineNum">     819 </span><span class="lineNoCov">          0 :   if ( empty_fields&lt;Res&gt;(req, cb) )</span>
+<span class="lineNum">     820 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     821 </span>            : 
+<span class="lineNum">     822 </span><span class="lineNoCov">          0 :   if ( !this-&gt;check_prefix_&lt;Res&gt;(req, cb) )</span>
+<span class="lineNum">     823 </span><span class="lineNoCov">          0 :     return false;</span>
+<span class="lineNum">     824 </span>            :   
+<span class="lineNum">     825 </span><span class="lineNoCov">          0 :   if ( _opt.keys_per_req!=0 &amp;&amp; req-&gt;fields.size() &gt; _opt.keys_per_req )</span>
+<span class="lineNum">     826 </span><span class="lineNoCov">          0 :     return send_error&lt;common_status::TooManyKeys, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">     827 </span>            :   
+<span class="lineNum">     828 </span><span class="lineNoCov">          0 :   if ( _opt.value_size_limit==0 || _opt.key_size_limit==0 )</span>
+<span class="lineNum">     829 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">     830 </span>            :   
+<span class="lineNum">     831 </span><span class="lineNoCov">          0 :   for (const auto&amp; f : req-&gt;fields)</span>
+<span class="lineNum">     832 </span>            :   {
+<span class="lineNum">     833 </span><span class="lineNoCov">          0 :     if ( f.first.size() &gt; _opt.key_size_limit)</span>
+<span class="lineNum">     834 </span><span class="lineNoCov">          0 :       return send_error&lt;common_status::KeyLengthExceeded, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">     835 </span>            :       
+<span class="lineNum">     836 </span><span class="lineNoCov">          0 :     if ( f.second.size() &gt; _opt.value_size_limit)</span>
+<span class="lineNum">     837 </span><span class="lineNoCov">          0 :       return send_error&lt;common_status::ValueLengthExceeded, Res&gt;(std::move(req), std::move(cb) );</span>
+<span class="lineNum">     838 </span>            :   }
+<span class="lineNum">     839 </span><span class="lineNoCov">          0 :   return true;</span>
+<a name="840"><span class="lineNum">     840 </span>            : }</a>
+<span class="lineNum">     841 </span>            : 
+<span class="lineNum">     842 </span><span class="lineCov">          3 : }}</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
