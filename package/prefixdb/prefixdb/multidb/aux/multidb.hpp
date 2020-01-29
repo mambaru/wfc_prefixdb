@@ -29,33 +29,9 @@ inline bool create_prefix_fail(const ReqPtr& req, const Callback& cb)
   return send_error<common_status::CreatePrefixFail, Res>(std::move(req), std::move(cb) );
 }
 
-/*
-template<typename Req, typename Callback>
-inline bool req_null(const Req& req, const Callback& cb)
-{
-  if ( req==nullptr )
-  {
-    if ( cb!=nullptr )
-    {
-      cb(nullptr);
-    }
-    return true;
-  }
-  return false;
-}
-
-template<typename Req, typename Callback>
-inline bool notify_ban(const Req& req, const Callback& cb)
-{
-  return cb==nullptr || req_null(req, cb);
-}
-*/
-
 template<typename Res, typename ReqPtr, typename Callback>
 inline bool empty_fields(const ReqPtr& req, const Callback& cb)
 {
-  // if ( req_null(req, cb) ) return true; 
-
   if ( req->fields.empty() )
   {
     send_error<common_status::EmptyFields, Res>(std::move(req), std::move(cb) );

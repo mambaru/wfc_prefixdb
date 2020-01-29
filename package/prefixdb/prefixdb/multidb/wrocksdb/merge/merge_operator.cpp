@@ -44,7 +44,6 @@ namespace helper{
     if ( beg==end )
       return false;
     
-    //PREFIXDB_LOG_DEBUG("merge operator: " << std::string(beg, end))
     typedef typename J::serializer ser;
     ::wfc::json::json_error e;
     ser()(obj, beg, end, &e);

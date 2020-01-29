@@ -1,8 +1,4 @@
 
-include(BuildInfo)
-
-include_directories(.)
-
 SET(
   prefixdb_source_list
   
@@ -27,10 +23,15 @@ SET(
 )
 
 add_library(wfc_prefixdb ${prefixdb_source_list})
+wci_targets(wfc_prefixdb)
+target_include_directories(wfc_prefixdb PUBLIC ${wfc_prefixdb_SOURCE_DIR})
+target_include_directories(wfc_prefixdb PRIVATE ${wfc_prefixdb_SOURCE_DIR}/package)
+target_include_directories(wfc_prefixdb PRIVATE ${CMAKE_SOURCE_DIR}/external/rocksdb)
+target_include_directories(wfc_prefixdb PRIVATE ${CMAKE_SOURCE_DIR}/external/rocksdb/include)
 
-target_link_libraries(wfc_prefixdb rocksdb ${WFC_LIBRARIES} )
+find_library(LIBRT rt)
+target_link_libraries(wfc_prefixdb PUBLIC wfc rocksdb ${LIBRT})
+
 add_dependencies(wfc_prefixdb rocksdb)
-
 build_info(wfc_prefixdb prefixdb)
-
 install(TARGETS wfc_prefixdb DESTINATION ${CMAKE_INSTALL_PREFIX})

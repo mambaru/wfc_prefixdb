@@ -11,7 +11,6 @@ namespace request
 {
   struct setnx
   {
-    typedef raw_field_list_t field_list_t;
     
     bool sync = false;
     bool nores = true;
@@ -28,7 +27,6 @@ namespace response
 {
   struct setnx
   {
-    typedef raw_field_list_t field_list_t;
     common_status status =  common_status::OK;
     std::string prefix;
     field_list_t fields;

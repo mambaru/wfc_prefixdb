@@ -3,12 +3,28 @@ cmake_minimum_required(VERSION 3.1)
 project(wfc_prefixdb)
 
 include(cmake/ci.cmake)
-include(rocksdb)
+include(cmake/rocksdb.cmake)
 
-wfc_libs()
-get_rocksdb()
+wci_getlib(NAME wfc ${WCI_SUPERMODULE})
+wci_getlib(NAME rocksdb SUPERMODULE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-undef")
+set_target_properties(
+  rocksdb 
+  PROPERTIES   
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/archive"
+    POSITION_INDEPENDENT_CODE OFF
+)
+
+set_target_properties(
+  rocksdb-shared
+  PROPERTIES   
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/lib"
+    POSITION_INDEPENDENT_CODE ON
+)
+
+
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-undef")
 add_subdirectory(package)
 
 if ( BUILD_TESTING )

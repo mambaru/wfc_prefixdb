@@ -29,13 +29,5 @@ typedef ::wfc::json::dict_vector<
   10
 > packed_params_json;
 
-/*
-typedef ::wfc::json::object2array<
-  ::wfc::json::value<std::string>,
-  packed_field_params_json,
-  10
-> packed_params_json;
-*/
-
 
 }}
