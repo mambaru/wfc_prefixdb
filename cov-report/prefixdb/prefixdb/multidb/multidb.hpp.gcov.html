@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/prefixdb/multidb/multidb.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">prefixdb/prefixdb/multidb</a> - multidb.hpp<span style="font-size: 80%;"> (source / <a href="multidb.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;prefixdb/prefixdb/multidb/options/multidb_config.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;prefixdb/prefixdb/multidb/iprefixdb_ex.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;memory&gt;
+<span class="lineNum">       6 </span>            : #include &lt;map&gt;
+<span class="lineNum">       7 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : namespace wamba{ namespace prefixdb{
+<span class="lineNum">      11 </span>            :  
+<a name="12"><span class="lineNum">      12 </span>            : struct ifactory;</a>
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span><span class="lineNoCov">          0 : class multidb</span>
+<span class="lineNum">      15 </span>            :   : public iprefixdb
+<span class="lineNum">      16 </span>            :   , public std::enable_shared_from_this&lt;multidb&gt;
+<span class="lineNum">      17 </span>            : {
+<span class="lineNum">      18 </span>            :   typedef std::shared_ptr&lt;iprefixdb_ex&gt; prefixdb_ptr;
+<span class="lineNum">      19 </span>            :   typedef std::map&lt;std::string, prefixdb_ptr&gt; db_map;
+<span class="lineNum">      20 </span>            : public:
+<span class="lineNum">      21 </span>            :   multidb();
+<span class="lineNum">      22 </span>            :   bool reconfigure(const multidb_config&amp; opt, const std::shared_ptr&lt;ifactory&gt;&amp; factory);
+<span class="lineNum">      23 </span>            :   virtual void start();
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            :   virtual void set( request::set::ptr req, response::set::handler cb) override;
+<span class="lineNum">      26 </span>            :   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
+<span class="lineNum">      27 </span>            :   virtual void get( request::get::ptr req, response::get::handler cb) override;
+<span class="lineNum">      28 </span>            :   virtual void has( request::has::ptr req, response::has::handler cb) override;
+<span class="lineNum">      29 </span>            :   virtual void del( request::del::ptr req, response::del::handler cb) override;
+<span class="lineNum">      30 </span>            :   virtual void inc( request::inc::ptr req, response::inc::handler cb) override;
+<span class="lineNum">      31 </span>            :   virtual void add( request::add::ptr req, response::add::handler cb) override;
+<span class="lineNum">      32 </span>            :   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
+<span class="lineNum">      33 </span>            :   virtual void range( request::range::ptr req, response::range::handler cb) override;
+<span class="lineNum">      34 </span>            :   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
+<span class="lineNum">      35 </span>            :   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
+<span class="lineNum">      36 </span>            :   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
+<span class="lineNum">      37 </span>            :   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) override;
+<span class="lineNum">      38 </span>            :   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
+<span class="lineNum">      39 </span>            :   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
+<span class="lineNum">      40 </span>            :   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
+<span class="lineNum">      41 </span>            :   virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) override;
+<span class="lineNum">      42 </span>            :   virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) override;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            :   virtual void stop();  
+<span class="lineNum">      45 </span>            :   virtual bool backup();
+<span class="lineNum">      46 </span>            :   virtual bool archive();
+<span class="lineNum">      47 </span>            :   virtual bool restore();
+<span class="lineNum">      48 </span>            :   virtual bool compact();
+<span class="lineNum">      49 </span>            :   
+<span class="lineNum">      50 </span>            : private:
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   void configure_compact_timer_();
+<span class="lineNum">      53 </span>            :   void configure_backup_timer_();
+<span class="lineNum">      54 </span>            :   void configure_archive_timer_();
+<span class="lineNum">      55 </span>            :   void configure_prefix_reqester_();
+<span class="lineNum">      56 </span>            :   request::get_all_prefixes::ptr get_all_prefixes_handler_(response::get_all_prefixes::ptr res);
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   std::vector&lt; std::string &gt; all_prefixes_();
+<span class="lineNum">      59 </span>            :   bool preopen_(const std::string&amp; path, bool create_if_missing);
+<span class="lineNum">      60 </span>            :   
+<span class="lineNum">      61 </span>            :   prefixdb_ptr prefix_(const std::string&amp; prefix, bool create_if_missing);
+<span class="lineNum">      62 </span>            :   bool close_prefix_(const std::string&amp; prefix);
+<span class="lineNum">      63 </span>            :   
+<span class="lineNum">      64 </span>            :   template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">      65 </span>            :   bool check_fields_(const ReqPtr&amp; req, const Callback&amp; cb);
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :   template&lt;typename Res, typename ReqPtr, typename Callback&gt;
+<span class="lineNum">      68 </span>            :   bool check_prefix_(const ReqPtr&amp; req, const Callback&amp; cb);
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : private:
+<span class="lineNum">      71 </span>            :   typedef wfc::workflow::timer_id_t timer_id_t;
+<span class="lineNum">      72 </span>            :   
+<span class="lineNum">      73 </span>            :   
+<span class="lineNum">      74 </span>            :   std::shared_ptr&lt;ifactory&gt; _factory;
+<span class="lineNum">      75 </span>            :   db_map _db_map;
+<span class="lineNum">      76 </span>            :   std::mutex _mutex;
+<span class="lineNum">      77 </span>            :   multidb_config _opt;
+<span class="lineNum">      78 </span>            :   std::shared_ptr&lt; ::wfc::workflow&gt; _workflow;
+<span class="lineNum">      79 </span>            :   
+<span class="lineNum">      80 </span>            :   ::wfc::workflow::timer_id_t _compact_timer  = -1;
+<span class="lineNum">      81 </span>            :   ::wfc::workflow::timer_id_t _backup_timer  = -1;
+<span class="lineNum">      82 </span>            :   ::wfc::workflow::timer_id_t _archive_timer  = -1;
+<span class="lineNum">      83 </span>            :   ::wfc::workflow::timer_id_t _prefix_reqester = -1;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : };
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

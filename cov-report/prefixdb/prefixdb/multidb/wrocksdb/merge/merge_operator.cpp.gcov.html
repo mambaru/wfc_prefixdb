@@ -1,0 +1,460 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/prefixdb/multidb/wrocksdb/merge/merge_operator.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">prefixdb/prefixdb/multidb/wrocksdb/merge</a> - merge_operator.cpp<span style="font-size: 80%;"> (source / <a href="merge_operator.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">173</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #include &quot;merge_operator.hpp&quot;</a>
+<span class="lineNum">       2 </span>            : #include &quot;merge.hpp&quot;
+<span class="lineNum">       3 </span>            : #include &quot;merge_json.hpp&quot;
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            : #include &quot;inc_params.hpp&quot;
+<span class="lineNum">       6 </span>            : #include &quot;inc_params_json.hpp&quot;
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #include &quot;packed_params.hpp&quot;
+<span class="lineNum">       9 </span>            : #include &quot;packed_params_json.hpp&quot;
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &quot;add_params.hpp&quot;
+<span class="lineNum">      12 </span>            : #include &quot;add_params_json.hpp&quot;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &quot;packed.hpp&quot;
+<span class="lineNum">      15 </span>            : #include &quot;packed_json.hpp&quot;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &lt;prefixdb/logger.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;wfc/json.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : namespace wamba{ namespace prefixdb{
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : using parser = ::wfc::json::parser;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace helper{
+<span class="lineNum">      26 </span>            :   
+<span class="lineNum">      27 </span>            :   inline const char* begin(const merge_operator::slice_type* existing_value)
+<span class="lineNum">      28 </span>            :   {
+<span class="lineNum">      29 </span>            :     if ( existing_value==nullptr ) 
+<span class="lineNum">      30 </span>            :       return nullptr;
+<span class="lineNum">      31 </span>            :     return existing_value-&gt;data();
+<span class="lineNum">      32 </span>            :   }
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            :   inline const char* end(const merge_operator::slice_type* existing_value)
+<span class="lineNum">      35 </span>            :   {
+<span class="lineNum">      36 </span>            :     if ( existing_value==nullptr ) 
+<span class="lineNum">      37 </span>            :       return nullptr;
+<span class="lineNum">      38 </span>            :     return existing_value-&gt;data() + existing_value-&gt;size();
+<span class="lineNum">      39 </span>            :   }
+<a name="40"><span class="lineNum">      40 </span>            :   </a>
+<span class="lineNum">      41 </span>            :   template&lt;typename J, typename Obj, typename I&gt;
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 :   inline bool unserialize(Obj&amp; obj, I beg, I end, bool hide)</span>
+<span class="lineNum">      43 </span>            :   {
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :     if ( beg==end )</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">      46 </span>            :     
+<span class="lineNum">      47 </span>            :     typedef typename J::serializer ser;
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :     ::wfc::json::json_error e;</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :     ser()(obj, beg, end, &amp;e);</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :     if ( e )</span>
+<span class="lineNum">      51 </span>            :     {
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :       if (!hide)</span>
+<span class="lineNum">      53 </span>            :       {
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         PREFIXDB_LOG_ERROR( &quot;unserialize merge_operator error: &quot; &lt;&lt; ::wfc::json::strerror::message_trace(e, beg, end) );</span>
+<span class="lineNum">      55 </span>            :       }
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :       return false;</span>
+<span class="lineNum">      57 </span>            :     }
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">      59 </span>            :   }
+<a name="60"><span class="lineNum">      60 </span>            : </a>
+<span class="lineNum">      61 </span>            :   template&lt;typename J, typename Obj&gt;
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :   inline bool unserialize(Obj&amp; obj, const std::string&amp; str, bool hide)</span>
+<span class="lineNum">      63 </span>            :   {
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :     return unserialize&lt;J&gt;(obj, str.begin(), str.end() , hide);</span>
+<span class="lineNum">      65 </span>            :   }
+<a name="66"><span class="lineNum">      66 </span>            : </a>
+<span class="lineNum">      67 </span>            :   template&lt;typename J, typename Obj&gt;
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :   inline bool unserialize(Obj&amp; obj, const merge_operator::slice_type&amp; slice, bool hide)</span>
+<span class="lineNum">      69 </span>            :   {
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :     return unserialize&lt;J&gt;(obj, slice.data(), slice.data() + slice.size(), hide );</span>
+<span class="lineNum">      71 </span>            :   }
+<a name="72"><span class="lineNum">      72 </span>            : </a>
+<span class="lineNum">      73 </span>            :   template&lt;typename J, typename Obj&gt;
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :   inline bool unserialize(Obj&amp; obj, const merge_operator::slice_type* slice, bool hide)</span>
+<span class="lineNum">      75 </span>            :   {
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :     if (slice==nullptr) return false;</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     return unserialize&lt;J&gt;(obj, *slice, hide);</span>
+<span class="lineNum">      78 </span>            :   }
+<a name="79"><span class="lineNum">      79 </span>            : }</a>
+<span class="lineNum">      80 </span>            :   
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 : merge_operator::merge_operator(const std::string&amp; name, size_t array_limit, size_t packed_limit)</span>
+<span class="lineNum">      82 </span>            :   : _name(name)
+<span class="lineNum">      83 </span>            :   , _array_limit(array_limit)
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :   , _packed_limit(packed_limit)</span>
+<span class="lineNum">      85 </span>            : {
+<a name="86"><span class="lineNum">      86 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 : bool merge_operator::FullMergeV2(</span>
+<span class="lineNum">      89 </span>            :   const MergeOperationInput&amp; merge_in,
+<span class="lineNum">      90 </span>            :   MergeOperationOutput* merge_out
+<span class="lineNum">      91 </span>            : ) const
+<span class="lineNum">      92 </span>            : try
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :   const auto&amp; operands = merge_in.operand_list;</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :   DEBUG_LOG_MESSAGE(&quot;merge_operator::FullMergeV2 operands.size()=&quot; &lt;&lt; operands.size() )</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :   if ( operands.empty() )</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     return true;</span>
+<span class="lineNum">      98 </span>            :   
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :   merge mrg;</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :   merge_mode mode = merge_mode::none;</span>
+<span class="lineNum">     101 </span>            :   
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :   update_list updates;</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :   updates.reserve(operands.size());</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :   for (size_t i = 0; i &lt; operands.size(); ++i)</span>
+<span class="lineNum">     105 </span>            :   {
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     DEBUG_LOG_MESSAGE(&quot;merge_operator::FullMergeV2 operands[&quot; &lt;&lt; i &lt;&lt; &quot;]=&quot; &lt;&lt; operands[i].ToString() )</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :     if ( helper::unserialize&lt;merge_json&gt;(mrg, operands[i], false) )</span>
+<span class="lineNum">     108 </span>            :     {
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :       if ( mrg.mode == merge_mode::setnx &amp;&amp; mode!=merge_mode::none )</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :         continue;</span>
+<span class="lineNum">     111 </span>            :       
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :       if ( mode != mrg.mode )</span>
+<span class="lineNum">     113 </span>            :       {
+<span class="lineNum">     114 </span>            :         // при i==0 или если сменился метод (тогда предыдущие не имеют смысла )
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :         updates.clear();</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         mode = mrg.mode;</span>
+<span class="lineNum">     117 </span>            :       }
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :       updates.push_back( std::move(mrg.raw) );</span>
+<span class="lineNum">     119 </span>            :     }
+<span class="lineNum">     120 </span>            :     else
+<span class="lineNum">     121 </span>            :     {
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_WARNING(_name &lt;&lt; &quot;: Invalid merge operator: &quot; &lt;&lt; merge_in.key.ToString() &lt;&lt; &quot;='&quot; &lt;&lt; operands[i].ToString() )</span>
+<span class="lineNum">     123 </span>            :     }
+<span class="lineNum">     124 </span>            :   } 
+<span class="lineNum">     125 </span>            :   
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :   merge_out-&gt;new_value.clear();</span>
+<span class="lineNum">     127 </span>            :   
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :   switch( mode )</span>
+<span class="lineNum">     129 </span>            :   {
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     case merge_mode::setnx:</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :       this-&gt;setnx_(merge_in.existing_value,  updates, merge_out-&gt;new_value ); </span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :     case merge_mode::inc:</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :       this-&gt;inc_(merge_in.existing_value,    updates, merge_out-&gt;new_value ); </span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :     case merge_mode::add:</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :       this-&gt;add_(merge_in.existing_value,    updates, merge_out-&gt;new_value ); </span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :     case merge_mode::packed:</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :       this-&gt;packed_(merge_in.existing_value, updates, merge_out-&gt;new_value ); </span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :       break;</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :     case merge_mode::none:</span>
+<span class="lineNum">     143 </span>            :     default:
+<span class="lineNum">     144 </span>            :       
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :       if ( !updates.empty() )</span>
+<span class="lineNum">     146 </span>            :       {
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         PREFIXDB_LOG_WARNING(_name &lt;&lt; &quot;: merge_operator::Merge: Invalid method merge: &quot; &lt;&lt; merge_in.key.ToString() </span>
+<span class="lineNum">     148 </span>            :                                    &lt;&lt; &quot;='&quot; &lt;&lt; updates[0]  )
+<span class="lineNum">     149 </span>            :       }
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :       merge_out-&gt;new_value=&quot;\&quot;ERROR\&quot;&quot;;</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_MESSAGE(_name &lt;&lt; &quot;: merge_operator::Merge: Save old value: &quot; &lt;&lt; merge_in.key.ToString() </span>
+<span class="lineNum">     152 </span>            :                                  &lt;&lt; &quot;='&quot; &lt;&lt; merge_out-&gt;new_value  )
+<span class="lineNum">     153 </span>            :       
+<span class="lineNum">     154 </span>            :   } // switch( mode )
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   return true;</span>
+<span class="lineNum">     157 </span>            : }
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 : catch(std::exception e)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :   if ( merge_in.existing_value )</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     merge_out-&gt;new_value = merge_in.existing_value-&gt;ToString();</span>
+<span class="lineNum">     162 </span>            :   
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_ERROR(&quot;PreffixDB merge_operator::FullMerge exception: &quot;&lt;&lt; e.what() &lt;&lt; &quot;: key=&quot; </span>
+<span class="lineNum">     164 </span>            :                   &lt;&lt; merge_in.key.ToString() &lt;&lt; &quot; existing=&quot; 
+<span class="lineNum">     165 </span>            :                   &lt;&lt; ( merge_in.existing_value ? merge_in.existing_value -&gt;ToString() : std::string(&quot;nullptr&quot;) )
+<span class="lineNum">     166 </span>            :                   &lt;&lt; &quot; operands=&quot; &lt;&lt; merge_in.operand_list.size() )
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :   return true;</span>
+<span class="lineNum">     168 </span>            : }
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 : catch(...)</span>
+<span class="lineNum">     170 </span>            : {
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :   if ( merge_in.existing_value )</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :     merge_out-&gt;new_value = merge_in.existing_value-&gt;ToString();</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :   PREFIXDB_LOG_ERROR(&quot;PreffixDB merge_operator::FullMerge unhandled exception: key=&quot; </span>
+<span class="lineNum">     175 </span>            :                   &lt;&lt; merge_in.key.ToString() &lt;&lt; &quot; existing=&quot; 
+<span class="lineNum">     176 </span>            :                   &lt;&lt; ( merge_in.existing_value ? merge_in.existing_value -&gt;ToString() : std::string(&quot;nullptr&quot;) )
+<span class="lineNum">     177 </span>            :                   &lt;&lt; &quot; operands=&quot; &lt;&lt; merge_in.operand_list.size() )
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :   return true;</span>
+<a name="179"><span class="lineNum">     179 </span>            : }</a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 : const char* merge_operator::Name() const </span>
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :   return &quot;PreffixDBMergeOperator&quot;;</span>
+<a name="184"><span class="lineNum">     184 </span>            : }</a>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 : void merge_operator::setnx_(const slice_type* value, const update_list&amp; operands, std::string&amp; result) const</span>
+<span class="lineNum">     187 </span>            : {
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :   if ( value!=nullptr )</span>
+<span class="lineNum">     189 </span>            :   {
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :     result = value-&gt;ToString();</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span>            :   
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :   if ( operands.empty() )</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     196 </span>            :   
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :   result = operands.front();</span>
+<a name="198"><span class="lineNum">     198 </span>            : }</a>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 : void merge_operator::inc_(const slice_type* value, const update_list&amp; operands, std::string&amp; result) const</span>
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span>            :   typedef ::wfc::json::value&lt;int64_t&gt; int64json;
+<span class="lineNum">     203 </span>            :   typedef ::wfc::json::value&lt;int64_t&gt;::serializer intser;
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :   int64_t num = 0;</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :   bool exist = true;</span>
+<span class="lineNum">     206 </span>            :   // Десериализуем текущий объект
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :   if ( value==nullptr || !helper::unserialize&lt;int64json&gt;(num, value, true)  )</span>
+<span class="lineNum">     208 </span>            :   {
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :     num = 0;</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :     exist = false;</span>
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :   for (const std::string&amp; oper : operands )</span>
+<span class="lineNum">     214 </span>            :   {
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :     this-&gt;inc_operand_(oper, num, exist);</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :     exist = true;</span>
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :   result.reserve(8);</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :   intser()( num, std::inserter(result, result.end()) );</span>
+<a name="221"><span class="lineNum">     221 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 : void merge_operator::inc_operand_(const std::string&amp; operand, int64_t&amp; num, bool exist) const</span>
+<span class="lineNum">     224 </span>            : {
+<span class="lineNum">     225 </span>            :   typedef ::wfc::json::value&lt;int64_t&gt; int64json;
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :   inc_params params;</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :   if ( !helper::unserialize&lt;inc_params_json&gt;(params, operand, false) )</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     230 </span>            :   
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :   if ( !exist )</span>
+<span class="lineNum">     232 </span>            :   {
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :     if ( !parser::is_number( params.val.begin(), params.val.end() ) )</span>
+<span class="lineNum">     234 </span>            :     {
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :       num = 0;</span>
+<span class="lineNum">     236 </span>            :     }
+<span class="lineNum">     237 </span>            :     else
+<span class="lineNum">     238 </span>            :     {
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :       helper::unserialize&lt;int64json&gt;(num, params.val, false);</span>
+<span class="lineNum">     240 </span>            :     }
+<span class="lineNum">     241 </span>            :   }
+<span class="lineNum">     242 </span>            :   
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :   if (parser::is_number( params.inc.begin(), params.inc.end()))</span>
+<span class="lineNum">     244 </span>            :   {
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :     int64_t inc = 0;</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :     helper::unserialize&lt;int64json&gt;(inc, params.inc, false);</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :     num += inc;</span>
+<span class="lineNum">     248 </span>            :   }
+<a name="249"><span class="lineNum">     249 </span>            : }</a>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 : void merge_operator::add_(const slice_type* value, const update_list&amp; operands, std::string&amp; result) const</span>
+<span class="lineNum">     252 </span>            : {
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :   std::deque&lt;std::string&gt; arr;</span>
+<span class="lineNum">     254 </span>            :   typedef ::wfc::json::array&lt; std::deque&lt; ::wfc::json::raw_value&lt;&gt; &gt; &gt; arr_json;
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :   // Десериализуем текущий объект
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :   if ( !helper::unserialize&lt;arr_json&gt;(arr, value, false) )</span>
+<span class="lineNum">     258 </span>            :   {
+<span class="lineNum">     259 </span>            :     // очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :     arr.clear();</span>
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :   for (const std::string&amp; oper : operands )</span>
+<span class="lineNum">     264 </span>            :   {
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :     this-&gt;add_operand_(oper, arr);</span>
+<span class="lineNum">     266 </span>            :   }
+<span class="lineNum">     267 </span>            :   
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :   if ( value!= nullptr )</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :     result.reserve(value-&gt;size());</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :   arr_json::serializer()( arr, std::inserter(result, result.end()) );</span>
+<a name="271"><span class="lineNum">     271 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 : void merge_operator::add_operand_(const std::string&amp; operand, std::deque&lt;std::string&gt;&amp; arr) const</span>
+<span class="lineNum">     274 </span>            : {
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :   add_params update;</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :   if ( !helper::unserialize&lt;add_params_json&gt;(update, operand, false) )</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     278 </span>            :   
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :   if ( update.lim == 0 )</span>
+<span class="lineNum">     280 </span>            :   {
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :     arr.clear();</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     283 </span>            :   }
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :   arr.insert( arr.end(), update.arr.begin(), update.arr.end() );</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :   if ( arr.size() &gt; update.lim )</span>
+<span class="lineNum">     287 </span>            :   {
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :     std::ptrdiff_t pos = static_cast&lt;std::ptrdiff_t&gt;(arr.size() - update.lim);</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :     arr.erase( arr.begin(), arr.begin() + pos );</span>
+<span class="lineNum">     290 </span>            :   }
+<a name="291"><span class="lineNum">     291 </span>            : }</a>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 : void merge_operator::packed_(const slice_type* value, const update_list&amp; operands, std::string&amp; result) const</span>
+<span class="lineNum">     294 </span>            : {
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :   packed_t pck;</span>
+<span class="lineNum">     296 </span>            :   
+<span class="lineNum">     297 </span>            :   // Десериализуем текущий объект
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :   if ( !helper::unserialize&lt;packed_json&gt;(pck, value, false) )</span>
+<span class="lineNum">     299 </span>            :   {
+<span class="lineNum">     300 </span>            :     // очевидно записан какой-то мусор похожий на объект. Не важно, просто заменим его
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :     pck.clear();</span>
+<span class="lineNum">     302 </span>            :   }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :   for (const std::string&amp; oper : operands )</span>
+<span class="lineNum">     305 </span>            :   {
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :     this-&gt;packed_operand_(oper, pck);</span>
+<span class="lineNum">     307 </span>            :   }
+<span class="lineNum">     308 </span>            :   
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :   if ( value!= nullptr )</span>
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :     result.reserve(value-&gt;size());</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :   packed_json::serializer()( pck, std::inserter(result, result.end()) );</span>
+<a name="312"><span class="lineNum">     312 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 : void merge_operator::packed_operand_(const std::string&amp; operand, packed_t&amp; pck) const</span>
+<span class="lineNum">     315 </span>            : {
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :   packed_params_t update;</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :   if ( !helper::unserialize&lt;packed_params_json&gt;(update, operand, false) )</span>
+<a name="318"><span class="lineNum">     318 </span><span class="lineNoCov">          0 :     return;</span></a>
+<span class="lineNum">     319 </span>            :     
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :   static auto less = []( const packed_field&amp; l, const packed_field&amp; r) { return l.first &lt; r.first; };</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :   if ( !std::is_sorted( pck.begin(), pck.end(), less ) )</span>
+<span class="lineNum">     322 </span>            :   { 
+<span class="lineNum">     323 </span>            :     // сортируем для быстропоиска
+<span class="lineNum">     324 </span>            :     // как фитча все поля у хранимого пакета упорядочены 
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 :     std::sort( pck.begin(), pck.end(), less );</span>
+<span class="lineNum">     326 </span>            :   }
+<span class="lineNum">     327 </span>            :     
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :   packed_field field;</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :   for (const auto&amp; upd : update)</span>
+<span class="lineNum">     330 </span>            :   {
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :     const packed_field_params&amp; u = upd.second;</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :     const bool erase = parser::is_null( u.inc.begin(), u.inc.end() )</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :                     &amp;&amp; parser::is_null( u.val.begin(), u.val.end() );</span>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :     field.first = std::move(upd.first);</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :     auto itr = std::lower_bound(pck.begin(), pck.end(), field, less);</span>
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :     const bool found = ( itr != pck.end() &amp;&amp; itr-&gt;first == field.first );</span>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :     if ( erase )</span>
+<span class="lineNum">     340 </span>            :     {
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :       if ( found ) pck.erase(itr);</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :         continue;</span>
+<span class="lineNum">     343 </span>            :     }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :     // это инкремент или просто замена
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :     bool inc_ready = parser::is_number( u.inc.begin(), u.inc.end() );</span>
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :     if ( !found )</span>
+<span class="lineNum">     348 </span>            :     {
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :       field.second = u.val;</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :       itr = pck.insert(itr, std::move(field) );</span>
+<span class="lineNum">     351 </span>            :     }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :     if ( inc_ready )</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :       this-&gt;packed_inc_( u, itr-&gt;second );</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :     else if (found)</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :       itr-&gt;second = std::move( u.val );</span>
+<span class="lineNum">     357 </span>            :   }
+<a name="358"><span class="lineNum">     358 </span>            : }</a>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 : void merge_operator::packed_inc_(const packed_field_params&amp; upd, std::string&amp; result) const</span>
+<span class="lineNum">     361 </span>            : {
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :   ::wfc::json::value&lt;int64_t&gt;::serializer intser;</span>
+<span class="lineNum">     363 </span>            :   
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :   if ( !parser::is_number( result.begin(), result.end() ) )</span>
+<span class="lineNum">     365 </span>            :   { 
+<span class="lineNum">     366 </span>            :     // если текущее значение не число, то берём из val
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :     result = upd.val;</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :     if ( !parser::is_number( result.begin(), result.end() ) )</span>
+<span class="lineNum">     369 </span>            :     { // если все равно не число
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :       result = &quot;0&quot;;</span>
+<span class="lineNum">     371 </span>            :     }
+<span class="lineNum">     372 </span>            :   }
+<span class="lineNum">     373 </span>            :   
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :   int64_t val = 0;</span>
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :   int64_t inc = 0;</span>
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :   intser(val, result.begin(), result.end(), nullptr);</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :   intser(inc, upd.inc.begin(), upd.inc.end(), nullptr );</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :   val += inc;</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :   result.clear();</span>
+<span class="lineNum">     380 </span>            :   
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :   intser(val, std::inserter(result, result.end()) );</span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

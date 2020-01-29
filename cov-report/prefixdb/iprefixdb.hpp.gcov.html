@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/iprefixdb.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">prefixdb</a> - iprefixdb.hpp<span style="font-size: 80%;"> (source / <a href="iprefixdb.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;wfc/iinterface.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;prefixdb/api/set.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;prefixdb/api/setnx.hpp&gt;
+<span class="lineNum">       6 </span>            : #include &lt;prefixdb/api/get.hpp&gt;
+<span class="lineNum">       7 </span>            : #include &lt;prefixdb/api/has.hpp&gt;
+<span class="lineNum">       8 </span>            : #include &lt;prefixdb/api/del.hpp&gt;
+<span class="lineNum">       9 </span>            : #include &lt;prefixdb/api/inc.hpp&gt;
+<span class="lineNum">      10 </span>            : #include &lt;prefixdb/api/add.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;prefixdb/api/packed.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;prefixdb/api/range.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;prefixdb/api/get_updates_since.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;prefixdb/api/get_all_prefixes.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;prefixdb/api/detach_prefixes.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;prefixdb/api/attach_prefixes.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;prefixdb/api/delay_background.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;prefixdb/api/continue_background.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;prefixdb/api/compact_prefix.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;prefixdb/api/create_snapshot.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;prefixdb/api/release_snapshot.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : namespace wamba { namespace prefixdb{
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /**
+<span class="lineNum">      26 </span>            :   * @brief Интерфейс к PrefixDB
+<span class="lineNum">      27 </span>            :   * @details 
+<span class="lineNum">      28 </span>            :   * 
+<span class="lineNum">      29 </span>            :   * Основные операции
+<span class="lineNum">      30 </span>            :   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
+<span class="lineNum">      31 </span>            :   * -----------|-----------------|----------------|------------
+<span class="lineNum">      32 </span>            :   * @ref iprefixdb::set &quot;set&quot; | @ref request::set (@ref request::set_json &quot;json&quot;) | @ref response::set (@ref response::set_json &quot;json&quot;) | Запись
+<span class="lineNum">      33 </span>            :   * @ref iprefixdb::get &quot;get&quot; | @ref request::get (@ref request::get_json &quot;json&quot;) | @ref response::get (@ref response::get_json &quot;json&quot;) | Чтение
+<span class="lineNum">      34 </span>            :   * @ref iprefixdb::del &quot;del&quot; | @ref request::del (@ref request::del_json &quot;json&quot;) | @ref response::del (@ref response::del_json &quot;json&quot;) | Удаление
+<span class="lineNum">      35 </span>            :   * @ref iprefixdb::has &quot;has&quot; | @ref request::has (@ref request::has_json &quot;json&quot;) | @ref response::has (@ref response::has_json &quot;json&quot;) | Проверка
+<span class="lineNum">      36 </span>            :   * 
+<span class="lineNum">      37 </span>            :   * Операции слияния
+<span class="lineNum">      38 </span>            :   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
+<span class="lineNum">      39 </span>            :   * -----------|-----------------|----------------|------------
+<span class="lineNum">      40 </span>            :   * @ref iprefixdb::inc &quot;inc&quot; | @ref request::inc (@ref request::inc_json &quot;json&quot;) | @ref response::inc (@ref response::inc_json &quot;json&quot;) | Целочисленный счетчик 
+<span class="lineNum">      41 </span>            :   * @ref iprefixdb::add &quot;add&quot; | @ref request::add (@ref request::add_json &quot;json&quot;) | @ref response::add (@ref response::add_json &quot;json&quot;) | Циклический массив
+<span class="lineNum">      42 </span>            :   * @ref iprefixdb::setnx &quot;setnx&quot; | @ref request::setnx (@ref request::setnx_json &quot;json&quot;) | @ref response::setnx (@ref response::setnx_json &quot;json&quot;) | Записать, если не существует 
+<span class="lineNum">      43 </span>            :   * @ref iprefixdb::packed &quot;packed&quot; | @ref request::packed (@ref request::packed_json &quot;json&quot;) | @ref response::packed (@ref response::packed_json &quot;json&quot;) | Пакетное обновление полей JSON-объекта
+<span class="lineNum">      44 </span>            :   * 
+<span class="lineNum">      45 </span>            :   * Работа с диапазоном
+<span class="lineNum">      46 </span>            :   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
+<span class="lineNum">      47 </span>            :   * -----------|-----------------|----------------|------------
+<span class="lineNum">      48 </span>            :   *     range    | @ref request::range (@ref request::range_json) | @ref response::range (@ref response::range_json) | Запись
+<span class="lineNum">      49 </span>            :   *
+<span class="lineNum">      50 </span>            :   * Префиксы
+<span class="lineNum">      51 </span>            :   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
+<span class="lineNum">      52 </span>            :   * -----------|-----------------|----------------|------------
+<span class="lineNum">      53 </span>            :   * get_all_prefixes | @ref request::get_all_prefixes (@ref request::get_all_prefixes_json) | @ref response::get_all_prefixes (@ref response::get_all_prefixes_json) | Запись
+<span class="lineNum">      54 </span>            :   * detach_prefixes | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<span class="lineNum">      55 </span>            :   * attach_prefixes | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<span class="lineNum">      56 </span>            :   * compact_prefix | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<span class="lineNum">      57 </span>            :   *
+<span class="lineNum">      58 </span>            :   * Снапшоты
+<span class="lineNum">      59 </span>            :   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
+<span class="lineNum">      60 </span>            :   * -----------|-----------------|----------------|------------
+<span class="lineNum">      61 </span>            :   * create_snapshot | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<span class="lineNum">      62 </span>            :   * release_snapshot | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<span class="lineNum">      63 </span>            :   * 
+<span class="lineNum">      64 </span>            :   * Репликация и бэкапы
+<span class="lineNum">      65 </span>            :   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
+<span class="lineNum">      66 </span>            :   * -----------|-----------------|----------------|------------
+<span class="lineNum">      67 </span>            :   * delay_background | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<span class="lineNum">      68 </span>            :   * continue_background | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+<a name="69"><span class="lineNum">      69 </span>            :   * get_updates_since | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись</a>
+<span class="lineNum">      70 </span>            :   */
+<a name="71"><span class="lineNum">      71 </span><span class="lineCov">          1 : struct iprefixdb: public ::wfc::iinterface</span></a>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineCov">          1 :   virtual ~iprefixdb() {}</span>
+<span class="lineNum">      74 </span>            :   
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :   /**
+<span class="lineNum">      77 </span>            :     * @brief Установка значений для нескольких ключей.
+<span class="lineNum">      78 </span>            :     * @param req запрос
+<span class="lineNum">      79 </span>            :     * @param cb обработчик обратного вызова
+<span class="lineNum">      80 </span>            :     */
+<span class="lineNum">      81 </span>            :   virtual void set( request::set::ptr req, response::set::handler cb) = 0;
+<span class="lineNum">      82 </span>            :   virtual void get( request::get::ptr req, response::get::handler cb) = 0;
+<span class="lineNum">      83 </span>            :   virtual void del( request::del::ptr req, response::del::handler cb) = 0;
+<span class="lineNum">      84 </span>            :   virtual void has( request::has::ptr req, response::has::handler cb) = 0;
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :   virtual void inc( request::inc::ptr req, response::inc::handler cb) = 0;
+<span class="lineNum">      87 </span>            :   virtual void add( request::add::ptr req, response::add::handler cb) = 0;
+<span class="lineNum">      88 </span>            :   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) = 0;
+<span class="lineNum">      89 </span>            :   virtual void packed( request::packed::ptr req, response::packed::handler cb) = 0;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :   virtual void range( request::range::ptr req, response::range::handler cb) = 0;
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) = 0;
+<span class="lineNum">      94 </span>            :   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) = 0;
+<span class="lineNum">      95 </span>            :   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) = 0;
+<span class="lineNum">      96 </span>            :   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) = 0;
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :   virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) = 0;
+<span class="lineNum">      99 </span>            :   virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) = 0;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) = 0;
+<span class="lineNum">     103 </span>            :   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) = 0;
+<span class="lineNum">     104 </span>            :   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) = 0;
+<span class="lineNum">     105 </span>            :   
+<span class="lineNum">     106 </span>            :   
+<span class="lineNum">     107 </span>            : };
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

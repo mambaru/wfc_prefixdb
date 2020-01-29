@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/prefixdb/multidb/aux/base64.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">prefixdb/prefixdb/multidb/aux</a> - base64.hpp<span style="font-size: 80%;"> (source / <a href="base64.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;boost/archive/iterators/binary_from_base64.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;boost/archive/iterators/base64_from_binary.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;boost/archive/iterators/transform_width.hpp&gt;
+<span class="lineNum">       6 </span>            : #include &lt;boost/archive/iterators/insert_linebreaks.hpp&gt;
+<span class="lineNum">       7 </span>            : #include &lt;boost/archive/iterators/remove_whitespace.hpp&gt;
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      10 </span>            : #include &lt;string&gt;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : namespace wamba{ namespace prefixdb {
+<a name="13"><span class="lineNum">      13 </span>            :   </a>
+<span class="lineNum">      14 </span>            : template&lt;typename I, typename Out &gt;
+<span class="lineNum">      15 </span><span class="lineNoCov">          0 : inline Out encode64(I beg, I end, Out out)</span>
+<span class="lineNum">      16 </span>            : {
+<span class="lineNum">      17 </span>            :   using namespace boost::archive::iterators;
+<span class="lineNum">      18 </span>            :   typedef insert_linebreaks&lt;base64_from_binary&lt;transform_width&lt;I, 6, 8&gt; &gt;, 72 &gt; iterator;
+<span class="lineNum">      19 </span><span class="lineNoCov">          0 :   out = std::copy( iterator(beg), iterator(end), out);</span>
+<span class="lineNum">      20 </span><span class="lineNoCov">          0 :   return std::fill_n( out, (3-std::distance(beg,end)%3)%3, '=');</span>
+<span class="lineNum">      21 </span>            : }
+<span class="lineNum">      22 </span>            : 
+<a name="23"><span class="lineNum">      23 </span>            : // костыль для старого буста: tail - хвост который нужно отрезать в результате, модификация интервала</a>
+<span class="lineNum">      24 </span>            : template&lt;typename I, typename Out &gt;
+<span class="lineNum">      25 </span><span class="lineNoCov">          0 : inline Out decode64(I beg, I end, Out out, size_t&amp; tail)</span>
+<span class="lineNum">      26 </span>            : {
+<span class="lineNum">      27 </span>            :   using namespace boost::archive::iterators;
+<span class="lineNum">      28 </span>            :   typedef transform_width&lt;binary_from_base64&lt; remove_whitespace&lt;I&gt; &gt;, 8, 6&gt; iterator;
+<span class="lineNum">      29 </span><span class="lineNoCov">          0 :   std::reverse_iterator&lt;I&gt; rend(end);</span>
+<span class="lineNum">      30 </span><span class="lineNoCov">          0 :   for ( tail=0; tail &lt; 2 &amp;&amp; *rend == '='; ++tail, ++rend, *( end - static_cast&lt;std::ptrdiff_t&gt;(tail) )='A' );</span>
+<span class="lineNum">      31 </span><span class="lineNoCov">          0 :   return std::copy( iterator(beg), iterator(end), out);</span>
+<span class="lineNum">      32 </span>            : }
+<span class="lineNum">      33 </span>            :    
+<span class="lineNum">      34 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_slave.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">prefixdb/prefixdb/multidb/wrocksdb</a> - wrocksdb_slave.hpp<span style="font-size: 80%;"> (source / <a href="wrocksdb_slave.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;prefixdb/prefixdb/multidb/options/db_config.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">       5 </span>            : namespace rocksdb{ class DBWithTTL;}
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : namespace wamba{ namespace prefixdb{
+<span class="lineNum">       8 </span>            :   
+<a name="9"><span class="lineNum">       9 </span>            : class since_reader;</a>
+<span class="lineNum">      10 </span>            :   
+<span class="lineNum">      11 </span><span class="lineNoCov">          0 : class wrocksdb_slave</span>
+<span class="lineNum">      12 </span>            :   : public std::enable_shared_from_this&lt;wrocksdb_slave&gt;
+<span class="lineNum">      13 </span>            : {
+<span class="lineNum">      14 </span>            :   typedef wfc::workflow::timer_id_t timer_id_t;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : public:
+<span class="lineNum">      17 </span>            :   typedef ::rocksdb::DBWithTTL db_type;
+<span class="lineNum">      18 </span>            :   
+<span class="lineNum">      19 </span>            :   wrocksdb_slave(std::string name, std::string path, const slave_config&amp; opt, db_type&amp; db);
+<span class="lineNum">      20 </span>            :   
+<span class="lineNum">      21 </span>            :   void start();
+<span class="lineNum">      22 </span>            :   void start(size_t last_sn );
+<span class="lineNum">      23 </span>            :   
+<span class="lineNum">      24 </span>            :   void stop();
+<span class="lineNum">      25 </span>            :   
+<span class="lineNum">      26 </span>            : private:
+<span class="lineNum">      27 </span>            :   
+<span class="lineNum">      28 </span>            :   void start_();
+<span class="lineNum">      29 </span>            :   void create_updates_requester_();
+<span class="lineNum">      30 </span>            :   
+<span class="lineNum">      31 </span>            :   static request::get_updates_since::ptr updates_generator_(
+<span class="lineNum">      32 </span>            :     std::weak_ptr&lt;wrocksdb_slave&gt; wthis,
+<span class="lineNum">      33 </span>            :     response::get_updates_since::ptr, 
+<span class="lineNum">      34 </span>            :     std::shared_ptr&lt;request::get_updates_since&gt; preq
+<span class="lineNum">      35 </span>            :   );
+<span class="lineNum">      36 </span>            :   
+<span class="lineNum">      37 </span>            :   void logs_parser_( response::get_updates_since::ptr&amp; res);
+<span class="lineNum">      38 </span>            :   void create_diff_timer_();
+<span class="lineNum">      39 </span>            :   void create_seq_timer_();
+<span class="lineNum">      40 </span>            :   void     write_sequence_number_(uint64_t seq);
+<span class="lineNum">      41 </span>            :   uint64_t read_sequence_number_();
+<span class="lineNum">      42 </span>            :   
+<span class="lineNum">      43 </span>            :   
+<span class="lineNum">      44 </span>            : private:
+<span class="lineNum">      45 </span>            :   std::string _name;
+<span class="lineNum">      46 </span>            :   std::string _path;
+<span class="lineNum">      47 </span>            :   slave_config _opt;
+<span class="lineNum">      48 </span>            :   db_type&amp; _db;
+<span class="lineNum">      49 </span>            :   std::shared_ptr&lt;since_reader&gt; _log_parser;
+<span class="lineNum">      50 </span>            :   
+<span class="lineNum">      51 </span>            :   std::atomic&lt;time_t&gt; _last_update_time;
+<span class="lineNum">      52 </span>            :   std::atomic&lt;size_t&gt; _update_counter;
+<span class="lineNum">      53 </span>            :   std::atomic&lt;std::ptrdiff_t&gt; _current_differens;
+<span class="lineNum">      54 </span>            :   std::atomic&lt;size_t&gt; _last_sequence;
+<span class="lineNum">      55 </span>            :   std::atomic&lt;size_t&gt; _lost_counter;
+<span class="lineNum">      56 </span>            :   
+<span class="lineNum">      57 </span>            :   timer_id_t _slave_timer_id = -1;
+<span class="lineNum">      58 </span>            :   timer_id_t _diff_timer_id = -1;
+<span class="lineNum">      59 </span>            :   timer_id_t _seq_timer_id = -1;
+<span class="lineNum">      60 </span>            :   
+<span class="lineNum">      61 </span>            :   std::shared_ptr&lt;wfc::workflow&gt; _workflow;
+<span class="lineNum">      62 </span>            :   typedef std::mutex mutex_type;
+<span class="lineNum">      63 </span>            :   mutex_type _mutex;
+<span class="lineNum">      64 </span>            :   bool is_started = false;
+<span class="lineNum">      65 </span>            : };
+<span class="lineNum">      66 </span>            :  
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

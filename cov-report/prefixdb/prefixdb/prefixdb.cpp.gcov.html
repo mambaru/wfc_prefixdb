@@ -1,0 +1,360 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/prefixdb/prefixdb.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">prefixdb/prefixdb</a> - prefixdb.cpp<span style="font-size: 80%;"> (source / <a href="prefixdb.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">146</td>
+            <td class="headerCovTableEntryLo">0.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryLo">8.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #include &quot;prefixdb.hpp&quot;</a>
+<span class="lineNum">       2 </span>            : #include &lt;wfc/wfc_exit.hpp&gt;
+<span class="lineNum">       3 </span>            : #include &lt;wfc/logger.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;wfc/core/icore.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;wfc/module/iinstance.hpp&gt;
+<span class="lineNum">       6 </span>            : #include &quot;multidb/multidb.hpp&quot;
+<span class="lineNum">       7 </span>            : #include &quot;multidb/god.hpp&quot;
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &quot;../service/prefixdb_cmd.hpp&quot;
+<span class="lineNum">      10 </span>            : #include &quot;../logger.hpp&quot;
+<span class="lineNum">      11 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">      12 </span>            : 
+<a name="13"><span class="lineNum">      13 </span>            : namespace wamba{ namespace prefixdb {</a>
+<span class="lineNum">      14 </span>            :   
+<span class="lineNum">      15 </span><span class="lineNoCov">          0 : void prefixdb::start()</span>
+<span class="lineNum">      16 </span>            : {
+<span class="lineNum">      17 </span><span class="lineNoCov">          0 :   if ( this-&gt;has_arg(&quot;restore&quot;) )  </span>
+<span class="lineNum">      18 </span><span class="lineNoCov">          0 :     return this-&gt;restore_();</span>
+<span class="lineNum">      19 </span>            :   
+<span class="lineNum">      20 </span><span class="lineNoCov">          0 :   this-&gt;open_prefixdb();</span>
+<span class="lineNum">      21 </span><span class="lineNoCov">          0 :   if ( _impl!=nullptr )</span>
+<span class="lineNum">      22 </span><span class="lineNoCov">          0 :     _impl-&gt;start();</span>
+<a name="23"><span class="lineNum">      23 </span>            : }</a>
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span><span class="lineNoCov">          0 : void prefixdb::open_prefixdb()</span>
+<span class="lineNum">      26 </span>            : {
+<span class="lineNum">      27 </span><span class="lineNoCov">          0 :   options_type opt = this-&gt;options();</span>
+<span class="lineNum">      28 </span><span class="lineNoCov">          0 :   opt.args.timers_workflow = this-&gt;get_workflow();</span>
+<span class="lineNum">      29 </span><span class="lineNoCov">          0 :   opt.args.write_workflow = this-&gt;get_workflow(opt.delayed_write_workflow, true);</span>
+<span class="lineNum">      30 </span><span class="lineNoCov">          0 :   if ( opt.args.write_workflow == nullptr )</span>
+<span class="lineNum">      31 </span><span class="lineNoCov">          0 :     opt.args.write_workflow = opt.args.timers_workflow;</span>
+<span class="lineNum">      32 </span>            :   
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :   if ( this-&gt;has_arg(&quot;load&quot;) )  </span>
+<span class="lineNum">      34 </span>            :   {
+<span class="lineNum">      35 </span><span class="lineNoCov">          0 :     opt.initial_load.enabled = true;</span>
+<span class="lineNum">      36 </span><span class="lineNoCov">          0 :     if ( size_t size = this-&gt;get_arg_t&lt;size_t&gt;(&quot;load&quot;) )  </span>
+<span class="lineNum">      37 </span><span class="lineNoCov">          0 :       opt.initial_load.initial_range = size;</span>
+<span class="lineNum">      38 </span>            :     
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 :     std::string setnx_arg = this-&gt;get_arg(&quot;setnx&quot;);</span>
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :     opt.initial_load.use_setnx = setnx_arg.empty() || (setnx_arg!=&quot;false&quot; &amp;&amp; setnx_arg!=&quot;0&quot;);</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :     opt.initial_load.disableWAL = !opt.initial_load.use_setnx;</span>
+<span class="lineNum">      42 </span>            :     
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :     std::string target = this-&gt;get_arg_t&lt;std::string&gt;(&quot;target&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :     if ( target.empty() )</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :       target = opt.slave.target;</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :     if (target.empty())</span>
+<span class="lineNum">      47 </span>            :     {
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_FATAL(&quot;'target' is not set for initial load&quot;)</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :       return;</span>
+<span class="lineNum">      50 </span>            :     }
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :     opt.initial_load.remote = this-&gt;get_target&lt;iprefixdb&gt;(target);</span>
+<span class="lineNum">      52 </span>            :   }
+<span class="lineNum">      53 </span>            :   
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :   if ( this-&gt;has_arg(&quot;repair&quot;) )  </span>
+<span class="lineNum">      55 </span>            :   {
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     opt.forced_repair = this-&gt;has_arg(&quot;repair&quot;);</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_MESSAGE(&quot;Forced repair &quot; &lt;&lt; opt.forced_repair)</span>
+<span class="lineNum">      58 </span>            :   }
+<span class="lineNum">      59 </span>            :   
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :   if ( _impl == nullptr )</span>
+<span class="lineNum">      61 </span>            :   {
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :     _impl = std::make_shared&lt;multidb&gt;();</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :     auto factory = god::create(&quot;rocksdb&quot;, this-&gt;global()-&gt;io_service );</span>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :     opt.slave.master = this-&gt;get_target&lt;iprefixdb&gt;( opt.slave.target );</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :     _impl-&gt;reconfigure( opt, factory );</span>
+<span class="lineNum">      67 </span>            :   }
+<span class="lineNum">      68 </span>            :   else
+<span class="lineNum">      69 </span>            :   {
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :     auto&amp; stop_list = opt.stop_list;</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :     for ( const std::string&amp; sname : stop_list )</span>
+<span class="lineNum">      72 </span>            :     {
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :       if ( auto obj = this-&gt;global()-&gt;registry.get_object&lt;wfc::iinstance&gt;(&quot;instance&quot;, sname) )</span>
+<span class="lineNum">      74 </span>            :       {
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         obj-&gt;stop(&quot;&quot;);</span>
+<span class="lineNum">      76 </span>            :       }
+<span class="lineNum">      77 </span>            :     }
+<span class="lineNum">      78 </span>            :     
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :     auto factory = god::create(&quot;rocksdb&quot;, this-&gt;global()-&gt;io_service );</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     factory-&gt;initialize(opt);</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :     if ( !_impl-&gt;reconfigure( opt, factory ) )</span>
+<span class="lineNum">      83 </span>            :     {
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :       PREFIXDB_LOG_FATAL(&quot;prefixdb open DB abort!&quot;);</span>
+<span class="lineNum">      85 </span>            :     }
+<span class="lineNum">      86 </span>            :     
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :     for ( const std::string&amp; name1 : stop_list )</span>
+<span class="lineNum">      88 </span>            :     {
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :       if ( auto obj = this-&gt;global()-&gt;registry.get_object&lt;wfc::iinstance&gt;(&quot;instance&quot;, name1) )</span>
+<span class="lineNum">      90 </span>            :       {
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         obj-&gt;start(&quot;&quot;);</span>
+<span class="lineNum">      92 </span>            :       }
+<span class="lineNum">      93 </span>            :     }
+<span class="lineNum">      94 </span>            :   }
+<a name="95"><span class="lineNum">      95 </span>            : }</a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 : void prefixdb::stop() </span>
+<span class="lineNum">      98 </span>            : {
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :   if ( _impl )</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     _impl-&gt;stop();</span>
+<a name="101"><span class="lineNum">     101 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 : void prefixdb::set( request::set::ptr req, response::set::handler cb)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     107 </span>            :   
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :   _impl-&gt;set( std::move(req), std::move(cb) );</span>
+<a name="109"><span class="lineNum">     109 </span>            : }</a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 : void prefixdb::setnx( request::setnx::ptr req, response::setnx::handler cb)</span>
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :   _impl-&gt;setnx( std::move(req), std::move(cb) );</span>
+<a name="117"><span class="lineNum">     117 </span>            : }</a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 : void prefixdb::get( request::get::ptr req, response::get::handler cb)</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :   if ( this-&gt;notify_ban(req, cb) )</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :   _impl-&gt;get( std::move(req), std::move(cb) );</span>
+<a name="125"><span class="lineNum">     125 </span>            : }</a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 : void prefixdb::has( request::has::ptr req, response::has::handler cb)</span>
+<span class="lineNum">     128 </span>            : {
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :   if ( this-&gt;notify_ban(req, cb) )</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   _impl-&gt;has( std::move(req), std::move(cb) );</span>
+<a name="133"><span class="lineNum">     133 </span>            : }</a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 : void prefixdb::del( request::del::ptr req, response::del::handler cb) </span>
+<span class="lineNum">     136 </span>            : {
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :   _impl-&gt;del( std::move(req), std::move(cb) );</span>
+<a name="141"><span class="lineNum">     141 </span>            : }</a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : void prefixdb::inc( request::inc::ptr req, response::inc::handler cb) </span>
+<span class="lineNum">     144 </span>            : {
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :   _impl-&gt;inc( std::move(req), std::move(cb) );</span>
+<a name="149"><span class="lineNum">     149 </span>            : }</a>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 : void prefixdb::add( request::add::ptr req, response::add::handler cb) </span>
+<span class="lineNum">     152 </span>            : {
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   _impl-&gt;add( std::move(req), std::move(cb) );</span>
+<a name="157"><span class="lineNum">     157 </span>            : }</a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 : void prefixdb::packed( request::packed::ptr req, response::packed::handler cb)</span>
+<span class="lineNum">     160 </span>            : {
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :   _impl-&gt;packed( std::move(req), std::move(cb) );</span>
+<a name="165"><span class="lineNum">     165 </span>            : }</a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 : void prefixdb::range( request::range::ptr req, response::range::handler cb)</span>
+<span class="lineNum">     168 </span>            : {
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   if ( this-&gt;notify_ban(req, cb) )</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :   _impl-&gt;range( std::move(req), std::move(cb) );</span>
+<a name="173"><span class="lineNum">     173 </span>            : }</a>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 : void prefixdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)</span>
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :   if ( this-&gt;notify_ban(req, cb) )</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :   _impl-&gt;get_updates_since( std::move(req), std::move(cb) );  </span>
+<a name="181"><span class="lineNum">     181 </span>            : }</a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 : void prefixdb::get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb)</span>
+<span class="lineNum">     184 </span>            : {
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :   if ( this-&gt;notify_ban(req, cb) )</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :   _impl-&gt;get_all_prefixes( std::move(req), std::move(cb) );  </span>
+<a name="189"><span class="lineNum">     189 </span>            : }</a>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 : void prefixdb::detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb)</span>
+<span class="lineNum">     192 </span>            : {
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :   _impl-&gt;detach_prefixes( std::move(req), std::move(cb) );  </span>
+<a name="197"><span class="lineNum">     197 </span>            : }</a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 : void prefixdb::attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb)</span>
+<span class="lineNum">     200 </span>            : {
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :   _impl-&gt;attach_prefixes( std::move(req), std::move(cb) );  </span>
+<a name="205"><span class="lineNum">     205 </span>            : }</a>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 : void prefixdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb) </span>
+<span class="lineNum">     208 </span>            : {
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :   _impl-&gt;delay_background( std::move(req), std::move(cb) );  </span>
+<a name="213"><span class="lineNum">     213 </span>            : }</a>
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 : void prefixdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb) </span>
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :   _impl-&gt;continue_background( std::move(req), std::move(cb) );  </span>
+<a name="221"><span class="lineNum">     221 </span>            : }</a>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 : void prefixdb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) </span>
+<span class="lineNum">     224 </span>            : {
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     227 </span>            :   
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :   _impl-&gt;compact_prefix( std::move(req), std::move(cb) );  </span>
+<a name="229"><span class="lineNum">     229 </span>            : }</a>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 : void prefixdb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) </span>
+<span class="lineNum">     232 </span>            : {
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :   if ( this-&gt;notify_ban(req, cb) )</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     235 </span>            :   
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :   _impl-&gt;create_snapshot( std::move(req), std::move(cb) );  </span>
+<a name="237"><span class="lineNum">     237 </span>            : }</a>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 : void prefixdb::release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) </span>
+<span class="lineNum">     240 </span>            : {
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :   if ( this-&gt;bad_request(req, cb) )</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     243 </span>            :   
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :   _impl-&gt;release_snapshot( std::move(req), std::move(cb) );  </span>
+<span class="lineNum">     245 </span>            : }
+<a name="246"><span class="lineNum">     246 </span>            : </a>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 : void prefixdb::perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler)</span>
+<span class="lineNum">     249 </span>            : {
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :   service::prefixdb_cmd(this-&gt;shared_from_this(), std::move(d), handler);</span>
+<a name="251"><span class="lineNum">     251 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 : void prefixdb::restore_()</span>
+<span class="lineNum">     254 </span>            : {
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :   auto opt = this-&gt;options();</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :   if ( opt.restore.forbid )</span>
+<span class="lineNum">     257 </span>            :   {
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_FATAL(&quot;Restore forbidden in this configurations&quot;);</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     260 </span>            :   }
+<span class="lineNum">     261 </span>            :   
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :   auto db = std::make_shared&lt;multidb&gt;();</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :   auto factory = god::create(&quot;rocksdb&quot;, this-&gt;global()-&gt;io_service );</span>
+<span class="lineNum">     264 </span>            :   
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :   std::string path = this-&gt;get_arg(&quot;restore&quot;);</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :   if ( !path.empty() )</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :     opt.restore.path = path;</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :   if ( this-&gt;has_arg(&quot;bid&quot;) )</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :     opt.restore.backup_id = this-&gt;get_arg_t&lt;int64_t&gt;(&quot;bid&quot;);</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :   opt.preopen = false;</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :   factory-&gt;initialize(opt);</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :   db-&gt;reconfigure( opt, factory );</span>
+<span class="lineNum">     273 </span>            :   
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :   if ( !db-&gt;restore() )</span>
+<span class="lineNum">     275 </span>            :   {
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :     PREFIXDB_LOG_FATAL(&quot;restore fail&quot;)</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     278 </span>            :   }
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :   db-&gt;stop();</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :   ::wfc_exit();</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :   return; </span>
+<a name="282"><span class="lineNum">     282 </span>            : }</a>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">          3 : }}</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - wfc_prefixdb-coverage.info - prefixdb/api/set.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">prefixdb/api</a> - set.hpp<span style="font-size: 80%;"> (source / <a href="set.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">wfc_prefixdb-coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-01-29 13:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;prefixdb/api/common_status.hpp&gt;
+<span class="lineNum">       4 </span>            : #include &lt;prefixdb/api/fields.hpp&gt;
+<span class="lineNum">       5 </span>            : #include &lt;memory&gt;
+<span class="lineNum">       6 </span>            : #include &lt;string&gt;
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : namespace wamba { namespace prefixdb {
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : namespace request
+<span class="lineNum">      11 </span>            : {
+<span class="lineNum">      12 </span>            :   /**
+<span class="lineNum">      13 </span>            :    * @brief Установка значений для нескольких ключей для заданного префикса.
+<span class="lineNum">      14 </span>            :    * @details Значение ключа - произвольный json-объект, строка, число или флаг. Объект сохраняется в базу как есть, 
+<span class="lineNum">      15 </span>            :    * без десериализации, в таком же виде и возвращается при запросе.
+<span class="lineNum">      16 </span>            :    * @see @ref request::set_json &quot;Запрос 'set' в формате JSON&quot;
+<a name="17"><span class="lineNum">      17 </span>            :    * @see @ref response::set &quot;Ответ на запрос 'set'&quot;</a>
+<span class="lineNum">      18 </span>            :    */
+<span class="lineNum">      19 </span><span class="lineNoCov">          0 :   struct set</span>
+<span class="lineNum">      20 </span>            :   {
+<span class="lineNum">      21 </span>            :     /**
+<span class="lineNum">      22 </span>            :      * @brief Префикс
+<span class="lineNum">      23 </span>            :      * @details Обязательный параметр. Если префикс не существует, то создает новый.
+<span class="lineNum">      24 </span>            :      * @return @ref common_status::EmptyPrefix &quot;EmptyPrefix&quot; - если не задан префикс или пустая строка
+<span class="lineNum">      25 </span>            :      * @return @ref common_status::CreatePrefixFail &quot;CreatePrefixFail&quot; - не смог создать новый префикс 
+<span class="lineNum">      26 </span>            :      * @return @ref common_status::PrefixLengthExceeded &quot;PrefixLengthExceeded&quot; - превышен допустимый размер в имени префикса
+<span class="lineNum">      27 </span>            :      */
+<span class="lineNum">      28 </span>            :     std::string prefix;  
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            :     /**
+<span class="lineNum">      31 </span>            :      * @brief список пар ключ-значение для записи
+<span class="lineNum">      32 </span>            :      * @return Ошибка @ref common_status::TooManyKeys &quot;TooManyKeys&quot;
+<span class="lineNum">      33 </span>            :      * @return Ошибка @ref common_status::KeyLengthExceeded &quot;KeyLengthExceeded&quot;
+<span class="lineNum">      34 </span>            :      * @return Ошибка @ref common_status::ValueLengthExceeded &quot;ValueLengthExceeded&quot;
+<span class="lineNum">      35 </span>            :      */
+<span class="lineNum">      36 </span>            :     field_list_t fields; 
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :     /**
+<span class="lineNum">      39 </span>            :      * @brief Синхронная запись на диск (без кэширования)
+<span class="lineNum">      40 </span>            :      * @details Устанавливает соответствующий флаг при записи в RockDB, а также игнорирует отложенную запись через очередь, 
+<span class="lineNum">      41 </span>            :      * если такая разрешена в конфигурации @ref db_config::enable_delayed_write.
+<span class="lineNum">      42 </span>            :      */
+<span class="lineNum">      43 </span>            :     bool sync = false;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :     /**
+<span class="lineNum">      46 </span>            :      * @brief TODO
+<span class="lineNum">      47 </span>            :      */
+<span class="lineNum">      48 </span>            :     bool nores = true;
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :     /**
+<span class="lineNum">      51 </span>            :      * @brief TODO
+<span class="lineNum">      52 </span>            :      */
+<span class="lineNum">      53 </span>            :     bool noval = false;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :     /**
+<span class="lineNum">      56 </span>            :      * @brief TODO
+<span class="lineNum">      57 </span>            :      */
+<span class="lineNum">      58 </span>            :     size_t snapshot = 0;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     typedef std::unique_ptr&lt;set&gt; ptr;
+<span class="lineNum">      61 </span>            :   };
+<span class="lineNum">      62 </span>            : }
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : namespace response
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            :   /**
+<span class="lineNum">      67 </span>            :    * @brief Ответ Установка значений для нескольких ключей.
+<span class="lineNum">      68 </span>            :    * @details -Значение ключа - произвольный json-объект, строка, число или флаг. Объект сохраняется в базу как есть, 
+<span class="lineNum">      69 </span>            :    * без десериализации, в таком же виде и возвращается при запросе-. JSON @ref response::set_json
+<span class="lineNum">      70 </span>            :    * @see response::set_json - JSON
+<a name="71"><span class="lineNum">      71 </span>            :    * @see request::set - запрос</a>
+<span class="lineNum">      72 </span>            :    */
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :   struct set</span>
+<span class="lineNum">      74 </span>            :   {
+<span class="lineNum">      75 </span>            :     /**
+<span class="lineNum">      76 </span>            :      * @brief стаус ответа
+<span class="lineNum">      77 </span>            :      */
+<span class="lineNum">      78 </span>            :     common_status status =  common_status::OK;
+<span class="lineNum">      79 </span>            :     
+<span class="lineNum">      80 </span>            :     /**
+<span class="lineNum">      81 </span>            :      * @brief префикс
+<span class="lineNum">      82 </span>            :      */
+<span class="lineNum">      83 </span>            :     std::string prefix;
+<span class="lineNum">      84 </span>            :     
+<span class="lineNum">      85 </span>            :     
+<span class="lineNum">      86 </span>            :     /**
+<span class="lineNum">      87 </span>            :      * @brief Список установленных полей (значение в зависимости от флагов @ref request::set::noval &quot;noval&quot; и @ref request::set::nores &quot;nores&quot;)
+<span class="lineNum">      88 </span>            :      */
+<span class="lineNum">      89 </span>            :     field_list_t fields;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :     typedef std::unique_ptr&lt;set&gt; ptr;
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :     typedef std::function&lt; void(ptr) &gt; handler;
+<span class="lineNum">      94 </span>            :   };
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : }
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
