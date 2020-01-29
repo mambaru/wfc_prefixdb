@@ -22,9 +22,6 @@ set_target_properties(
     POSITION_INDEPENDENT_CODE ON
 )
 
-
-
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wno-undef")
 add_subdirectory(package)
 
 if ( BUILD_TESTING )
