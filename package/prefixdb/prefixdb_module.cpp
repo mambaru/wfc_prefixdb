@@ -4,10 +4,10 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 
-#include <prefixdb/prefixdb_module.hpp>
-#include <prefixdb/prefixdb/prefixdb_multiton.hpp>
-#include <prefixdb/service/prefixdb_service_multiton.hpp>
-#include <prefixdb/gateway/prefixdb_gateway_multiton.hpp>
+#include "prefixdb_module.hpp"
+#include "prefixdb/prefixdb_multiton.hpp"
+#include "service/prefixdb_service_multiton.hpp"
+#include "gateway/prefixdb_gateway_multiton.hpp"
 
 #include <wfc/module/component_list.hpp>
 #include <wfc/name.hpp>

@@ -1,12 +1,6 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${UNIT_TEST_BIN_OUTPUT_DIR})
 
-add_executable(
-  test_prefixdb
-    test_prefixdb.cpp
-    prefixdb_suite.cpp
-    ${FAS_TESTING_CPP}
-)
+add_executable(test_prefixdb test_prefixdb.cpp prefixdb_suite.cpp)
 
-target_link_libraries(test_prefixdb wfc_prefixdb)
+target_link_libraries(test_prefixdb PUBLIC wfc_prefixdb fas::testing)
 add_dependencies(test_prefixdb wfc_prefixdb)
-add_test(NAME test_prefixdb COMMAND test_prefixdb)
+wci_test(TARGET test_prefixdb COMMAND test_prefixdb)

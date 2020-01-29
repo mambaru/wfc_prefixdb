@@ -17,9 +17,6 @@ struct add_params_json
         ::wfc::json::member<n_lim, add_params, size_t, &add_params::lim >,
         ::wfc::json::member<n_arr, add_params, std::vector<std::string>, &add_params::arr, 
                                    ::wfc::json::array< std::vector< ::wfc::json::raw_value<> >, 20 > >
-        /*::wfc::json::array< std::vector< ::wfc::json::raw_value<> > > *,
-        ::wfc::json::member<n_arr, add_params, std::string, &add_params::arr, ::wfc::json::raw_value<> >
-        */
     >
   > type;
 
@@ -27,8 +24,5 @@ struct add_params_json
   typedef type::serializer serializer;
   typedef type::member_list member_list;
 };
-
-//typedef ::wfc::json::array< add_item_params_json, 10 > add_params_json;
-
 
 }}

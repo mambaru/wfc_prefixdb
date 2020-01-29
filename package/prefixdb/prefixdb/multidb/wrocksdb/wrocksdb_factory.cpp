@@ -48,7 +48,7 @@ wrocksdb_factory::wrocksdb_factory()
 {
 }
 
-bool wrocksdb_factory::initialize(const db_config& db_conf) 
+bool wrocksdb_factory::initialize(const db_config& db_conf)
 {
   db_config conf = db_conf;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
@@ -57,20 +57,20 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
   while ( !conf.backup.path.empty() && conf.backup.path.back()=='/' ) conf.backup.path.pop_back();
   while ( !conf.restore.path.empty() && conf.restore.path.back()=='/' ) conf.restore.path.pop_back();
   while ( !conf.archive.path.empty() && conf.archive.path.back()=='/' ) conf.archive.path.pop_back();
-  
+
   if ( !conf.path.empty() )
   {
     if ( conf.backup.enabled && conf.backup.path.empty() ) conf.backup.path = conf.path + "_backup";
     if ( !conf.restore.forbid && conf.restore.path.empty() ) conf.restore.path = conf.path + "_restore";
-    if ( conf.archive.enabled && conf.archive.path.empty() ) conf.archive.path = conf.path + "_archive";  
+    if ( conf.archive.enabled && conf.archive.path.empty() ) conf.archive.path = conf.path + "_archive";
   }
-    
-  std::lock_guard<std::mutex> lk(_mutex);  
+
+  std::lock_guard<std::mutex> lk(_mutex);
   _ttl = conf.TTL_seconds;
   _context = std::make_shared<wrocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->config = conf;
-  
+
   if ( !conf.ini.empty() )
   {
     auto status = ::rocksdb::LoadOptionsFromFile( conf.ini, _context->env, &(_context->options), &(_context->cdf) );
@@ -88,7 +88,7 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
   return true;
 }
 
-ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing) 
+ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool create_if_missing)
 {
   if ( dbname.empty() )
   {
@@ -99,15 +99,15 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   {
     PREFIXDB_LOG_MESSAGE("wrocksdb_factory::create_db '" << dbname << "'")
   }
-  
+
   std::lock_guard<std::mutex> lk(_mutex);
   _context->options.env = _context->env;
   _context->options.create_if_missing = create_if_missing;
   auto conf = _context->config;
-  
+
   auto merge = std::make_shared<merge_operator>(dbname, conf.array_limit, conf.packed_limit);
   _context->cdf[0].options.merge_operator = merge;
-  
+
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;
   if ( !conf.wal_path.empty() ) conf.wal_path = _context->config.wal_path + "/" + dbname;
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
@@ -122,10 +122,10 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     if ( !wal_dir.empty() && wal_dir!="\"\"" )
       options.wal_dir += std::string("/") + wal_dir;
   }
-  
+
   ::rocksdb::DBWithTTL* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
-  
+
   PREFIXDB_LOG_BEGIN("rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << _ttl << " ...");
 
   std::vector<int32_t> ttls;
@@ -135,7 +135,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
   else
     status = ::rocksdb::Status::Incomplete();
-  
+
   if ( !status.ok() )
   {
     if ( !conf.forced_repair )
@@ -154,7 +154,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       {
         PREFIXDB_LOG_ERROR("rocksdb::DB::RepairDB '" << dbname << "' :" << status.ToString());
       }
-      
+
       if ( status.ok() )
       {
         status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);
@@ -165,7 +165,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
       }
     }
   }
-  
+
   if ( !status.ok() )
   {
     if ( conf.abort_if_open_error )
@@ -174,8 +174,8 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     }
     return nullptr;
   }
-  
-  if ( status.ok() ) 
+
+  if ( status.ok() )
   {
     assert(handles.size() == 1);
     // i can delete the handle since DBImpl is always holding a reference to
@@ -192,12 +192,18 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     {
       PREFIXDB_LOG_MESSAGE("Backup path: " << conf.backup.path)
       ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
-      
-      status = ::rocksdb::BackupEngine::Open( 
-        _context->env, 
-        backup_opt, 
+
+      ::rocksdb::Status backup_status = ::rocksdb::BackupEngine::Open(
+        _context->env,
+        backup_opt,
         &backup_engine
       );
+
+      if ( ! backup_status.ok() )
+      {
+        PREFIXDB_LOG_FATAL("rocksdb_factory::create: ::rocksdb::BackupEngine::Open " << backup_status.ToString());
+        return nullptr;
+      }
 
       if ( !conf.restore.path.empty() )
       {
@@ -213,7 +219,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
 }
 
 
-wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbname) 
+wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbname)
 {
   auto conf = _context->config;
   if ( !conf.path.empty() ) conf.path = _context->config.path + "/" + dbname;

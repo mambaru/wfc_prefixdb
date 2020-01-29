@@ -235,7 +235,7 @@ void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
   else
   {
     db->Write( wo, &(*batch));
-    this->get_<Res>( std::move(req), std::move(cb) );
+    this->get_<Res>( std::move(req), std::move(cb), false );
   }
   
 }
@@ -391,7 +391,7 @@ void wrocksdb::get( request::get::ptr req, response::get::handler cb)
 
 void wrocksdb::has( request::has::ptr req, response::has::handler cb)
 {
-  this->get_<response::has>( std::move(req), std::move(cb) );
+  this->get_<response::has>( std::move(req), std::move(cb), false );
 }
 
 void wrocksdb::del( request::del::ptr req, response::del::handler cb) 

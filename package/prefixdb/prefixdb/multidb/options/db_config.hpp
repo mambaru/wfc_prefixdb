@@ -10,9 +10,11 @@
 
 namespace wamba{ namespace prefixdb{
   
+/**
+  * @brief Конфигурация
+  */
 struct db_config
 {
-
   // Путь к базе данных для всех префиксов
   std::string path = "";
   // Путь для WAL, если не указан то по умолчанью из rocksdb
@@ -37,7 +39,10 @@ struct db_config
   // Завершение работы, если база префикса не смогла быть открыта
   bool abort_if_open_error = true;
 
-  // Запись batch в отдельном потоке
+  
+  /**
+    * @brief Запись batch в отдельном потоке
+    */
   bool enable_delayed_write = false;  
   
   // Проверять на валидность параметры JSON в merge - опирациях 

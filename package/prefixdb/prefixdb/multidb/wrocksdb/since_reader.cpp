@@ -13,12 +13,12 @@
 
 namespace wamba{ namespace prefixdb {
 
-namespace 
+namespace
 {
   inline size_t get_size(const char** pbeg, const char* end)
   {
     if ( *pbeg == end ) return 0;
-    
+
     size_t size = 0;
     bool fin = false;
     for (int i=0; !fin && i<8; i++)
@@ -29,17 +29,17 @@ namespace
       cnk <<= 7*i;
       size |= cnk;
       (*pbeg)++;
-      if ( *pbeg == end && !fin) 
-        ::wfc_exit_with_error("prefixdb::since_reader::get_size log format error"); 
+      if ( *pbeg == end && !fin)
+        ::wfc_exit_with_error("prefixdb::since_reader::get_size log format error");
     }
     return size;
   }
-  
+
   inline ::rocksdb::Slice get_item(const char** beg, const char* end)
   {
     size_t size = get_size(beg, end);
     if ( *beg + size > end )
-      ::wfc_exit_with_error("prefixdb::since_reader::get_item size error"); 
+      ::wfc_exit_with_error("prefixdb::since_reader::get_item size error");
     ::rocksdb::Slice res(*beg, size);
     *beg += size;
     return res;
@@ -57,7 +57,7 @@ namespace
   {
     return get_item(beg, end);
   }
-  
+
   inline std::pair< ::rocksdb::Slice, ::rocksdb::Slice> get_pair(const char** beg, const char* end)
   {
     auto first  = get_key(beg, end);
@@ -72,7 +72,7 @@ inline std::string s4l( ::rocksdb::Slice s)
   // Slice for log
   if ( s.size() < 84 )
     return s.ToString();
-  
+
   std::string res;
   res.append(s.data(), s.data() + 40);
   res += "...";
@@ -80,11 +80,11 @@ inline std::string s4l( ::rocksdb::Slice s)
   return res;
 }
 }
-  
+
 const char*  since_reader::read_put_(const char* beg, const char* end, bool ignore)
 {
   auto pair = get_pair( &beg, end);
-  
+
   if ( !pair.first.empty() )
   {
     if ( !ignore )
@@ -138,7 +138,7 @@ const char*  since_reader::read_merge_(const char* beg, const char* end, bool ig
 
 const char*  since_reader::read_op_(const char* beg, const char* end, bool ignore)
 {
-  if (beg > end) 
+  if (beg > end)
   {
     wfc_exit_with_error("Iterators error");
     abort();
@@ -147,21 +147,20 @@ const char*  since_reader::read_op_(const char* beg, const char* end, bool ignor
   int type = int( *reinterpret_cast<const uint8_t*>(beg++) );
   switch ( type )
   {
-    case 0: 
-      beg = read_del_(beg, end, ignore); 
+    case 0:
+      beg = read_del_(beg, end, ignore);
       break;
-    case 1: 
-      beg = read_put_(beg, end, ignore); 
+    case 1:
+      beg = read_put_(beg, end, ignore);
       break;
-    case 2: 
-      beg = read_merge_(beg, end, ignore); 
+    case 2:
+      beg = read_merge_(beg, end, ignore);
       break;
     default:
-      beg = end;
-      ::wfc_exit_with_error("prefixdb::since_reader::read_item_ unknown operation"); 
+      ::wfc_exit_with_error("prefixdb::since_reader::read_item_ unknown operation");
       return nullptr;
   };
-  
+
   return beg;
 }
 
@@ -182,7 +181,7 @@ size_t since_reader::parse_()
     _batch = std::make_unique<batch_type>();
   const char *beg = &(_buffer[0]);
   const char *end = beg + _buffer.size();
-  
+
   this->read_record_(beg, end);
   return static_cast<size_t>( std::distance(beg, end) );
 }
