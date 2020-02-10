@@ -30,7 +30,7 @@ namespace
   void continue_background_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     bool force = false;
-    
+
     ss >> force;
     auto req = std::make_unique<request::continue_background>();
     req->force = force;
@@ -48,16 +48,16 @@ namespace
     time_t deny_timeout = 0;
     ss >> deny_timeout;
     req->deny_timeout_s = deny_timeout;
-    
+
     std::string prefix;
-    for (;;) 
+    for (;;)
     {
       prefix.clear();
       ss >> prefix;
       if (prefix.empty()) break;
       req->prefixes.push_back(prefix);
     }
-    
+
     db->detach_prefixes( std::move(req), [handler, deny_timeout](response::detach_prefixes::ptr res)
     {
       std::stringstream ss2;
@@ -80,7 +80,7 @@ namespace
       handler( ::iow::io::make(ss.str()) );
     } );
   }
-  
+
   void get_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::get>();
@@ -117,7 +117,7 @@ namespace
     }
     req->nores = false;
     req->noval = false;
-    
+
     db->del( std::move(req), [handler](response::del::ptr res)
     {
       std::stringstream oss;
@@ -132,11 +132,36 @@ namespace
 
   void set_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
+    std::string prefix, key, value;
+    ss >> prefix;
+    ss >> key;
+    value.assign(std::istreambuf_iterator<char>(ss), {});
+    bool ready = false;
+    if ( prefix.empty() )
+      handler( iow::io::make("Error: Prefix required") );
+    else if ( key.empty() )
+      handler( iow::io::make("Error: Key required") );
+    else
+    {
+      ready=true;
+      wjson::json_error e;
+      auto beg = wjson::parser::parse_space(value.begin(), value.end(), nullptr);
+      value.erase(value.begin(), beg);
+      wjson::parser::parse_value(beg, value.end(), &e);
+      if ( e )
+      {
+        std::string newval;
+        wjson::value<std::string>::serializer()( value, std::back_inserter(newval) );
+        value.swap(newval);
+      }
+    }
+
+    if (  !ready  )
+      return;
+
     auto req = std::make_unique<request::set>();
-    ss >> req->prefix;
-    req->fields.resize(1);
-    ss >> req->fields.back().first;
-    ss >> req->fields.back().second;
+    req->prefix = prefix;
+    req->fields.push_back(std::make_pair(key, value));
 
     db->set( std::move(req), [handler](response::set::ptr )
     {
@@ -146,7 +171,7 @@ namespace
 
   void inc_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
-    
+
     auto req = std::make_unique<request::inc>();
     ss >> req->prefix;
     req->fields.resize(1);
@@ -158,12 +183,12 @@ namespace
     param << "{\"inc\":"<< inc << ",\"val\":" << val << "}";
     req->fields.back().first = key;
     req->fields.back().second = param.str();
-    
+
     db->inc( std::move(req), [handler](response::inc::ptr )
     {
       handler( ::iow::io::make("OK") );
     } );
-    
+
   }
 
   void compact_prefix_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
@@ -191,7 +216,7 @@ namespace
     if (ss) ss >> req->limit;
     if ( req->limit == 0 )
       req->limit = 100;
-    
+
     db->range( std::move(req), [handler](response::range::ptr res)
     {
       std::stringstream oss;
@@ -204,20 +229,20 @@ namespace
     } );
   }
 
-  const char* help_str[][4] = { 
+  const char* help_str[][4] = {
     {"h", "help", "[<<command>>]",  "Подсказка по конкретной команде. Если не указана, то список всех комманд."},
-    {"e", "exit", "",  "Выход."}, 
+    {"e", "exit", "",  "Выход."},
     {"db", "delay_background", "[0](delay seconds) [0](force)", "Завершает все фоновые процессы на delay_s секунд. \n"
                                "Если force=1 то по завершению таймаута гарантировано запустит все фоновые \n"
                                "процессы, даже если в это время были вызовы delay_background c большим таймаутом. "
                                "Для гаранитированного запуска используй: 'db 0 1'"},
     {"cb", "continue_background", " [0](force)", ""},
-    {"cp", "compact_prefix", "<<prefix>> [<<from>> [<<to>>] ]", "compact для префикса"}, 
+    {"cp", "compact_prefix", "<<prefix>> [<<from>> [<<to>>] ]", "compact для префикса"},
     {"dp", "detach_prefixes",  "[0](access denied in sec) <<prefix1>> [<<prefix2>> ...]", "Отсоединяет префиксы на заданный таймаут. База префиксов перемещаеться в указанное \n"
                                "в конфигурации место. Префикс станет доступен через заданное первым параметром число секунд." },
     {"gap", "get_all_prefixes",  "", "Получить спискок всех доступных префиксов" },
     {"g", "get", "<<prefix>> <<key1>> [<<key2>> ....]", "Получить значения полей в указанном префиксе"},
-    {"d", "del", "<<prefix>> <<key1>> [<<key2>> ....]", "Удалить поля в указанном префиксе"}, 
+    {"d", "del", "<<prefix>> <<key1>> [<<key2>> ....]", "Удалить поля в указанном префиксе"},
     {"s", "set", "<<prefix>> <<key>> <<value>>", "Изменить значение поля в указанном префиксе"},
     {"i", "inc", "<<prefix>> <<key>> <<increment>> [<<default value>>]", "Инкрементировать значение поля для указанном префиксе"},
     {"r", "range", "<<prefix>> [from [to [offset [limit] ] ]]  ", "Получить значения полей в указанном префиксе по диапазону. Примеры:\n"
@@ -225,8 +250,8 @@ namespace
       "\tr test key1 - получить первые 25 полей начиная с key1 \n"
       "\tr test key1 key2- получить первые 25 полей начиная с key1 до key2 включительно\n"
       "\tr test key1 key2 25 75 - получить 75 полей начиная с key1 до key2 включительно, пропустив первые 25"
-    }, 
-    
+    },
+
 
   };
   void help_( std::shared_ptr<iprefixdb> /*db*/, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
@@ -252,14 +277,14 @@ namespace
     handler( ::iow::io::make( res) );
   }
 }
-  
+
 void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d, wfc::iinterface::output_handler_t handler)
 {
   std::stringstream ss;
   ss << std::string( d->begin(), d->end() );
   std::string method;
   ss >> method;
-  
+
   if ( method == "help" || method == "h")
   {
     help_(db, ss, std::move(handler) );
@@ -312,7 +337,7 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   {
     handler( ::iow::io::make("Unknown method") );
   }
-  
+
 }
 
 }}}

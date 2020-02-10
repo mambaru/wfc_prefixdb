@@ -647,6 +647,7 @@ void multidb::configure_prefix_reqester_()
   
   if( _opt.initial_load.enabled )
   {
+    PREFIXDB_LOG_MESSAGE("Get All Prefixes for initial load")
     _opt.initial_load.remote->get_all_prefixes(
       std::make_unique<request::get_all_prefixes>(), 
       std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
@@ -675,7 +676,10 @@ void multidb::configure_prefix_reqester_()
 request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
 {
   if ( res == nullptr )
+  {
+    PREFIXDB_LOG_ERROR("get_all_prefixes return nullptr (Bad Gateway) ")
     return std::make_unique<request::get_all_prefixes>();
+  }
 
   auto preflist = this->all_prefixes_();
   std::set<std::string> prefset( preflist.begin(), preflist.end() );

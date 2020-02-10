@@ -32,6 +32,7 @@ void prefixdb::open_prefixdb()
   
   if ( this->has_arg("load") )  
   {
+    PREFIXDB_LOG_MESSAGE("Initial load mode ON")
     opt.initial_load.enabled = true;
     if ( size_t size = this->get_arg_t<size_t>("load") )  
       opt.initial_load.initial_range = size;

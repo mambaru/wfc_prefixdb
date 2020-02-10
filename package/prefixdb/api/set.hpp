@@ -21,17 +21,17 @@ namespace request
     /**
      * @brief Префикс
      * @details Обязательный параметр. Если префикс не существует, то создает новый.
-     * @return @ref common_status::EmptyPrefix "EmptyPrefix" - если не задан префикс или пустая строка
-     * @return @ref common_status::CreatePrefixFail "CreatePrefixFail" - не смог создать новый префикс 
-     * @return @ref common_status::PrefixLengthExceeded "PrefixLengthExceeded" - превышен допустимый размер в имени префикса
+     * @retval response::set::status @ref common_status::EmptyPrefix "EmptyPrefix" - если не задан префикс или пустая строка
+     * @retval response::set::status @ref common_status::CreatePrefixFail "CreatePrefixFail" - не смог создать новый префикс 
+     * @retval response::set::status @ref common_status::PrefixLengthExceeded "PrefixLengthExceeded" - превышен допустимый размер в имени префикса
      */
     std::string prefix;  
 
     /**
      * @brief список пар ключ-значение для записи
-     * @return Ошибка @ref common_status::TooManyKeys "TooManyKeys"
-     * @return Ошибка @ref common_status::KeyLengthExceeded "KeyLengthExceeded"
-     * @return Ошибка @ref common_status::ValueLengthExceeded "ValueLengthExceeded"
+     * @retval response::set::status @ref common_status::TooManyKeys "TooManyKeys"
+     * @retval response::set::status @ref common_status::KeyLengthExceeded "KeyLengthExceeded"
+     * @retval response::set::status @ref common_status::ValueLengthExceeded "ValueLengthExceeded"
      */
     field_list_t fields; 
 
