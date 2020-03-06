@@ -53,7 +53,7 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
   db_config conf = db_conf;
   while ( !conf.path.empty() && conf.path.back()=='/' ) conf.path.pop_back();
   while ( !conf.wal_path.empty() && conf.wal_path.back()=='/' ) conf.wal_path.pop_back();
-  while ( !conf.detach_path.empty() && conf.detach_path.back()=='/' ) conf.path.pop_back();
+  while ( !conf.detach_path.empty() && conf.detach_path.back()=='/' ) conf.detach_path.pop_back();
   while ( !conf.backup.path.empty() && conf.backup.path.back()=='/' ) conf.backup.path.pop_back();
   while ( !conf.restore.path.empty() && conf.restore.path.back()=='/' ) conf.restore.path.pop_back();
   while ( !conf.archive.path.empty() && conf.archive.path.back()=='/' ) conf.archive.path.pop_back();
