@@ -4,10 +4,10 @@
 #include <boost/algorithm/string.hpp>
 #include <wfc/boost.hpp>
 #include <sstream>
-       
+
 namespace wamba{ namespace prefixdb {
-  
-namespace 
+
+namespace
 {
   bool copy_dir(
     boost::filesystem::path const & source,
@@ -25,7 +25,7 @@ namespace
         message = ss.str();
         return false;
       }
-      
+
       if ( ::boost::filesystem::exists(destination) )
       {
         std::stringstream ss;
@@ -33,7 +33,7 @@ namespace
         message = ss.str();
         return false;
       }
-      
+
       // Create the destination directory
       if( !::boost::filesystem::create_directory(destination) )
       {
@@ -50,7 +50,7 @@ namespace
       message = ss.str();
       return false;
     }
-    
+
     // Iterate through the source directory
     for( ::boost::filesystem::directory_iterator file(source); file != ::boost::filesystem::directory_iterator(); ++file) try
     {
@@ -91,7 +91,7 @@ namespace
   {
     if ( ::boost::filesystem::exists(destination) )
       ::boost::filesystem::remove_all(destination);
-    
+
     ::boost::filesystem::rename(source, destination);
     return true;
   }
@@ -114,11 +114,7 @@ namespace
     }
     return ec;
   }
-
 }
-
-
-
 
 bool copy_dir(const std::string& from, const std::string& to, std::string& message)
 {

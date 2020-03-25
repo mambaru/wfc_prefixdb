@@ -6,9 +6,8 @@
 #include <map>
 #include <mutex>
 
-
 namespace wamba{ namespace prefixdb{
- 
+
 struct ifactory;
 
 class multidb
@@ -41,12 +40,12 @@ public:
   virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) override;
   virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) override;
 
-  virtual void stop();  
+  virtual void stop();
   virtual bool backup();
   virtual bool archive();
   virtual bool restore();
   virtual bool compact();
-  
+
 private:
 
   void configure_compact_timer_();
@@ -57,10 +56,10 @@ private:
 
   std::vector< std::string > all_prefixes_();
   bool preopen_(const std::string& path, bool create_if_missing);
-  
+
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   bool close_prefix_(const std::string& prefix);
-  
+
   template<typename Res, typename ReqPtr, typename Callback>
   bool check_fields_(const ReqPtr& req, const Callback& cb);
 
@@ -69,14 +68,14 @@ private:
 
 private:
   typedef wfc::workflow::timer_id_t timer_id_t;
-  
-  
+
+
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;
   std::shared_ptr< ::wfc::workflow> _workflow;
-  
+
   ::wfc::workflow::timer_id_t _compact_timer  = -1;
   ::wfc::workflow::timer_id_t _backup_timer  = -1;
   ::wfc::workflow::timer_id_t _archive_timer  = -1;

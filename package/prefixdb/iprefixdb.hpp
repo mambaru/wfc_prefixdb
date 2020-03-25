@@ -51,22 +51,22 @@ namespace wamba { namespace prefixdb{
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
   * get_all_prefixes | @ref request::get_all_prefixes (@ref request::get_all_prefixes_json) | @ref response::get_all_prefixes (@ref response::get_all_prefixes_json) | Запись
-  * detach_prefixes | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
-  * attach_prefixes | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
-  * compact_prefix | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+  * detach_prefixes | @ref request::detach_prefixes (@ref request::detach_prefixes_json) | @ref response::detach_prefixes (@ref response::detach_prefixes_json) | Запись
+  * attach_prefixes | @ref request::attach_prefixes (@ref request::attach_prefixes_json) | @ref response::attach_prefixes (@ref response::attach_prefixes_json) | Запись
+  * compact_prefix | @ref request::compact_prefix (@ref request::compact_prefix_json) | @ref response::compact_prefix (@ref response::compact_prefix_json) | Запись
   *
   * Снапшоты
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
-  * create_snapshot | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
-  * release_snapshot | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+  * create_snapshot | @ref request::create_snapshot (@ref request::create_snapshot_json) | @ref response::create_snapshot (@ref response::create_snapshot_json) | Запись
+  * release_snapshot | @ref request::release_snapshot (@ref request::release_snapshot_json) | @ref response::release_snapshot (@ref response::release_snapshot_json) | Запись
   * 
   * Репликация и бэкапы
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
-  * delay_background | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
-  * continue_background | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
-  * get_updates_since | @ref request::set (@ref request::set_json) | @ref response::set (@ref response::set_json) | Запись
+  * delay_background | @ref request::delay_background (@ref request::delay_background_json) | @ref response::delay_background (@ref response::delay_background_json) | Запись
+  * continue_background | @ref request::continue_background (@ref request::continue_background_json) | @ref response::continue_background (@ref response::continue_background_json) | Запись
+  * get_updates_since | @ref request::get_updates_since (@ref request::get_updates_since_json) | @ref response::get_updates_since (@ref response::get_updates_since_json) | Запись
   */
 struct iprefixdb: public ::wfc::iinterface
 {
@@ -75,8 +75,8 @@ struct iprefixdb: public ::wfc::iinterface
 
   /**
     * @brief Установка значений для нескольких ключей.
-    * @param req запрос
-    * @param cb обработчик обратного вызова
+    * @param req запрос @ref request::set
+    * @param cb обработчик обратного вызова @ref response::set
     */
   virtual void set( request::set::ptr req, response::set::handler cb) = 0;
   virtual void get( request::get::ptr req, response::get::handler cb) = 0;
@@ -102,8 +102,6 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) = 0;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) = 0;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) = 0;
-  
-  
 };
 
 }}

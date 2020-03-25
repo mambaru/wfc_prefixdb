@@ -1,15 +1,9 @@
 
 #include "since_reader.hpp"
-
-#include <iostream>
 #include <prefixdb/logger.hpp>
 #include <wfc/memory.hpp>
 #include <wfc/wfc_exit.hpp>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include <db/log_format.h>
-#pragma GCC diagnostic pop
 
 namespace wamba{ namespace prefixdb {
 

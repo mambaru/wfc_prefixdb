@@ -107,7 +107,7 @@ BRIEF_MEMBER_DESC      = YES
 # brief descriptions will be completely suppressed.
 # The default value is: YES.
 
-REPEAT_BRIEF           = YES
+REPEAT_BRIEF           = NO
 
 # This tag implements a quasi-intelligent brief description abbreviator that is
 # used to form the text in various listings. Each string in this list, if found
@@ -135,7 +135,7 @@ ABBREVIATE_BRIEF       = "The $name class" \
 # description.
 # The default value is: NO.
 
-ALWAYS_DETAILED_SEC    = YES
+ALWAYS_DETAILED_SEC    = NO
 
 # If the INLINE_INHERITED_MEMB tag is set to YES, doxygen will show all
 # inherited members of a class in the documentation of that class as if those
@@ -773,12 +773,10 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = Readme.md docs-md/ package/ 
-
-#Readme.md \
-#                         package/prefixdb/api/fields.hpp \
-#                         package/prefixdb/api/set.hpp \
-#                        package/prefixdb/api/set_json.hpp
+INPUT                  = Readme.md docs-md/ package/ \
+                         package/prefixdb/api/fields.hpp \
+                         package/prefixdb/api/set.hpp \
+                         package/prefixdb/api/set_json.hpp
 
 
 # This tag can be used to specify the character encoding of the source files

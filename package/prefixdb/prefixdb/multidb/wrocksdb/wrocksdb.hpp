@@ -4,28 +4,18 @@
 #include <prefixdb/prefixdb/multidb/wrocksdb/merge/merge.hpp>
 #include <prefixdb/prefixdb/multidb/iprefixdb_ex.hpp>
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
-#include <memory>
-#include <mutex>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wlong-long"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wgnu-redeclared-enum"
-#endif
-
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
-// //#include <rocksdb/utilities/db_ttl.h>
 #include <rocksdb/utilities/db_ttl.h>
+
+#include <memory>
+#include <mutex>
 
 namespace rocksdb{ class BackupEngine;}
 
 namespace wamba{ namespace prefixdb{
-  
+
 class wrocksdb_slave;
 class wrocksdb_initial;
 
@@ -50,7 +40,7 @@ public:
   virtual void add( request::add::ptr req, response::add::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
-  
+
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
@@ -58,17 +48,16 @@ public:
   virtual void delay_background( request::delay_background::ptr req, response::delay_background::handler cb) override;
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override;
   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) override;
-  
+
   virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) override;
   virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) override;
-  
+
   virtual void start( ) override;
   virtual void stop() override;
   virtual bool compact() override;
   virtual bool backup() override;
   virtual bool archive(std::string path) override;
-  
-  
+
   std::string get_property(const std::string& name) const ;
 
 private:
@@ -82,7 +71,7 @@ private:
 
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
   void merge_(ReqPtr req, Callback cb);
-  
+
   template<typename Res, typename ReqPtr, typename Callback>
   void get_(ReqPtr req, Callback cb, bool ignore_if_missing /*= false*/);
 
@@ -92,9 +81,10 @@ private:
   snapshot_ptr find_snapshot_(size_t id) const;
   size_t create_snapshot_(size_t *seq_num);
   bool release_snapshot_(size_t id);
+
 private:
-  
-  std::string _name;  
+
+  std::string _name;
   const db_config _conf;
   std::shared_ptr<db_type> _db;
   std::shared_ptr<backup_type> _backup;
@@ -105,9 +95,6 @@ private:
   std::shared_ptr<wrocksdb_initial> _initial;
   std::shared_ptr<wfc::workflow> _workflow;
   std::shared_ptr<wfc::workflow> _write_workflow;
-  
 };
 
 }}
-
-#pragma GCC diagnostic pop

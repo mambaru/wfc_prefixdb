@@ -1,7 +1,7 @@
 #pragma once
 
 #include "add_params.hpp"
-#include <wfc/json.hpp>
+#include <wjson/wjson.hpp>
 #include <string>
 
 namespace wamba{ namespace prefixdb{
@@ -11,12 +11,11 @@ struct add_params_json
   JSON_NAME(lim)
   JSON_NAME(arr)
 
-  typedef ::wfc::json::object<
+  typedef wjson::object<
     add_params,
-    ::wfc::json::member_list<
-        ::wfc::json::member<n_lim, add_params, size_t, &add_params::lim >,
-        ::wfc::json::member<n_arr, add_params, std::vector<std::string>, &add_params::arr, 
-                                   ::wfc::json::array< std::vector< ::wfc::json::raw_value<> >, 20 > >
+    wjson::member_list<
+      wjson::member<n_lim, add_params, size_t, &add_params::lim >,
+      wjson::member<n_arr, add_params, std::vector<std::string>, &add_params::arr, wjson::vector_of< wjson::raw_value<>, 20 > >
     >
   > type;
 

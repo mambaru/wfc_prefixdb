@@ -4,7 +4,7 @@
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
 
 namespace wamba{ namespace prefixdb{
-  
+
 struct multidb_config: db_config
 {
   // максимальное количество ключей на запрос
@@ -19,8 +19,6 @@ struct multidb_config: db_config
   size_t max_prefixes = 0;
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
-  
-  
 };
 
 }}

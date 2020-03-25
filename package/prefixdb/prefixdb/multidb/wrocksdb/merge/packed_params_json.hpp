@@ -1,7 +1,7 @@
 #pragma once
 
 #include "packed_params.hpp"
-#include <wfc/json.hpp>
+#include <wjson/wjson.hpp>
 #include <string>
 
 namespace wamba{ namespace prefixdb{
@@ -11,11 +11,11 @@ struct packed_field_params_json
   JSON_NAME(inc)
   JSON_NAME(val)
 
-  typedef ::wfc::json::object<
+  typedef wjson::object<
     packed_field_params,
-    ::wfc::json::member_list<
-        ::wfc::json::member<n_inc, packed_field_params, std::string, &packed_field_params::inc, ::wfc::json::raw_value<> >,
-        ::wfc::json::member<n_val, packed_field_params, std::string, &packed_field_params::val, ::wfc::json::raw_value<> >
+    wjson::member_list<
+        wjson::member<n_inc, packed_field_params, std::string, &packed_field_params::inc, wjson::raw_value<> >,
+        wjson::member<n_val, packed_field_params, std::string, &packed_field_params::val, wjson::raw_value<> >
     >
   > type;
 
@@ -24,10 +24,6 @@ struct packed_field_params_json
   typedef type::member_list member_list;
 };
 
-typedef ::wfc::json::dict_vector<
-  packed_field_params_json,
-  10
-> packed_params_json;
-
+typedef wjson::dict_vector< packed_field_params_json, 10 > packed_params_json;
 
 }}

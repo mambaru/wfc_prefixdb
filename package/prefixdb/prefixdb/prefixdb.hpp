@@ -2,10 +2,8 @@
 
 #include <prefixdb/prefixdb/prefixdb_config.hpp>
 #include <prefixdb/iprefixdb.hpp>
-
 #include <wfc/domain_object.hpp>
 #include <wfc/workflow.hpp>
-//#include <iow/io/timer/timer.hpp>
 #include <memory>
 
 namespace wamba{ namespace prefixdb{
@@ -16,14 +14,11 @@ class prefixdb
   : public ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat>
   , public std::enable_shared_from_this< prefixdb >
 {
-  //typedef ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat> super;
 public:
-  //typedef super::custom_options options_type;
-  // domain_object
   virtual void start() override;
   void open_prefixdb();
   virtual void stop() override;
-  
+
   // iprefixdb
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -48,7 +43,7 @@ public:
   virtual void perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler) override;
 private:
   void restore_();
-  
+
   std::shared_ptr<multidb> _impl;
 };
 

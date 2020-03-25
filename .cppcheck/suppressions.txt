@@ -1,13 +1,13 @@
-unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:214
-unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:131
+unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:208
+unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:124
 unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/merge/merge_operator.cpp:181
 unusedFunction:./package/prefixdb/prefixdb_module.cpp:29
-unusedFunction:./package/prefixdb/prefixdb/prefixdb.cpp:249
+unusedFunction:./package/prefixdb/prefixdb/prefixdb.cpp:247
 
 missingInclude:./package/prefixdb_package.cpp:8
 unmatchedSuppression:./package/prefixdb_package.cpp:8
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp:562
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:317
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp:557
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:307
 
 
 # TODO:

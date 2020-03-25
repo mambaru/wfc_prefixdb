@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/prefixdb/multidb/options/compact_config.hpp>
-#include <wfc/json.hpp>
+#include <wjson/wjson.hpp>
 
 namespace wamba{ namespace prefixdb{
 
@@ -12,15 +12,15 @@ struct compact_config_json
   JSON_NAME(start_time)
   JSON_NAME(period_s)
 
-  typedef ::wfc::json::object<
+  typedef wjson::object<
     compact_config,
-    wfc::json::member_list<
-      wfc::json::member<n_enabled,       compact_config, bool,        &compact_config::enabled>,
-      wfc::json::member<n_startup_compact,       compact_config, bool,        &compact_config::startup_compact>,
-      wfc::json::member<n_start_time,    compact_config, std::string, &compact_config::start_time>,
-      wfc::json::member<n_period_s,      compact_config, time_t,      &compact_config::period_s>
+    wjson::member_list<
+      wjson::member<n_enabled,         compact_config, bool,        &compact_config::enabled>,
+      wjson::member<n_startup_compact, compact_config, bool,        &compact_config::startup_compact>,
+      wjson::member<n_start_time,      compact_config, std::string, &compact_config::start_time>,
+      wjson::member<n_period_s,        compact_config, time_t,      &compact_config::period_s>
     >,
-    wfc::json::strict_mode
+    wjson::strict_mode
   > type;
 
   typedef type::target target;

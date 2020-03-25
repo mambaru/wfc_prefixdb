@@ -1,19 +1,13 @@
 #pragma once
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
 #include <rocksdb/write_batch.h>
-#pragma GCC diagnostic pop
-
 #include <deque>
 #include <vector>
 #include <memory>
 #include <cstddef>
 
 namespace wamba{ namespace prefixdb{
-  
+
 class since_reader
 {
 public:
@@ -23,10 +17,10 @@ public:
     Error = 0,
     Ready = 1
   };
-  
+
   typedef ::rocksdb::WriteBatch batch_type;
   typedef std::unique_ptr<batch_type> batch_ptr;
-  
+
   void enable_log() { _log = true;}
   void disable_log() { _log = false;}
   // сборс состояний после ошибки
@@ -52,5 +46,5 @@ private:
   batch_ptr _batch;
   bool _log = false; // TODO: выключить
 };
- 
+
 }}

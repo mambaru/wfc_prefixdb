@@ -1,21 +1,10 @@
-
 #include "wrocksdb_factory.hpp"
-#include <prefixdb/logger.hpp>
-#include <memory>
-#include <iostream>
-#include <sys/stat.h>
-#include <list>
-#include <string>
 #include "wrocksdb.hpp"
 #include "wrocksdb_restore.hpp"
 #include "merge/merge_operator.hpp"
+#include <prefixdb/logger.hpp>
 #include <wfc/wfc_exit.hpp>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wlong-long"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wswitch-default"
 #include <rocksdb/db.h>
 #include <rocksdb/env.h>
 #include <rocksdb/options.h>
@@ -24,8 +13,11 @@
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/options_util.h>
 #include <rocksdb/utilities/db_ttl.h>
-#pragma GCC diagnostic pop
 
+#include <memory>
+#include <sys/stat.h>
+#include <list>
+#include <string>
 
 namespace wamba{ namespace prefixdb{
 
@@ -229,13 +221,11 @@ wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbnam
   if ( !conf.restore.path.empty() )
   {
     rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
-    //rdb = new ::rocksdb::RestoreBackupableDB( _context->env, restore_opt);
     rocksdb::Status s = rocksdb::BackupEngineReadOnly::Open( _context->env, restore_opt, &backup_engine);
     if ( s.ok() )
       return std::make_shared< wrocksdb_restore >(dbname, conf, backup_engine);
   }
   return nullptr;
 }
-
 
 }}
