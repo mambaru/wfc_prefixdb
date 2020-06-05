@@ -27,9 +27,12 @@ public:
   typedef ::rocksdb::BackupEngine backup_type;
   typedef ::rocksdb::DBWithTTL  db_type;
   typedef ::rocksdb::Snapshot snapshot_type;
+  typedef ::rocksdb::WriteBatch write_batch_t;
+  typedef std::shared_ptr<write_batch_t> write_batch_ptr;
   typedef const snapshot_type* snapshot_ptr;
 
-  wrocksdb( std::string name, const db_config conf, db_type* db, backup_type* bk);
+  wrocksdb( std::string name, const db_config& conf, db_type* db, backup_type* bk);
+  void reconfigure(const db_config& conf);
 
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
@@ -41,6 +44,7 @@ public:
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
 
+  virtual void repair_json( request::repair_json::ptr req, response::repair_json::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
@@ -57,7 +61,6 @@ public:
   virtual bool compact() override;
   virtual bool backup() override;
   virtual bool archive(std::string path) override;
-
   std::string get_property(const std::string& name) const ;
 
 private:
@@ -69,14 +72,20 @@ private:
   bool check_add_(request::add::ptr& req, response::add::handler& cb);
   bool check_packed_(request::packed::ptr& req, response::packed::handler& cb);
 
+  std::string repair_json_(const std::string& key, std::string&& value, bool force = false, bool* fix = nullptr) const;
+
   template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
   void merge_(ReqPtr req, Callback cb);
 
   template<typename Res, typename ReqPtr, typename Callback>
   void get_(ReqPtr req, Callback cb, bool ignore_if_missing /*= false*/);
 
-  template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
-  void write_batch_(BatchPtr batch, ReqPtr req, Callback cb);
+  template<typename Res, typename ReqPtr>
+  void write_batch_(const write_batch_ptr& batch, ReqPtr req, std::function<void(std::unique_ptr<Res>)> cb);
+
+  template<typename Res, typename ReqPtr>
+  void write_batch_2db_(const write_batch_ptr& batch, ReqPtr req, std::function<void(std::unique_ptr<Res>)> cb);
+
 
   snapshot_ptr find_snapshot_(size_t id) const;
   size_t create_snapshot_(size_t *seq_num);
@@ -95,6 +104,12 @@ private:
   std::shared_ptr<wrocksdb_initial> _initial;
   std::shared_ptr<wfc::workflow> _workflow;
   std::shared_ptr<wfc::workflow> _write_workflow;
+
+  // реконфигурируемые опции
+  std::atomic_bool _check_incoming_merge_json;
+  std::atomic_bool _answer_before_write;
+  std::atomic_bool _enable_delayed_write;
+  std::atomic_bool _repair_json_values;
 };
 
 }}

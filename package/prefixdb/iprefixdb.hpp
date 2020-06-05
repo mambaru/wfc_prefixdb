@@ -10,6 +10,7 @@
 #include <prefixdb/api/add.hpp>
 #include <prefixdb/api/packed.hpp>
 #include <prefixdb/api/range.hpp>
+#include <prefixdb/api/repair_json.hpp>
 #include <prefixdb/api/get_updates_since.hpp>
 #include <prefixdb/api/get_all_prefixes.hpp>
 #include <prefixdb/api/detach_prefixes.hpp>
@@ -24,8 +25,8 @@ namespace wamba { namespace prefixdb{
 
 /**
   * @brief Интерфейс к PrefixDB
-  * @details 
-  * 
+  * @details
+  *
   * Основные операции
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
@@ -33,15 +34,15 @@ namespace wamba { namespace prefixdb{
   * @ref iprefixdb::get "get" | @ref request::get (@ref request::get_json "json") | @ref response::get (@ref response::get_json "json") | Чтение
   * @ref iprefixdb::del "del" | @ref request::del (@ref request::del_json "json") | @ref response::del (@ref response::del_json "json") | Удаление
   * @ref iprefixdb::has "has" | @ref request::has (@ref request::has_json "json") | @ref response::has (@ref response::has_json "json") | Проверка
-  * 
+  *
   * Операции слияния
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
-  * @ref iprefixdb::inc "inc" | @ref request::inc (@ref request::inc_json "json") | @ref response::inc (@ref response::inc_json "json") | Целочисленный счетчик 
+  * @ref iprefixdb::inc "inc" | @ref request::inc (@ref request::inc_json "json") | @ref response::inc (@ref response::inc_json "json") | Целочисленный счетчик
   * @ref iprefixdb::add "add" | @ref request::add (@ref request::add_json "json") | @ref response::add (@ref response::add_json "json") | Циклический массив
-  * @ref iprefixdb::setnx "setnx" | @ref request::setnx (@ref request::setnx_json "json") | @ref response::setnx (@ref response::setnx_json "json") | Записать, если не существует 
+  * @ref iprefixdb::setnx "setnx" | @ref request::setnx (@ref request::setnx_json "json") | @ref response::setnx (@ref response::setnx_json "json") | Записать, если не существует
   * @ref iprefixdb::packed "packed" | @ref request::packed (@ref request::packed_json "json") | @ref response::packed (@ref response::packed_json "json") | Пакетное обновление полей JSON-объекта
-  * 
+  *
   * Работа с диапазоном
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
@@ -60,7 +61,7 @@ namespace wamba { namespace prefixdb{
   * -----------|-----------------|----------------|------------
   * create_snapshot | @ref request::create_snapshot (@ref request::create_snapshot_json) | @ref response::create_snapshot (@ref response::create_snapshot_json) | Запись
   * release_snapshot | @ref request::release_snapshot (@ref request::release_snapshot_json) | @ref response::release_snapshot (@ref response::release_snapshot_json) | Запись
-  * 
+  *
   * Репликация и бэкапы
   *   Метод    |  Запрос (JSON)  |  Ответ (JSON)  | Кратко
   * -----------|-----------------|----------------|------------
@@ -71,7 +72,7 @@ namespace wamba { namespace prefixdb{
 struct iprefixdb: public ::wfc::iinterface
 {
   virtual ~iprefixdb() {}
-  
+
 
   /**
     * @brief Установка значений для нескольких ключей.
@@ -94,6 +95,7 @@ struct iprefixdb: public ::wfc::iinterface
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) = 0;
   virtual void attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) = 0;
   virtual void compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) = 0;
+  virtual void repair_json( request::repair_json::ptr req, response::repair_json::handler cb) = 0;
 
   virtual void create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) = 0;
   virtual void release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) = 0;

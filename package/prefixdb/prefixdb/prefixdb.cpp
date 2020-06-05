@@ -21,6 +21,13 @@ void prefixdb::start()
     _impl->start();
 }
 
+void prefixdb::reconfigure()
+{
+  if ( _impl!=nullptr )
+    _impl->reconfigure( this->options() );
+}
+
+
 void prefixdb::open_prefixdb()
 {
   options_type opt = this->options();
@@ -63,7 +70,7 @@ void prefixdb::open_prefixdb()
     auto factory = god::create("rocksdb", this->global()->io_service );
 
     opt.slave.master = this->get_target<iprefixdb>( opt.slave.target );
-    _impl->reconfigure( opt, factory );
+    _impl->configure( opt, factory );
   }
   else
   {
@@ -79,7 +86,7 @@ void prefixdb::open_prefixdb()
     auto factory = god::create("rocksdb", this->global()->io_service );
     factory->initialize(opt);
 
-    if ( !_impl->reconfigure( opt, factory ) )
+    if ( !_impl->configure( opt, factory ) )
     {
       PREFIXDB_LOG_FATAL("prefixdb open DB abort!");
     }
@@ -170,6 +177,15 @@ void prefixdb::range( request::range::ptr req, response::range::handler cb)
     return;
 
   _impl->range( std::move(req), std::move(cb) );
+}
+
+
+void prefixdb::repair_json( request::repair_json::ptr req, response::repair_json::handler cb)
+{
+  if ( this->bad_request(req, cb) )
+    return;
+
+  _impl->repair_json( std::move(req), std::move(cb) );
 }
 
 void prefixdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
@@ -268,7 +284,7 @@ void prefixdb::restore_()
     opt.restore.backup_id = this->get_arg_t<int64_t>("bid");
   opt.preopen = false;
   factory->initialize(opt);
-  db->reconfigure( opt, factory );
+  db->configure( opt, factory );
 
   if ( !db->restore() )
   {

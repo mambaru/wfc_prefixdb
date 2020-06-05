@@ -24,6 +24,7 @@ SET(
 add_library(wfc_prefixdb ${prefixdb_source_list})
 wci_targets(wfc_prefixdb)
 
+# отключение предупреждений rocksdb параноидального режима
 set_source_files_properties(
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_factory.cpp
   PROPERTIES
@@ -32,30 +33,13 @@ set_source_files_properties(
 
 set_source_files_properties(
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp
-  PROPERTIES
-  COMPILE_FLAGS "-Wno-sign-conversion"
-)
-
-set_source_files_properties(
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_restore.cpp
-  PROPERTIES
-  COMPILE_FLAGS "-Wno-sign-conversion"
-)
-
-set_source_files_properties(
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_slave.cpp
-  PROPERTIES
-  COMPILE_FLAGS "-Wno-sign-conversion"
-)
-
-set_source_files_properties(
   prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_initial.cpp
-  PROPERTIES
-  COMPILE_FLAGS "-Wno-sign-conversion"
-)
-
-set_source_files_properties(
   prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp
+  prefixdb/prefixdb/multidb/multidb.cpp
+  prefixdb/prefixdb/multidb/god.cpp
+  prefixdb/prefixdb/prefixdb.cpp
   PROPERTIES
   COMPILE_FLAGS "-Wno-sign-conversion"
 )

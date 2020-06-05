@@ -24,13 +24,19 @@ namespace {
   }
 }
 
-multidb::multidb()
+multidb::multidb():
+  // реконфигурируемые опции
+  _range_limit(),
+  _max_prefixes(),
+  _prefix_size_limit(),
+  _keys_per_req(),
+  _value_size_limit(),
+  _key_size_limit()
 {
 }
 
-bool multidb::reconfigure(const multidb_config& opt, const std::shared_ptr<ifactory>& factory)
+bool multidb::configure(const multidb_config& opt, const std::shared_ptr<ifactory>& factory)
 {
-  this->stop(); // ???
   {
     std::lock_guard<std::mutex> lk(_mutex);
     _factory = factory;
@@ -52,14 +58,33 @@ bool multidb::reconfigure(const multidb_config& opt, const std::shared_ptr<ifact
     }
   }
 
+  // Еще базы не открыты, конфигурация только этого
+  this->reconfigure(opt);
+
   if (!opt.preopen)
     return true;
   if ( !this->preopen_(opt.path, false) )
     return false;
-  if (_opt.compact.startup_compact)
+  if (opt.compact.startup_compact)
     return this->compact();
   return true;
 }
+
+void multidb::reconfigure(const multidb_config& opt)
+{
+  std::lock_guard<std::mutex> lk(_mutex);
+  _range_limit  = opt.range_limit;
+  _max_prefixes = opt.max_prefixes;
+  _prefix_size_limit = opt.prefix_size_limit;
+  _keys_per_req = opt.keys_per_req;
+  _value_size_limit = opt.value_size_limit;
+  _key_size_limit = opt.key_size_limit;
+
+  for (auto db_val: _db_map)
+    if ( auto db = db_val.second)
+      db->reconfigure(opt);
+}
+
 
 void multidb::start()
 {
@@ -186,7 +211,7 @@ void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 
 void multidb::range( request::range::ptr req, response::range::handler cb)
 {
-  if ( this->_opt.range_limit!=0 && (req->limit + req->offset > this->_opt.range_limit) )
+  if ( _range_limit!=0 && (req->limit + req->offset > _range_limit) )
   {
     send_error<common_status::RangeLimitExceeded, response::range>(std::move(req), std::move(cb) );
     return;
@@ -201,6 +226,61 @@ void multidb::range( request::range::ptr req, response::range::handler cb)
     prefix_not_found<response::range>( std::move(req), std::move(cb) );
   }
 }
+
+void multidb::repair_json( request::repair_json::ptr req, response::repair_json::handler cb)
+{
+  //пустой префикс - для всех преффиксов
+  if ( req->prefix.empty() )
+  {
+    PREFIXDB_LOG_BEGIN("Repair JSON for ALL prefixes...")
+    req->nores = true;
+    req->noval = true;
+    req->beg = true;
+    req->from = "";
+    req->to = "";
+    req->offset = 0;
+    // req->limit = 0; оставил для тестирования
+
+    size_t total = 0;
+    size_t repaired = 0;
+    std::stringstream sprefixes;
+    auto prefixes = this->all_prefixes_();
+    for ( std::string prefix : prefixes )
+    {
+      if ( auto db = this->prefix_(prefix, false) )
+      {
+        auto prefix_req = std::make_unique<request::repair_json>(*req);
+        prefix_req->prefix = prefix;
+        db->repair_json(std::move(prefix_req), [&total, &repaired](response::repair_json::ptr res){
+          total += res->total;
+          repaired += res->repaired;
+        });
+        sprefixes << prefix << ",";
+      }
+    }
+    if ( cb != nullptr )
+    {
+      auto res = std::make_unique<response::repair_json>();
+      res->fin = true;
+      res->total = total;
+      res->repaired = repaired;
+      res->prefix = sprefixes.str();
+      if ( !res->prefix.empty() )
+        res->prefix.pop_back();
+      cb(std::move(res));
+    }
+    PREFIXDB_LOG_END("Repair JSON for ALL prefixes Done! repaired=" << repaired << " total=" << total << " prefixes=" << sprefixes.str() )
+  }
+  else if ( auto db = this->prefix_(req->prefix, false) )
+  {
+    db->repair_json( std::move(req), std::move(cb) );
+  }
+  else
+  {
+    prefix_not_found<response::repair_json>( std::move(req), std::move(cb) );
+  }
+}
+
 
 void multidb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
 {
@@ -644,7 +724,7 @@ void multidb::configure_prefix_reqester_()
     PREFIXDB_LOG_MESSAGE("Get All Prefixes for initial load")
     _opt.initial_load.remote->get_all_prefixes(
       std::make_unique<request::get_all_prefixes>(),
-      std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
+      std::bind( &multidb::get_all_prefixes_generator_, this, std::placeholders::_1)
     );
   }
 
@@ -662,16 +742,15 @@ void multidb::configure_prefix_reqester_()
         pprefixdb->get_all_prefixes(std::move(req), callback);
         return true;
       },
-      std::bind( &multidb::get_all_prefixes_handler_, this, std::placeholders::_1)
+      std::bind( &multidb::get_all_prefixes_generator_, this, std::placeholders::_1)
     );
   }
 }
 
-request::get_all_prefixes::ptr multidb::get_all_prefixes_handler_(response::get_all_prefixes::ptr res)
+request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::get_all_prefixes::ptr res)
 {
   if ( res == nullptr )
   {
-    PREFIXDB_LOG_ERROR("get_all_prefixes return nullptr (Bad Gateway) ")
     return std::make_unique<request::get_all_prefixes>();
   }
 
@@ -772,7 +851,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
       return nullptr;
   }
 
-  if ( _opt.max_prefixes!=0 && _db_map.size() >= _opt.max_prefixes )
+  if ( _max_prefixes!=0 && _db_map.size() >= _max_prefixes )
     return nullptr;
 
   if ( !create_if_missing )
@@ -803,7 +882,7 @@ bool multidb::check_prefix_(const ReqPtr& req, const Callback& cb)
   if ( req->prefix.empty() )
     return send_error<common_status::EmptyPrefix, Res>(std::move(req), std::move(cb) );
 
-  if ( _opt.prefix_size_limit!=0 && req->prefix.size() > _opt.prefix_size_limit )
+  if ( _prefix_size_limit!=0 && req->prefix.size() > _prefix_size_limit )
     return send_error<common_status::PrefixLengthExceeded, Res>(std::move(req), std::move(cb) );
 
   return true;
@@ -818,18 +897,18 @@ bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
   if ( !this->check_prefix_<Res>(req, cb) )
     return false;
 
-  if ( _opt.keys_per_req!=0 && req->fields.size() > _opt.keys_per_req )
+  if ( _keys_per_req!=0 && req->fields.size() > _keys_per_req )
     return send_error<common_status::TooManyKeys, Res>(std::move(req), std::move(cb) );
 
-  if ( _opt.value_size_limit==0 || _opt.key_size_limit==0 )
+  if ( _value_size_limit==0 || _key_size_limit==0 )
     return true;
 
   for (const auto& f : req->fields)
   {
-    if ( f.first.size() > _opt.key_size_limit)
+    if ( f.first.size() > _key_size_limit)
       return send_error<common_status::KeyLengthExceeded, Res>(std::move(req), std::move(cb) );
 
-    if ( f.second.size() > _opt.value_size_limit)
+    if ( f.second.size() > _value_size_limit)
       return send_error<common_status::ValueLengthExceeded, Res>(std::move(req), std::move(cb) );
   }
   return true;

@@ -169,6 +169,33 @@ namespace
     } );
   }
 
+  void corrupt_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
+  {
+    std::string prefix, key, value;
+    ss >> prefix;
+    ss >> key;
+    ss >> value;
+    bool ready = false;
+    if ( prefix.empty() )
+      handler( iow::io::make("Error: Prefix required") );
+    else if ( key.empty() )
+      handler( iow::io::make("Error: Key required") );
+    else
+      ready=true;
+
+    if (  !ready  )
+      return;
+
+    auto req = std::make_unique<request::set>();
+    req->prefix = prefix;
+    req->fields.push_back(std::make_pair(key, value));
+
+    db->set( std::move(req), [handler](response::set::ptr )
+    {
+      handler( ::iow::io::make("OK") );
+    } );
+  }
+
   void inc_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
 
@@ -195,8 +222,8 @@ namespace
   {
     auto req = std::make_unique<request::compact_prefix>();
     ss >> req->prefix;
-    ss >> req->from;
-    ss >> req->to;
+    if (ss) ss >> req->from;
+    if (ss) ss >> req->to;
     db->compact_prefix( std::move(req), [handler](response::compact_prefix::ptr res)
     {
       if ( res->status == common_status::OK )
@@ -229,6 +256,89 @@ namespace
     } );
   }
 
+  void show_stat_( std::stringstream& oss, const wrtstat::aggregated_info& ag)
+  {
+        oss << "\tmin = " << ag.min << std::endl;
+        oss << "\tmax = " << ag.max << std::endl;
+        oss << "\tperc50 = " << ag.perc50 << std::endl;
+        oss << "\tperc80 = " << ag.perc80 << std::endl;
+        oss << "\tperc95 = " << ag.perc95 << std::endl;
+        oss << "\tperc99 = " << ag.perc99 << std::endl;
+        oss << "\tperc100 = " << ag.perc100 << std::endl;
+        oss << "\tпогрешность = " << ag.lossy << std::endl;
+  }
+
+  void get_prefix_info_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
+  {
+    auto req = std::make_unique<request::range>();
+    req->limit = 0;
+    req->stat = true;
+    req->nores = true;
+    ss >> req->prefix;
+    if (ss) ss >> req->limit;
+
+    if ( req->prefix.empty() )
+    {
+      handler( iow::io::make("Error: Prefix required") );
+      return;
+    }
+
+    db->range( std::move(req), [handler](response::range::ptr res)
+    {
+      std::stringstream oss;
+      if (auto s = res->stat )
+      {
+        oss << "Ключей " << s->keys.count << std::endl;
+        oss << "Значений " << s->values.count << std::endl;
+        oss << "JSON-типы значений полей (количество):" << std::endl;
+        oss << "\tJSON null = " << s->null_count << std::endl;
+        oss << "\tJSON boolean = " << s->bool_count << std::endl;
+        oss << "\tJSON number = " << s->number_count << std::endl;
+        oss << "\tJSON string = " << s->string_count << std::endl;
+        oss << "\tJSON array = " << s->array_count << std::endl;
+        oss << "\tJSON object = " << s->object_count << std::endl;
+        oss << "\trequired JSON repair = " << s->repair_count << std::endl;
+        oss << "\tempty fields = " << s->empty_count << std::endl;
+        oss << "Статистика по размерам ключей в байтах:" << std::endl;
+        show_stat_(oss, s->keys);
+        oss << "Статистика по размерам значений в байтах:" << std::endl;
+        show_stat_(oss, s->values);
+
+      }
+      else
+      {
+        oss << "No Stat" << std::endl;
+      }
+      oss << res->status;
+      handler( ::iow::io::make(oss.str()) );
+    } );
+  }
+
+  void repair_json_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
+  {
+    auto req = std::make_unique<request::repair_json>();
+    if (ss) ss >> req->prefix;
+    if (ss) ss >> req->limit;
+
+    if ( req->prefix == "*" )
+      req->prefix.clear();
+    db->repair_json( std::move(req), [handler](response::repair_json::ptr res)
+    {
+      if ( res->status == common_status::OK )
+      {
+        std::stringstream oss;
+        oss << "prefix: " << res->prefix << std::endl;
+        oss << "total: " << res->total << std::endl;
+        oss << "repair: " << res->repaired << std::endl;
+        oss << res->status;
+        handler( ::iow::io::make(oss.str()) );
+      }
+      else
+        handler( ::iow::io::make("FAIL") );
+    } );
+  }
+
+
   const char* help_str[][4] = {
     {"h", "help", "[<<command>>]",  "Подсказка по конкретной команде. Если не указана, то список всех комманд."},
     {"e", "exit", "",  "Выход."},
@@ -244,6 +354,7 @@ namespace
     {"g", "get", "<<prefix>> <<key1>> [<<key2>> ....]", "Получить значения полей в указанном префиксе"},
     {"d", "del", "<<prefix>> <<key1>> [<<key2>> ....]", "Удалить поля в указанном префиксе"},
     {"s", "set", "<<prefix>> <<key>> <<value>>", "Изменить значение поля в указанном префиксе"},
+    {"corrupt", "corrupt", "<<prefix>> <<key>> <<value>>", "Записать не-JSON значение повредив БД"},
     {"i", "inc", "<<prefix>> <<key>> <<increment>> [<<default value>>]", "Инкрементировать значение поля для указанном префиксе"},
     {"r", "range", "<<prefix>> [from [to [offset [limit] ] ]]  ", "Получить значения полей в указанном префиксе по диапазону. Примеры:\n"
       "\tr test - получить первые 25 полей \n"
@@ -251,8 +362,8 @@ namespace
       "\tr test key1 key2- получить первые 25 полей начиная с key1 до key2 включительно\n"
       "\tr test key1 key2 25 75 - получить 75 полей начиная с key1 до key2 включительно, пропустив первые 25"
     },
-
-
+    {"rj", "repair_json", "[<<prefix>>(*)  [limit] ]", "Восстановить JSON-формат значений полей"},
+    {"gpi", "get_prefix_info", "<<prefix>>  [limit] ", "Статистика по полям префикса"}
   };
   void help_( std::shared_ptr<iprefixdb> /*db*/, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
   {
@@ -332,6 +443,18 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   else if ( method=="cp" || method=="compact_prefix")
   {
     compact_prefix_(db, ss, std::move(handler) );
+  }
+  else if ( method=="rj" || method=="repair_json")
+  {
+    repair_json_(db, ss, std::move(handler) );
+  }
+  else if ( method=="corrupt")
+  {
+    corrupt_(db, ss, std::move(handler) );
+  }
+  else if ( method=="gpi" || method=="get_prefix_info")
+  {
+    get_prefix_info_(db, ss, std::move(handler) );
   }
   else
   {

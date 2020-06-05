@@ -8,18 +8,19 @@ namespace wamba { namespace prefixdb {
  */
 enum class common_status
 {
-  OK,                 ///< Успех  
-  InvalidFieldValue,  ///< Недопустимое значение для merge-операций  
-  EmptyFields,        ///< Пустой список полей в запросе 
+  OK,                 ///< Успех
+  IOError,
+  InvalidFieldValue,  ///< Недопустимое значение для merge-операций
+  EmptyFields,        ///< Пустой список полей в запросе
   EmptyPrefix,        ///< Не задан префикс в запросе
   CreatePrefixFail,   ///< Ошибка создания нового префикса
   CreateSnapshotFail, ///< Ошибка создания снапшота
   CompactFail,        ///< Ошибка compactoins
   PrefixNotFound,     ///< Префикс не найден
   SnapshotNotFound,   ///< Не найден снапшот
-  TooManyKeys,        ///< Слишком много ключей в запросе 
-  KeyLengthExceeded,  ///< Превышен лимит символов имени в одном из ключей 
-  ValueLengthExceeded, ///< Превышен лимит размера в одном из значений 
+  TooManyKeys,        ///< Слишком много ключей в запросе
+  KeyLengthExceeded,  ///< Превышен лимит символов имени в одном из ключей
+  ValueLengthExceeded, ///< Превышен лимит размера в одном из значений
   PrefixLengthExceeded, ///< Превышен лимит символов имени префикса
   RangeLimitExceeded,   ///< Превышен лимит параметров range
   InvalidSeqNumber      ///< Ошибка репликации

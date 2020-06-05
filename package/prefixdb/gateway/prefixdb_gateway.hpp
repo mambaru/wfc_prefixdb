@@ -10,6 +10,7 @@
 #include <prefixdb/api/add_json.hpp>
 #include <prefixdb/api/packed_json.hpp>
 #include <prefixdb/api/range_json.hpp>
+#include <prefixdb/api/repair_json_json.hpp>
 #include <prefixdb/api/get_updates_since_json.hpp>
 #include <prefixdb/api/get_all_prefixes_json.hpp>
 #include <prefixdb/api/detach_prefixes_json.hpp>
@@ -34,6 +35,7 @@ JSONRPC_TAG(inc)
 JSONRPC_TAG(add)
 JSONRPC_TAG(packed)
 JSONRPC_TAG(range)
+JSONRPC_TAG(repair_json)
 JSONRPC_TAG(get_updates_since)
 JSONRPC_TAG(get_all_prefixes)
 JSONRPC_TAG(detach_prefixes)
@@ -58,6 +60,7 @@ struct method_list: wfc::jsonrpc::method_list
   wfc::jsonrpc::call_method< _add_, request::add_json, response::add_json>,
   wfc::jsonrpc::call_method< _packed_, request::packed_json, response::packed_json>,
   wfc::jsonrpc::call_method< _range_, request::range_json, response::range_json>,
+  wfc::jsonrpc::call_method< _repair_json_, request::repair_json_json, response::repair_json_json>,
   wfc::jsonrpc::call_method< _get_updates_since_, request::get_updates_since_json, response::get_updates_since_json>,
   wfc::jsonrpc::call_method< _get_all_prefixes_, request::get_all_prefixes_json, response::get_all_prefixes_json>,
   wfc::jsonrpc::call_method< _detach_prefixes_, request::detach_prefixes_json, response::detach_prefixes_json>,
@@ -76,7 +79,7 @@ class prefixdb_interface
   : public Base
 {
 public:
-  
+
   virtual void get(request::get::ptr req, response::get::handler cb ) override
   {
     this->template call< _get_ >( std::move(req), cb, nullptr);
@@ -146,7 +149,7 @@ public:
   {
     this->template call< _delay_background_ >( std::move(req), cb, nullptr);
   }
-  
+
   virtual void continue_background( request::continue_background::ptr req, response::continue_background::handler cb) override
   {
     this->template call< _continue_background_ >( std::move(req), cb, nullptr);
@@ -167,15 +170,20 @@ public:
     this->template call< _release_snapshot_ >( std::move(req), cb, nullptr);
   }
 
+  virtual void repair_json( request::repair_json::ptr req, response::repair_json::handler cb) override
+  {
+    this->template call< _repair_json_ >( std::move(req), cb, nullptr);
+  }
+
   virtual void reg_io( ::wfc::iinterface::io_id_t /*io_id*/, std::weak_ptr< ::wfc::iinterface> /*itf*/) override
   {
-    
+
   }
 
   virtual void unreg_io( ::wfc::iinterface::io_id_t /*io_id*/) override
   {
-    
+
   }
 };
-  
+
 }}}

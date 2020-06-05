@@ -27,7 +27,9 @@ struct db_config_json
   JSON_NAME(restore)
   JSON_NAME(workflow)
   JSON_NAME(enable_delayed_write)
+  JSON_NAME(answer_before_write)
   JSON_NAME(auto_repair)
+  JSON_NAME(repair_json_values)
   JSON_NAME(abort_if_open_error)
   JSON_NAME(check_incoming_merge_json)
 
@@ -43,7 +45,9 @@ struct db_config_json
       wjson::member<n_array_limit, db_config, size_t, &db_config::array_limit>,
       wjson::member<n_range_limit, db_config, size_t, &db_config::range_limit>,
       wjson::member<n_enable_delayed_write, db_config, bool, &db_config::enable_delayed_write>,
+      wjson::member<n_answer_before_write, db_config, bool, &db_config::answer_before_write>,
       wjson::member<n_auto_repair, db_config, bool, &db_config::auto_repair>,
+      wjson::member<n_repair_json_values, db_config, bool, &db_config::repair_json_values>,
       wjson::member<n_abort_if_open_error, db_config, bool, &db_config::abort_if_open_error>,
       wjson::member<n_check_incoming_merge_json, db_config, bool, &db_config::check_incoming_merge_json>,
       wjson::member<n_compact,      db_config, compact_config,   &db_config::compact, compact_config_json>,

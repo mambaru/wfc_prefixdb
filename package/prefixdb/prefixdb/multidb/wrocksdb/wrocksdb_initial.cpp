@@ -72,6 +72,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
   req->prefix = _name;
   req->snapshot = snapshot;
   req->beg = beg;
+  req->repair_json = true;
   req->from = from;
   req->offset = 0;
   req->limit = _opt.initial_range;

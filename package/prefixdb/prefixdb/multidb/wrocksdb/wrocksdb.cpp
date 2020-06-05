@@ -1,8 +1,10 @@
+
 #include "../aux/copy_dir.hpp"
 #include "../aux/base64.hpp"
 
 #include "wrocksdb.hpp"
 #include "wrocksdb_slave.hpp"
+#include "aux/aux_wrocksdb.hpp"
 #include "merge/merge.hpp"
 #include "merge/merge_json.hpp"
 
@@ -10,6 +12,9 @@
 #include "merge/add_params_json.hpp"
 #include "merge/inc_params_json.hpp"
 #include "wrocksdb_initial.hpp"
+
+#include <prefixdb/api/range_json.hpp>
+
 
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
@@ -19,6 +24,9 @@
 
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
+
+#include <wrtstat/aggregator.hpp>
+
 #include <iomanip>
 #include <sstream>
 #include <ctime>
@@ -28,13 +36,7 @@
 
 namespace wamba{ namespace prefixdb {
 
-namespace
-{
-  inline std::string& get_key(std::string& key) {return key;}
-  inline std::string& get_key( std::pair<std::string, std::string>& field) {return field.first;}
-}
-
-wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup_type* bk)
+wrocksdb::wrocksdb( std::string name, const db_config& conf,  db_type* db, backup_type* bk)
   : _name(name)
   , _conf(conf)
   , _db(db)
@@ -44,6 +46,15 @@ wrocksdb::wrocksdb( std::string name, const db_config conf,  db_type* db, backup
   _write_workflow = conf.args.write_workflow;
   if ( _write_workflow == nullptr )
     _write_workflow = _workflow;
+  this->reconfigure(conf);
+}
+
+void wrocksdb::reconfigure(const db_config& conf)
+{
+  _check_incoming_merge_json = conf.check_incoming_merge_json;
+  _answer_before_write = conf.answer_before_write;
+  _enable_delayed_write = conf.enable_delayed_write;
+  _repair_json_values = conf.repair_json_values;
 }
 
 void wrocksdb::start( )
@@ -88,61 +99,28 @@ void wrocksdb::stop()
   this->stop_();
 }
 
-namespace
-{
-  template<typename Json, typename Res, typename ReqPtr, typename Callback>
-  bool check_params(ReqPtr& req, Callback& cb)
-  {
-    typedef Json params_json;
-    typedef typename params_json::target params_t;
-    typedef typename params_json::serializer serializer;
-    bool noerr = true;
-    params_t pkg;
-
-    ::wfc::json::json_error e;
-    for (const auto& field : req->fields )
-    {
-      serializer()(pkg, field.second.begin(), field.second.end(), &e );
-      if ( e )
-      {
-        PREFIXDB_LOG_ERROR( "JSONRPC params error: " << wfc::json::strerror::message_trace( e, field.second.begin(), field.second.end() ) );
-        noerr=false;
-        break;
-      }
-    }
-
-    if ( !noerr && cb!=nullptr)
-    {
-      auto res = std::make_unique<Res>();
-      res->status = common_status::InvalidFieldValue;
-      cb( std::move(res) );
-    }
-    return noerr;
-  }
-}
-
 bool wrocksdb::check_inc_(request::inc::ptr& req, response::inc::handler& cb)
 {
-  if ( !this->_conf.check_incoming_merge_json )
+  if ( !_check_incoming_merge_json )
     return true;
 
-  return check_params<inc_params_json, response::inc>(req, cb);
+  return aux::check_params<inc_params_json, response::inc>(req, cb);
 }
 
 bool wrocksdb::check_add_(request::add::ptr& req, response::add::handler& cb)
 {
-  if ( !this->_conf.check_incoming_merge_json )
+  if ( !_check_incoming_merge_json )
     return true;
 
-  return check_params<add_params_json, response::add>(req, cb);
+  return aux::check_params<add_params_json, response::add>(req, cb);
 }
 
 bool wrocksdb::check_packed_(request::packed::ptr& req, response::packed::handler& cb)
 {
-  if ( !this->_conf.check_incoming_merge_json )
+  if ( !_check_incoming_merge_json )
     return true;
 
-  return check_params<packed_params_json, response::packed>(req, cb);
+  return aux::check_params<packed_params_json, response::packed>(req, cb);
 }
 
 template<merge_mode Mode, typename Res, typename ReqPtr, typename Callback>
@@ -156,7 +134,7 @@ void wrocksdb::merge_(ReqPtr req, Callback cb)
   {
     merge upd;
     upd.mode = Mode;
-    upd.raw = std::move(f.second);
+    upd.raw = this->repair_json_(f.first, std::move(f.second));
     json.clear();
     ser( upd, std::inserter(json, json.end()));
     batch->Merge(f.first, json);
@@ -165,68 +143,69 @@ void wrocksdb::merge_(ReqPtr req, Callback cb)
   this->write_batch_<Res>(batch, std::move(req), std::move(cb) );
 }
 
-namespace {
 
 template<typename Res, typename ReqPtr>
-std::unique_ptr<Res> create_result_ok(ReqPtr& req)
-{
-  auto res = std::make_unique<Res>();
-  res->prefix = std::move(req->prefix);
-  res->status = common_status::OK ;
-  return std::move(res);
-}
-
-}
-
-template<typename Res, typename BatchPtr, typename ReqPtr, typename Callback>
-void wrocksdb::write_batch_(BatchPtr batch, ReqPtr req, Callback cb)
+void wrocksdb::write_batch_2db_(const write_batch_ptr& batch, ReqPtr req, std::function<void(std::unique_ptr<Res>)> cb)
 {
   ::rocksdb::WriteOptions wo;
   wo.sync = req->sync;
 
-  auto db = _db;
+  ::rocksdb::Status status = _db->Write( wo, &(*batch));
 
-  if ( db == nullptr )
+  if ( !status.ok() )
   {
-    if ( cb!=nullptr )
-      cb( nullptr );
+    PREFIXDB_LOG_ERROR("Ошибка записи в write_batch_2db_ в префиксе '" << _name << "': " << status.ToString() );
   }
 
-  if ( req->nores || cb == nullptr)
+  if ( cb != nullptr )
   {
-    // Если не нужен результат и не нужна синхронная запись, то сначала отправляем ответ
-    if ( cb != nullptr && !req->sync )
-      cb( create_result_ok<Res>(req) );
-
-    // Если включена запись через очередь
-    if ( !req->sync && _conf.enable_delayed_write )
+    if ( status.ok() )
     {
-      if ( !req->sync || cb==nullptr )
-      {
-        // Если не нужна синхронная запись, от ответ уже отправили
-        _write_workflow->post([db, wo, batch]() { db->Write( wo, &(*batch)); }, nullptr);
-      }
+      if ( !req->nores )
+        this->get_<Res>( std::move(req), std::move(cb), false );
       else
-      {
-        auto preq = std::make_shared<ReqPtr>( std::move(req) );
-        _write_workflow->post([db, wo, batch, preq, cb]()
-        {
-          db->Write( wo, &(*batch));
-          cb( create_result_ok<Res>( *preq) );
-        }, [cb](){ cb(nullptr);});
-      }
+        cb( aux::create_result_ok<Res>(req) );
     }
     else
-    {
-      db->Write( wo, &(*batch));
-      if ( cb != nullptr && req->sync )
-        cb( create_result_ok<Res>(req) );
-    }
+      cb( aux::create_io_error<Res>(req) );
+  }
+}
+
+template<typename Res, typename ReqPtr>
+void wrocksdb::write_batch_(const write_batch_ptr& batch, ReqPtr req, std::function<void(std::unique_ptr<Res>)> cb)
+{
+
+  bool answer_before_flag = _answer_before_write
+                          && !req->sync
+                          && req->nores
+                          && cb!=nullptr;
+
+  if ( answer_before_flag )
+  {
+    // клиент может получить ответ и сделать повторный запрос поля,
+    // до того как произойдет реальная запись
+    if ( cb!=nullptr )
+      cb( aux::create_result_ok<Res>(req) );
+    cb=nullptr;
+  }
+
+  if ( !_enable_delayed_write )
+  {
+    this->write_batch_2db_<Res>(batch, std::move(req), std::move(cb) );
   }
   else
   {
-    db->Write( wo, &(*batch));
-    this->get_<Res>( std::move(req), std::move(cb), false );
+    auto preq = std::make_shared<ReqPtr>( std::move(req) );
+    _write_workflow->post([this, batch, preq, cb]()
+    {
+       this->write_batch_2db_<Res>(batch, std::move(*preq), std::move(cb) );
+    },
+    [this, preq, cb]()
+    {
+      PREFIXDB_LOG_ERROR("Запрос на запись WriteBatch в префиксе '" << _name <<"' был выброшен из очереди" );
+      if (cb!=nullptr)
+        cb( aux::create_io_error<Res>( *preq) );
+    });
   }
 }
 
@@ -294,6 +273,24 @@ bool wrocksdb::release_snapshot_(size_t id)
   return true;
 }
 
+std::string wrocksdb::repair_json_(const std::string& key, std::string&& value, bool force, bool* fix) const
+{
+  if ( fix!=nullptr )
+    *fix = false;
+
+  if ( !force && !_repair_json_values)
+    return value;
+
+  if ( value.empty() )
+  {
+    if ( fix!=nullptr )
+      *fix = true;
+    return "null";
+  }
+
+  return aux::repair_json_value(_name, key, std::move(value), fix);
+}
+
 template<typename Res, typename ReqPtr, typename Callback>
 void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
 {
@@ -304,7 +301,7 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
   std::vector<slice_type> keys;
   keys.reserve(req->fields.size() );
   for ( auto& fld: req->fields )
-    keys.push_back( get_key(fld) );
+    keys.push_back( aux::get_key(fld) );
 
   // Забираем значения
   std::vector<std::string> resvals;
@@ -338,7 +335,7 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
   field_pair field;
   for ( size_t i = 0; i!=resvals.size(); ++i)
   {
-    field.first = std::move( get_key(req->fields[i]) );
+    field.first = std::move( aux::get_key(req->fields[i]) );
 
     if ( req->noval )
     { // Если значения не нужны
@@ -346,7 +343,7 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
     }
     else if ( status[i].ok() )
     { // Если ключ существует
-      field.second = std::move(resvals[i]);
+      field.second = this->repair_json_(field.first, std::move(resvals[i]) );
     }
     else
     {
@@ -366,9 +363,13 @@ void wrocksdb::set( request::set::ptr req, response::set::handler cb)
 {
   auto batch = std::make_shared< ::rocksdb::WriteBatch >();
 
-  for ( const auto& field : req->fields)
+  for ( auto& field : req->fields)
   {
-    batch->Put( field.first, field.second );
+    ::rocksdb::Status status = batch->Put( field.first, this->repair_json_(field.first, std::move(field.second) ) );
+    if ( !status.ok() )
+    {
+      PREFIXDB_LOG_ERROR("Ошибка записи WriteBatch в префиксе '" << _name <<"' для ключа '" << field.first << "': " << status.ToString() );
+    }
   }
 
   this->write_batch_<response::set>(batch, std::move(req), std::move(cb) );
@@ -406,7 +407,7 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
   }
   else
   {
-    // сначало берем, потом удаляем
+    // сначала берем, потом удаляем
     this->get_<response::del>( std::move(req), [db, batch, &cb](response::del::ptr res)
     {
       ::rocksdb::Status status = db->Write( ::rocksdb::WriteOptions(), &(*batch));
@@ -422,7 +423,8 @@ void wrocksdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 
 void wrocksdb::inc( request::inc::ptr req, response::inc::handler cb)
 {
-  this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
+  if ( this->check_inc_(req, cb) )
+    this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::add( request::add::ptr req, response::add::handler cb)
@@ -549,13 +551,36 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
     return;
   }
 
-  typedef ::rocksdb::Iterator iterator_type;
-
-  typedef std::shared_ptr<iterator_type> iterator_ptr;
   auto res=std::make_unique<response::range>();
   res->status = common_status::OK;
   res->prefix = std::move(req->prefix);
   res->fin = false;
+
+  typedef wrtstat::aggregator aggregator_t;
+  typedef aggregator_t::options_type aggregator_options_t;
+  typedef std::shared_ptr<aggregator_t> aggregator_ptr;
+  aggregator_ptr key_aggregator;
+  aggregator_ptr val_aggregator;
+  time_t now = time(nullptr);
+  time_t log_time = now;
+  if ( req->stat )
+  {
+    if ( req->limit == 0 )
+    {
+      req->limit = static_cast<size_t>(-1);
+      req->nores = true;
+    }
+
+    aggregator_options_t opt;
+    opt.outgoing_reduced_size = 0;
+    key_aggregator = std::make_shared<aggregator_t>(now, opt);
+    val_aggregator = std::make_shared<aggregator_t>(now, opt);
+    res->stat = std::make_shared<response::range::stat_info>();
+  }
+
+  typedef ::rocksdb::Iterator iterator_type;
+
+  typedef std::shared_ptr<iterator_type> iterator_ptr;
 
   ::rocksdb::ReadOptions opt;
   iterator_ptr itr(db->NewIterator(opt));
@@ -571,22 +596,65 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
       req->offset--; itr->Next();
     }
 
+    size_t log_stat_count = 0;
+
     while ( req->limit && itr->Valid() )
     {
       field_pair field;
+      bool fix = false;
       auto key = itr->key();
-
       field.first.assign(key.data(), key.size() );
+      auto val = itr->value();
+      field.second = this->repair_json_(field.first, std::string(val.data(), val.size()), req->repair_json, &fix);
 
       if ( !req->to.empty() && field.first > req->to )
         break;
 
-      if ( !req->noval )
+      if ( req->stat )
       {
-        auto val = itr->value();
-        field.second.assign(val.data(), val.size() );
+        key_aggregator->add(now, key.size(), 1);
+        val_aggregator->add(now, val.size(), 1);
+
+        if ( fix )
+          res->stat->repair_count++;
+
+        if ( val.size() == 0 )
+          res->stat->empty_count++;
+
+        if ( !field.second.empty() )
+        {
+          auto beg = field.second.begin();
+          auto end = field.second.end();
+          if ( wjson::parser::is_null(beg, end) )
+            res->stat->null_count++;
+          else if ( wjson::parser::is_bool(beg, end) )
+            res->stat->bool_count++;
+          else if ( wjson::parser::is_number(beg, end) )
+            res->stat->number_count++;
+          else if ( wjson::parser::is_string(beg, end) )
+            res->stat->string_count++;
+          else if ( wjson::parser::is_array(beg, end) )
+            res->stat->array_count++;
+          else if ( wjson::parser::is_object(beg, end) )
+            res->stat->object_count++;
+        }
+
+        log_stat_count++;
+        if ( log_time < time(nullptr) )
+        {
+          PREFIXDB_LOG_PROGRESS("STAT range for prefix '" << _name << "' count " << log_stat_count );
+          log_time = time(nullptr);
+        }
       }
-      res->fields.push_back(std::move(field));
+
+      if ( !req->nores )
+      {
+        if ( req->noval )
+        {
+          field.second = "true";
+        }
+        res->fields.push_back(std::move(field));
+      }
       itr->Next();
       req->limit--;
     }
@@ -599,7 +667,123 @@ void wrocksdb::range( request::range::ptr req, response::range::handler cb)
       res->fin = !itr->Valid() || itr->value()==req->to;
     }
   }
+  if ( req->stat )
+  {
+    if ( auto k_ag = key_aggregator->force_pop() )
+    {
+      static_cast<wrtstat::reduced_info&>(res->stat->keys) = static_cast<const wrtstat::reduced_info&>(*k_ag);
+      static_cast<wrtstat::aggregated_perc&>(res->stat->keys) = static_cast<const wrtstat::aggregated_perc&>(*k_ag);
+    }
+    if ( auto v_ag = val_aggregator->force_pop() )
+    {
+      static_cast<wrtstat::reduced_info&>(res->stat->values) = static_cast<const wrtstat::reduced_info&>(*v_ag);
+      static_cast<wrtstat::aggregated_perc&>(res->stat->values) = static_cast<const wrtstat::aggregated_perc&>(*v_ag);
+    }
+
+    std::string stat_json_str;
+    response::range_json::stat_json::serializer()(*res->stat, std::back_inserter(stat_json_str));
+    PREFIXDB_LOG_MESSAGE("STAT for prefix '" << _name << "' range request:" << stat_json_str );
+  }
   cb( std::move(res) );
+}
+
+void wrocksdb::repair_json( request::repair_json::ptr req, response::repair_json::handler cb)
+{
+  PREFIXDB_LOG_BEGIN("Repair json values for " << _name)
+
+  typedef ::rocksdb::Iterator iterator_type;
+  typedef std::shared_ptr<iterator_type> iterator_ptr;
+  auto res=std::make_unique<response::repair_json>();
+  res->status = common_status::OK;
+  res->prefix = std::move(req->prefix);
+  res->fin = false;
+
+  if ( req->limit == 0 )
+    req->limit = static_cast<size_t>(-1);
+
+  size_t count = 0;
+  size_t total = 0;
+
+  ::rocksdb::ReadOptions opt;
+  iterator_ptr itr(_db->NewIterator(opt));
+
+  time_t now = time(nullptr);
+  if ( itr != nullptr )
+  {
+    auto batch = std::make_shared< ::rocksdb::WriteBatch >();
+    // offset
+    itr->Seek( req->from );
+    if ( itr->Valid() && req->beg == false )
+      itr->Next();
+
+    while ( req->offset && itr->Valid() )
+    {
+      req->offset--; itr->Next();
+    }
+
+    while ( req->limit && itr->Valid() )
+    {
+      ++total;
+      auto val = itr->value();
+      auto beg = val.data();
+      auto end = beg + val.size();
+
+      wjson::json_error er;
+      // если нет ошибок и нет мусора в конце
+      auto last = wjson::parser::parse_value(beg, end, &er);
+      if ( er || last!=end )
+      {
+        auto key = itr->key();
+        field_pair field;
+        field.first = std::string(key.data(), key.size() );
+        field.second = this->repair_json_(field.first, std::string(beg, end), true);
+        batch->Put(field.first, field.second);
+        ++count;
+        res->last_key = field.first;
+        if ( !req->nores )
+        {
+          if ( req->noval )
+            field.second = "true";
+          res->fields.push_back(std::move(field));
+        }
+      }
+      itr->Next();
+      req->limit--;
+
+      if ( time(nullptr) > now)
+      {
+        PREFIXDB_LOG_PROGRESS("Repair JSON values for " << _name << ". Repair " << count << " total " << total << "        ")
+        now = time(nullptr);
+      }
+    }
+
+    res->fin |= req->limit!=0;
+    res->fin |= !itr->Valid();
+    if ( !res->fin )
+    {
+      itr->Next();
+      res->fin = !itr->Valid() || itr->value()==req->to;
+    }
+
+    if ( count!=0 )
+    {
+      ::rocksdb::WriteOptions wo;
+      wo.sync = req->sync;
+      ::rocksdb::Status status = _db->Write( wo, &(*batch));
+      if ( !status.ok() )
+      {
+        PREFIXDB_LOG_ERROR("Ошибка записи в write_batch_2db_ в префиксе '" << _name << "': " << status.ToString() );
+      }
+    }
+  }
+
+  if ( cb!=nullptr)
+  {
+    res->repaired = count;
+    res->total = total;
+    cb( std::move(res) );
+  }
+  PREFIXDB_LOG_END("Repair JSON values for " << _name << ". Repair " << count << " total " << total << "        ")
 }
 
 void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb)
@@ -675,9 +859,7 @@ void wrocksdb::release_snapshot( request::release_snapshot::ptr req, response::r
       res->status = common_status::SnapshotNotFound;
     cb( std::move(res) );
   }
-
 }
-
 
 bool wrocksdb::backup()
 {

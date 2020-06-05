@@ -23,7 +23,7 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
   , _opt(opt)
   , _db(db)
 {
-  _log_parser = std::make_shared<since_reader>();
+  _log_parser = std::make_shared<since_reader>(name);
 }
 
 void wrocksdb_slave::start(size_t last_sn )
@@ -37,6 +37,7 @@ void wrocksdb_slave::start()
 {
   _last_update_time = 0;
   _update_counter  = 0;
+  _op_counter = 0;
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
@@ -163,6 +164,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   }
 
   pthis->logs_parser_(res);
+  pthis->_op_counter += pthis->_log_parser->op_count();
   auto batch = pthis->_log_parser->detach();
   uint64_t sn = pthis->_log_parser->get_next_seq_number();
   pthis->_current_differens = static_cast<std::ptrdiff_t>( res->seq_final - (sn - 1) );
@@ -175,7 +177,11 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     {
       ::rocksdb::WriteOptions wo;
       wo.disableWAL = pthis->_opt.disableWAL;
-      pthis->_db.Write( wo, batch.get() );
+      ::rocksdb::Status status = pthis->_db.Write( wo, batch.get() );
+      if ( !status.ok() )
+      {
+        PREFIXDB_LOG_FATAL("wrocksdb_slave::updates_generator_: Slave write error: " << status.ToString() )
+      }
     }
   }
   pthis->write_sequence_number_(sn);
@@ -258,10 +264,12 @@ void wrocksdb_slave::create_seq_timer_()
         }
         else
         {
-          PREFIXDB_LOG_MESSAGE( pthis->_update_counter.load() << " updates for '" << pthis->_name << "' in the last "
-                                                              << span << " seconds. Next seq №" << pthis->_last_sequence );
+          PREFIXDB_LOG_MESSAGE( pthis->_update_counter.load() << " (" <<  pthis->_op_counter << ") updates for '"
+                                << pthis->_name << "' in the last "
+                                << span << " seconds. Next seq №" << pthis->_last_sequence );
           last_time->store( std::time(nullptr) );
           pthis->_update_counter = 0;
+          pthis->_op_counter = 0;
         }
         return true;
       }

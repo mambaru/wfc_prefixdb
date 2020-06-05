@@ -18,6 +18,7 @@ public:
   virtual void start() override;
   void open_prefixdb();
   virtual void stop() override;
+  virtual void reconfigure() override;
 
   // iprefixdb
   virtual void set( request::set::ptr req, response::set::handler cb) override;
@@ -29,6 +30,8 @@ public:
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
+
+  virtual void repair_json( request::repair_json::ptr req, response::repair_json::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;

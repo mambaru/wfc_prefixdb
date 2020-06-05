@@ -1,16 +1,19 @@
-unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:208
-unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:124
 unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/merge/merge_operator.cpp:181
 unusedFunction:./package/prefixdb/prefixdb_module.cpp:29
-unusedFunction:./package/prefixdb/prefixdb/prefixdb.cpp:247
+unusedFunction:./package/prefixdb/prefixdb/prefixdb.cpp:263
 
 missingInclude:./package/prefixdb_package.cpp:8
 unmatchedSuppression:./package/prefixdb_package.cpp:8
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp:557
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:307
 
 
 # TODO:
-duplicateCondition:./package/prefixdb/service/prefixdb_cmd.cpp:214
-duplicateCondition:./package/prefixdb/service/prefixdb_cmd.cpp:215
-duplicateCondition:./package/prefixdb/service/prefixdb_cmd.cpp:216
+duplicateCondition:./package/prefixdb/service/prefixdb_cmd.cpp
+
+
+
+
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp:637
+#variableScope:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:566
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:304
+#duplicateExpression:./package/prefixdb/service/prefixdb_cmd.cpp:451
+unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:266
