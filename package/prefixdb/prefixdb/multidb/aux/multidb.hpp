@@ -2,7 +2,7 @@
 #include <prefixdb/api/common_status.hpp>
 
 namespace wamba{ namespace prefixdb { namespace{
-  
+
 template<common_status Status, typename Res, typename ReqPtr, typename Callback>
 inline bool send_error(const ReqPtr& req, const Callback& cb)
 {
@@ -40,5 +40,4 @@ inline bool empty_fields(const ReqPtr& req, const Callback& cb)
   return false;
 }
 
-    
 }}}

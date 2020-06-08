@@ -1,31 +1,19 @@
-
+#include "../aux/base64.hpp"
 #include "wrocksdb_slave.hpp"
 #include "since_reader.hpp"
-#include "../aux/base64.hpp"
-
 #include <prefixdb/logger.hpp>
 #include <prefixdb/api/common_status_json.hpp>
 #include <wfc/wfc_exit.hpp>
 
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wlong-long"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wgnu-redeclared-enum"
-#endif
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/iterator.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
-#pragma GCC diagnostic pop
 
 #include <ctime>
 #include <fstream>
-
 
 namespace wamba{ namespace prefixdb {
 
@@ -35,9 +23,8 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
   , _opt(opt)
   , _db(db)
 {
-  _log_parser = std::make_shared<since_reader>();
+  _log_parser = std::make_shared<since_reader>(name);
 }
-
 
 void wrocksdb_slave::start(size_t last_sn )
 {
@@ -50,6 +37,7 @@ void wrocksdb_slave::start()
 {
   _last_update_time = 0;
   _update_counter  = 0;
+  _op_counter = 0;
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
@@ -77,7 +65,6 @@ void wrocksdb_slave::start_()
   is_started = true;
 }
 
-
 void wrocksdb_slave::stop()
 {
   std::lock_guard<mutex_type> lk(_mutex);
@@ -89,7 +76,6 @@ void wrocksdb_slave::stop()
   _opt.timer->release_timer(_seq_timer_id);
   _opt.timer->release_timer(_diff_timer_id);
 }
-
 
 void wrocksdb_slave::create_updates_requester_()
 {
@@ -175,19 +161,15 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
       PREFIXDB_LOG_TRACE( "re-entry sequences'"<< pthis->_name<<"': " << diff
                   << " request segment=" << preq->seq << " response=" << res->seq_first );
     }
-
-    //this->_current_differens = diff;
   }
 
-  //this->_current_differens = res->seq_final - res->seq_first;
-
   pthis->logs_parser_(res);
+  pthis->_op_counter += pthis->_log_parser->op_count();
   auto batch = pthis->_log_parser->detach();
-  //size_t sn = res->seq_last + 1;
   uint64_t sn = pthis->_log_parser->get_next_seq_number();
   pthis->_current_differens = static_cast<std::ptrdiff_t>( res->seq_final - (sn - 1) );
   pthis->_last_sequence = sn;
-  // batch->Put("~slave-last-sequence-number~", ::rocksdb::Slice( reinterpret_cast<const char*>(&sn), sizeof(sn) ));
+
   pthis->write_sequence_number_( static_cast<uint64_t>(-1) );
   {
     std::lock_guard<mutex_type> lk(pthis->_mutex);
@@ -195,7 +177,11 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     {
       ::rocksdb::WriteOptions wo;
       wo.disableWAL = pthis->_opt.disableWAL;
-      pthis->_db.Write( wo, batch.get() );
+      ::rocksdb::Status status = pthis->_db.Write( wo, batch.get() );
+      if ( !status.ok() )
+      {
+        PREFIXDB_LOG_FATAL("wrocksdb_slave::updates_generator_: Slave write error: " << status.ToString() )
+      }
     }
   }
   pthis->write_sequence_number_(sn);
@@ -216,7 +202,6 @@ void wrocksdb_slave::logs_parser_( response::get_updates_since::ptr& res)
     std::vector<char> binlog;
     binlog.reserve(512);
     size_t tail = 0;
-    // decode64 модифицирует log (костыль для строго буста)
     decode64(log.begin(), log.end(), std::inserter(binlog,binlog.end()), tail );
     binlog.resize( binlog.size() - tail);
     ++count;
@@ -247,9 +232,9 @@ void wrocksdb_slave::create_diff_timer_()
         }
 
         if ( _lost_counter > 0)
-	{
-	  PREFIXDB_LOG_WARNING("Lost segments '"<< this->_name<<"': " << _lost_counter)
-	}
+        {
+          PREFIXDB_LOG_WARNING("Lost segments '"<< this->_name<<"': " << _lost_counter)
+        }
         return true;
       }
     );
@@ -259,7 +244,6 @@ void wrocksdb_slave::create_diff_timer_()
 void wrocksdb_slave::create_seq_timer_()
 {
   _seq_timer_id = _opt.timer->release_timer(_seq_timer_id);
-  //auto update_counter = std::make_shared< std::atomic<size_t> >(0);
   if ( _opt.seq_log_timeout_ms != 0 )
   {
     auto last_time = std::make_shared< std::atomic<time_t> >( time(nullptr) );
@@ -280,9 +264,12 @@ void wrocksdb_slave::create_seq_timer_()
         }
         else
         {
-          PREFIXDB_LOG_MESSAGE( pthis->_update_counter.load() << " updates for '" << pthis->_name << "' in the last " << span << " seconds. Next seq №" << pthis->_last_sequence );
+          PREFIXDB_LOG_MESSAGE( pthis->_update_counter.load() << " (" <<  pthis->_op_counter << ") updates for '"
+                                << pthis->_name << "' in the last "
+                                << span << " seconds. Next seq №" << pthis->_last_sequence );
           last_time->store( std::time(nullptr) );
           pthis->_update_counter = 0;
+          pthis->_op_counter = 0;
         }
         return true;
       }

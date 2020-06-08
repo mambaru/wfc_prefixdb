@@ -12,7 +12,6 @@ struct iprefixdb_ex: iprefixdb
   virtual bool backup()  = 0;
   virtual bool compact()  = 0;
   virtual bool archive(std::string path) = 0;
-  
 };
 
 struct iprefixdb_restore

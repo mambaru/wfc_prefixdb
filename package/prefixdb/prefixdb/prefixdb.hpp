@@ -2,10 +2,8 @@
 
 #include <prefixdb/prefixdb/prefixdb_config.hpp>
 #include <prefixdb/iprefixdb.hpp>
-
 #include <wfc/domain_object.hpp>
 #include <wfc/workflow.hpp>
-//#include <iow/io/timer/timer.hpp>
 #include <memory>
 
 namespace wamba{ namespace prefixdb{
@@ -16,14 +14,12 @@ class prefixdb
   : public ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat>
   , public std::enable_shared_from_this< prefixdb >
 {
-  //typedef ::wfc::domain_object<iprefixdb, prefixdb_config, ::wfc::nostat> super;
 public:
-  //typedef super::custom_options options_type;
-  // domain_object
   virtual void start() override;
   void open_prefixdb();
   virtual void stop() override;
-  
+  virtual void reconfigure() override;
+
   // iprefixdb
   virtual void set( request::set::ptr req, response::set::handler cb) override;
   virtual void get( request::get::ptr req, response::get::handler cb) override;
@@ -34,6 +30,8 @@ public:
   virtual void setnx( request::setnx::ptr req, response::setnx::handler cb) override;
   virtual void packed( request::packed::ptr req, response::packed::handler cb) override;
   virtual void range( request::range::ptr req, response::range::handler cb) override;
+
+  virtual void repair_json( request::repair_json::ptr req, response::repair_json::handler cb) override;
   virtual void get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) override;
   virtual void get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) override;
   virtual void detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) override;
@@ -48,7 +46,7 @@ public:
   virtual void perform_io(data_ptr d, io_id_t /*io_id*/, output_handler_t handler) override;
 private:
   void restore_();
-  
+
   std::shared_ptr<multidb> _impl;
 };
 

@@ -1,20 +1,11 @@
-
+#include "../aux/base64.hpp"
 #include "wrocksdb_initial.hpp"
 #include "since_reader.hpp"
-#include "../aux/base64.hpp"
 
 #include <prefixdb/logger.hpp>
 #include <prefixdb/api/common_status_json.hpp>
 #include <wfc/wfc_exit.hpp>
 
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wlong-long"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wgnu-redeclared-enum"
-#endif
 #include <rocksdb/db.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/iterator.h>
@@ -22,11 +13,8 @@
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
 
-#pragma GCC diagnostic pop
-
 #include <ctime>
 #include <fstream>
-
 
 namespace wamba{ namespace prefixdb {
 
@@ -36,7 +24,6 @@ wrocksdb_initial::wrocksdb_initial(std::string name, const initial_config& opt, 
   , _db(db)
 {
 }
-
 
 void wrocksdb_initial::stop()
 {
@@ -50,7 +37,7 @@ void wrocksdb_initial::load(std::function<void(size_t)> ready)
   req->prefix = this->_name;
   req->release_timeout_s = 3600 * 24;
   std::weak_ptr<wrocksdb_initial> wthis = this->shared_from_this();
-  
+
   auto create_snapshot_handler = [wthis, ready](response::create_snapshot::ptr res)
   {
     if ( res!=nullptr && res->status==common_status::OK )
@@ -75,7 +62,7 @@ void wrocksdb_initial::load(std::function<void(size_t)> ready)
       }
     }
   };
-  
+
   _opt.remote->create_snapshot( std::move(req), _owner.callback( std::move(create_snapshot_handler) ));
 }
 
@@ -85,11 +72,12 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
   req->prefix = _name;
   req->snapshot = snapshot;
   req->beg = beg;
+  req->repair_json = true;
   req->from = from;
   req->offset = 0;
   req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_initial> wthis = this->shared_from_this();
-  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from 
+  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from
                       << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
   std::string lastkey = from;
   _opt.remote->range( std::move(req), _owner.callback([wthis, snapshot, lastkey, ready](response::range::ptr res) mutable
@@ -109,13 +97,13 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
       {
         lastkey = res->fields.back().first;
       }
-      
+
       if (res==nullptr || !res->fin )
         pthis->query_initial_range_(snapshot, lastkey, false, ready);
-      
+
       if ( res==nullptr )
         return;
-    
+
       if ( !pthis->_opt.use_setnx )
       {
         PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
@@ -126,7 +114,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
 
         rocksdb::WriteOptions wo;
         wo.disableWAL = pthis->_opt.disableWAL;
-        pthis->_db.Write( wo, &batch); 
+        pthis->_db.Write( wo, &batch);
         PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
       }
       else
@@ -140,14 +128,14 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
         pthis->_opt.local->setnx(std::move(req1), nullptr);
         PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
       }
-      
+
       if ( res->fin )
       {
         auto req2 = std::make_unique<request::release_snapshot>();
         req2->prefix = pthis->_name;
-        req2->snapshot = snapshot; 
+        req2->snapshot = snapshot;
         PREFIXDB_LOG_BEGIN("Release snapshot " << snapshot << " " << pthis->_name)
-        
+
         pthis->_opt.remote->release_snapshot(std::move(req2), pthis->_owner.callback([wthis, ready](response::release_snapshot::ptr)
         {
           if (auto pthis1 = wthis.lock() )
@@ -160,6 +148,5 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
     }
   }));
 }
-
 
 }}

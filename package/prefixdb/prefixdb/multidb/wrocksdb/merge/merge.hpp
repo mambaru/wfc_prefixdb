@@ -19,5 +19,4 @@ struct merge
   std::string raw;
 };
 
-
 }}

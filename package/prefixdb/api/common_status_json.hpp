@@ -7,6 +7,7 @@ namespace wamba { namespace prefixdb {
 struct common_status_json
 {
   JSON_NAME(OK)
+  JSON_NAME(IOError)
   JSON_NAME(InvalidFieldValue)
   JSON_NAME(EmptyFields)
   JSON_NAME(EmptyPrefix)
@@ -21,11 +22,12 @@ struct common_status_json
   JSON_NAME(RangeLimitExceeded)
   JSON_NAME(InvalidSeqNumber)
   JSON_NAME(CompactFail)
-  
+
   typedef ::wfc::json::enumerator<
     common_status,
     ::wfc::json::member_list<
         ::wfc::json::enum_value<n_OK, common_status, common_status::OK>,
+        ::wfc::json::enum_value<n_IOError, common_status, common_status::IOError>,
         ::wfc::json::enum_value<n_InvalidFieldValue, common_status, common_status::InvalidFieldValue>,
         ::wfc::json::enum_value<n_EmptyFields, common_status, common_status::EmptyFields>,
         ::wfc::json::enum_value<n_EmptyPrefix, common_status, common_status::EmptyPrefix>,
@@ -42,7 +44,7 @@ struct common_status_json
         ::wfc::json::enum_value<n_CompactFail, common_status, common_status::CompactFail>
     >
   > type;
-  
+
   typedef type::target target;
   typedef type::serializer serializer;
   typedef type::member_list member_list;
@@ -59,7 +61,7 @@ namespace std{
       status.erase(status.begin());
     if (!status.empty() && *status.rbegin()=='"')
       status.pop_back();
-    
+
     os << status;
     return os;
   }

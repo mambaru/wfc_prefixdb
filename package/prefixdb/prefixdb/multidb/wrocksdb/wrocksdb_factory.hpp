@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <prefixdb/iprefixdb.hpp>
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
 #include <prefixdb/prefixdb/multidb/ifactory.hpp>

@@ -3,8 +3,7 @@
 #include <prefixdb/logger.hpp>
 #include <wfc/asio.hpp>
 
-namespace wamba{ namespace prefixdb{ 
-  
+namespace wamba{ namespace prefixdb{
 
 std::shared_ptr<ifactory> god::create(std::string type, wfc::asio::io_service& )
 {

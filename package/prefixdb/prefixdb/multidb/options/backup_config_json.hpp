@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/prefixdb/multidb/options/backup_config.hpp>
-#include <wfc/json.hpp>
+#include <wjson/wjson.hpp>
 
 namespace wamba{ namespace prefixdb{
 
@@ -13,16 +13,16 @@ struct backup_config_json
   JSON_NAME(start_time)
   JSON_NAME(period_s)
 
-  typedef wfc::json::object<
+  typedef wjson::object<
     backup_config,
-    wfc::json::member_list<
-      wfc::json::member<n_enabled,       backup_config, bool,        &backup_config::enabled>,
-      wfc::json::member<n_period_s,      backup_config, time_t,      &backup_config::period_s>,
-      wfc::json::member<n_start_time,    backup_config, std::string, &backup_config::start_time>,
-      wfc::json::member<n_depth,         backup_config, uint32_t,      &backup_config::depth>,
-      wfc::json::member<n_path,          backup_config, std::string, &backup_config::path>
+    wjson::member_list<
+      wjson::member<n_enabled,       backup_config, bool,        &backup_config::enabled>,
+      wjson::member<n_period_s,      backup_config, time_t,      &backup_config::period_s>,
+      wjson::member<n_start_time,    backup_config, std::string, &backup_config::start_time>,
+      wjson::member<n_depth,         backup_config, uint32_t,      &backup_config::depth>,
+      wjson::member<n_path,          backup_config, std::string, &backup_config::path>
     >,
-    wfc::json::strict_mode
+    wjson::strict_mode
   > type;
 
   typedef type::target target;

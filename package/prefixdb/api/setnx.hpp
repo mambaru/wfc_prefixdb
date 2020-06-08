@@ -11,12 +11,12 @@ namespace request
 {
   struct setnx
   {
-    
+    std::string prefix;
+    field_list_t fields;
+
     bool sync = false;
     bool nores = true;
     bool noval = false;
-    std::string prefix;
-    field_list_t fields;
     // Только для noval=false, пишет в базу, а значение из snapshot_id
     size_t snapshot = 0;
     typedef std::unique_ptr<setnx> ptr;

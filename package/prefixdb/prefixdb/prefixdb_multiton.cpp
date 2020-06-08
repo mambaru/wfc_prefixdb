@@ -1,5 +1,5 @@
 //
-// Author: Vladimir Migashko <migashko@gmail.com>, (C) 2013-2015
+// Author: Vladimir Migashko <migashko@gmail.com>, (C) 2013-2015, 2020
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -16,7 +16,7 @@
 namespace wamba{ namespace prefixdb{
 
 namespace {
-  
+
 WFC_NAME2(component_name, "prefixdb")
 
 class impl: public ::wfc::multiton<
@@ -24,8 +24,8 @@ class impl: public ::wfc::multiton<
   ::wfc::instance<prefixdb>,
   prefixdb_config_json
 >
-{  
-  
+{
+
 };
 
 }
@@ -35,12 +35,12 @@ prefixdb_multiton::prefixdb_multiton():
 {
 }
 
-std::string prefixdb_multiton::interface_name() const 
+std::string prefixdb_multiton::interface_name() const
 {
   return "iprefixdb";
 }
 
-std::string prefixdb_multiton::description() const 
+std::string prefixdb_multiton::description() const
 {
   return "Allowed instance params:\n"
             "\t\t\t\trepair[=0|1] - repair and start\n"
@@ -48,7 +48,7 @@ std::string prefixdb_multiton::description() const
             "\t\t\t\tload[=<<items-per-request>>][:target=<<target>>][:setnx=<<true|false>>] - load DB from master (for slave before start)";
 }
 
-std::string prefixdb_multiton::help(const std::string&) const 
+std::string prefixdb_multiton::help(const std::string&) const
 {
   return "Allowed instance params:\n"
             "\t\t\t\trepair[=0|1] - repair and start\n"

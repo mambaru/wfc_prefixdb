@@ -18,7 +18,7 @@ std::vector<std::string> scan_dir(std::string path, bool& fail)
     return result;
   };
 
-  while ( (entry = readdir(dir)) != NULL) 
+  while ( (entry = readdir(dir)) != nullptr) 
   {
     if ( entry->d_type == 4)
     {
