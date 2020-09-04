@@ -9,15 +9,15 @@ wci_getlib(NAME wfc ${WCI_SUPERMODULE})
 wci_getlib(NAME rocksdb SUPERMODULE)
 
 set_target_properties(
-  rocksdb 
-  PROPERTIES   
+  rocksdb
+  PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/archive"
-    POSITION_INDEPENDENT_CODE OFF
+    POSITION_INDEPENDENT_CODE ON
 )
 
 set_target_properties(
   rocksdb-shared
-  PROPERTIES   
+  PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/lib"
     POSITION_INDEPENDENT_CODE ON
 )

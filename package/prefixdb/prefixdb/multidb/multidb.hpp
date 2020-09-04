@@ -70,19 +70,19 @@ private:
   bool check_prefix_(const ReqPtr& req, const Callback& cb);
 
 private:
-  typedef wfc::workflow::timer_id_t timer_id_t;
+  typedef wflow::workflow::timer_id_t timer_id_t;
 
 
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;
-  std::shared_ptr< ::wfc::workflow> _workflow;
+  std::shared_ptr<wflow::workflow> _workflow;
 
-  ::wfc::workflow::timer_id_t _compact_timer  = -1;
-  ::wfc::workflow::timer_id_t _backup_timer  = -1;
-  ::wfc::workflow::timer_id_t _archive_timer  = -1;
-  ::wfc::workflow::timer_id_t _prefix_reqester = -1;
+  wflow::workflow::timer_id_t _compact_timer  = -1;
+  wflow::workflow::timer_id_t _backup_timer  = -1;
+  wflow::workflow::timer_id_t _archive_timer  = -1;
+  wflow::workflow::timer_id_t _prefix_reqester = -1;
 
   // реконфигурируемые опции
   std::atomic_size_t _range_limit;

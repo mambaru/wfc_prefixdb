@@ -102,8 +102,8 @@ private:
   std::map<size_t, snapshot_ptr> _snapshot_map;
   std::shared_ptr<wrocksdb_slave> _slave;
   std::shared_ptr<wrocksdb_initial> _initial;
-  std::shared_ptr<wfc::workflow> _workflow;
-  std::shared_ptr<wfc::workflow> _write_workflow;
+  std::shared_ptr<wflow::workflow> _workflow;
+  std::shared_ptr<wflow::workflow> _write_workflow;
 
   // реконфигурируемые опции
   std::atomic_bool _check_incoming_merge_json;

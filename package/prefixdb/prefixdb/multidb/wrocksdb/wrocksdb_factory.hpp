@@ -13,7 +13,7 @@ class wrocksdb_factory
   : public ifactory
 {
 public:
-  typedef wfc::asio::io_service io_service_type;
+  typedef boost::asio::io_context io_context_type;
   virtual ~wrocksdb_factory();
   explicit wrocksdb_factory();
   typedef ifactory::prefixdb_ptr prefixdb_ptr;

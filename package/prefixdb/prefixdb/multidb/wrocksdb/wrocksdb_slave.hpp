@@ -12,7 +12,7 @@ class since_reader;
 class wrocksdb_slave
   : public std::enable_shared_from_this<wrocksdb_slave>
 {
-  typedef wfc::workflow::timer_id_t timer_id_t;
+  typedef wflow::workflow::timer_id_t timer_id_t;
 
 public:
   typedef ::rocksdb::DBWithTTL db_type;
@@ -60,7 +60,7 @@ private:
   timer_id_t _diff_timer_id = -1;
   timer_id_t _seq_timer_id = -1;
 
-  std::shared_ptr<wfc::workflow> _workflow;
+  std::shared_ptr<wflow::workflow> _workflow;
   typedef std::mutex mutex_type;
   mutex_type _mutex;
   bool is_started = false;

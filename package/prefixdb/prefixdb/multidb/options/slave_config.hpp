@@ -8,20 +8,20 @@
 #include <ctime>
 
 namespace wamba{ namespace prefixdb{
-  
+
 struct slave_config
 {
   bool enabled = false;
-  
+
   std::string target;
   std::string start_time;
-  
-  // интервал запросов к мастеру в милисекундах 
+
+  // интервал запросов к мастеру в милисекундах
   time_t pull_timeout_ms           = 1000;
   time_t query_prefixes_timeout_ms = 2000;
   // ограничение на количество элементов в ответе на один запрос к мастеру
   size_t log_limit_per_req = 100;
-  // отображать в логе процесс загрузки 
+  // отображать в логе процесс загрузки
   bool enable_progress = false;
   // выдерживать интервал после каждого запроса. В противном случае, если не достигнут конец лога, следующий запрос
   bool expires_for_req = true;
@@ -31,11 +31,11 @@ struct slave_config
   std::ptrdiff_t wrn_log_diff_seq = 10000;
   time_t wrn_log_timeout_ms = 1000;
   time_t seq_log_timeout_ms = 1000;
-  // Отключить WAL для обновлений 
+  // Отключить WAL для обновлений
   bool disableWAL = false;
-  
+
   std::shared_ptr<iprefixdb> master;
-  std::shared_ptr<wfc::workflow> timer;
+  std::shared_ptr<wflow::workflow> timer;
 };
 
 

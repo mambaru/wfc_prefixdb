@@ -71,8 +71,8 @@ struct db_config
 
   struct
   {
-    std::shared_ptr<wfc::workflow> timers_workflow;
-    std::shared_ptr<wfc::workflow> write_workflow;
+    std::shared_ptr<wflow::workflow> timers_workflow;
+    std::shared_ptr<wflow::workflow> write_workflow;
   } args;
 };
 

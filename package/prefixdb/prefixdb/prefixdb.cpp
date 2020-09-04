@@ -67,7 +67,7 @@ void prefixdb::open_prefixdb()
   if ( _impl == nullptr )
   {
     _impl = std::make_shared<multidb>();
-    auto factory = god::create("rocksdb", this->global()->io_service );
+    auto factory = god::create("rocksdb", this->global()->io_context );
 
     opt.slave.master = this->get_target<iprefixdb>( opt.slave.target );
     _impl->configure( opt, factory );
@@ -83,7 +83,7 @@ void prefixdb::open_prefixdb()
       }
     }
 
-    auto factory = god::create("rocksdb", this->global()->io_service );
+    auto factory = god::create("rocksdb", this->global()->io_context );
     factory->initialize(opt);
 
     if ( !_impl->configure( opt, factory ) )
@@ -275,7 +275,7 @@ void prefixdb::restore_()
   }
 
   auto db = std::make_shared<multidb>();
-  auto factory = god::create("rocksdb", this->global()->io_service );
+  auto factory = god::create("rocksdb", this->global()->io_context );
 
   std::string path = this->get_arg("restore");
   if ( !path.empty() )

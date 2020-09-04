@@ -112,7 +112,7 @@ namespace
       message = ec.message();
       return false;
     }
-    return ec;
+    return true;
   }
 }
 
