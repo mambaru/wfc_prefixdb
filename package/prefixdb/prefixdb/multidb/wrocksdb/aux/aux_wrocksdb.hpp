@@ -52,7 +52,7 @@ std::unique_ptr<Res> create_result_ok(ReqPtr& req)
   auto res = std::make_unique<Res>();
   res->prefix = std::move(req->prefix);
   res->status = common_status::OK ;
-  return std::move(res);
+  return res;
 }
 
 template<typename Res, typename ReqPtr>
@@ -61,7 +61,7 @@ std::unique_ptr<Res> create_io_error(ReqPtr& req)
   auto res = std::make_unique<Res>();
   res->prefix = std::move(req->prefix);
   res->status = common_status::IOError ;
-  return std::move(res);
+  return res;
 }
 
 inline std::string repair_json_value(const std::string& prefix, const std::string& key, std::string&& value, bool* fix)

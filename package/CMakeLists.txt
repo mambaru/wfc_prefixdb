@@ -23,6 +23,8 @@ SET(
 
 add_library(wfc_prefixdb ${prefixdb_source_list})
 wci_targets(wfc_prefixdb)
+enable_stat(wfc_prefixdb)
+
 
 # отключение предупреждений rocksdb параноидального режима
 set_source_files_properties(
@@ -46,8 +48,6 @@ set_source_files_properties(
 
 target_include_directories(wfc_prefixdb PUBLIC  ${wfc_prefixdb_SOURCE_DIR})
 target_include_directories(wfc_prefixdb PRIVATE ${wfc_prefixdb_SOURCE_DIR}/package)
-target_include_directories(wfc_prefixdb PUBLIC  ${wfc_prefixdb_SOURCE_DIR}/external/rocksdb)
-target_include_directories(wfc_prefixdb PUBLIC  ${wfc_prefixdb_SOURCE_DIR}/external/rocksdb/include)
 
 find_library(LIBRT rt)
 target_link_libraries(wfc_prefixdb PUBLIC wfc rocksdb ${LIBRT})

@@ -4,7 +4,6 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 
-
 #include "prefixdb_build_info.h"
 #include "prefixdb_package.hpp"
 #include "prefixdb/prefixdb_module.hpp"
@@ -13,8 +12,8 @@
 
 namespace wamba{ namespace prefixdb{
 
-namespace 
-{  
+namespace
+{
   class impl: public ::wfc::module_list<
     prefixdb_build_info,
     prefixdb_module
