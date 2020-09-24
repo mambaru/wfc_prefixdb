@@ -36,7 +36,7 @@ if ( DEFINED ENV{ROCKSDB_ROOT} )
 
     wci_remove_options(-Wextra-semi)
 
-    wci_getlib(NAME rocksdb)
+    wci_getlib(NAME rocksdb SUPERMODULE)
 
     set_target_properties(
       rocksdb
@@ -51,7 +51,7 @@ if ( DEFINED ENV{ROCKSDB_ROOT} )
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/lib"
         POSITION_INDEPENDENT_CODE ON
       )
-      
+
       include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/external/rocksdb/include")
       include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/external/rocksdb")
 
