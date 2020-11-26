@@ -2,7 +2,8 @@
 
 #include <prefixdb/api/common_status.hpp>
 #include <prefixdb/api/fields.hpp>
-#include <wrtstat/aggregated_data.hpp>
+#include <wrtstat/aggregator/api/aggregated_data.hpp>
+#include <wrtstat/aggregator/api/aggregated_info.hpp>
 #include <memory>
 #include <string>
 

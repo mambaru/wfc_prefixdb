@@ -15,7 +15,6 @@
 
 #include <prefixdb/api/range_json.hpp>
 
-
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
@@ -24,8 +23,7 @@
 
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
-
-#include <wrtstat/aggregator.hpp>
+#include <wrtstat/aggregator/aggregator.hpp>
 
 #include <iomanip>
 #include <sstream>

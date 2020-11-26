@@ -50,7 +50,10 @@ target_include_directories(wfc_prefixdb PUBLIC  ${wfc_prefixdb_SOURCE_DIR})
 target_include_directories(wfc_prefixdb PRIVATE ${wfc_prefixdb_SOURCE_DIR}/package)
 
 find_library(LIBRT rt)
-target_link_libraries(wfc_prefixdb PUBLIC wfc rocksdb ${LIBRT})
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+target_link_libraries(wfc_prefixdb PUBLIC wfc rocksdb ${LIBRT} Threads::Threads)
 
 add_dependencies(wfc_prefixdb rocksdb)
 build_info(wfc_prefixdb prefixdb)

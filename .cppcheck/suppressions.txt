@@ -14,6 +14,6 @@ duplicateCondition:./package/prefixdb/service/prefixdb_cmd.cpp
 
 useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp:637
 #variableScope:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:566
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:304
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:302
 #duplicateExpression:./package/prefixdb/service/prefixdb_cmd.cpp:451
 unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:266

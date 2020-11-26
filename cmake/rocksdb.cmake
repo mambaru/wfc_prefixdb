@@ -1,6 +1,7 @@
 macro(get_rocksdb)
 
-if ( DEFINED ENV{ROCKSDB_ROOT} )
+  if ( DEFINED ENV{ROCKSDB_ROOT} )
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
     find_package(rocksdb)
     message(STATUS "Find RocksDB=${ROCKSDB_FOUND}" )
   endif()
@@ -56,4 +57,5 @@ if ( DEFINED ENV{ROCKSDB_ROOT} )
       include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/external/rocksdb")
 
   endif()
+
 endmacro()
