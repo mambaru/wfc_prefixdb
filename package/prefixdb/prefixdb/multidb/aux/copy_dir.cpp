@@ -4,7 +4,7 @@
 #include <boost/algorithm/string.hpp>
 #include <wfc/boost.hpp>
 #include <sstream>
-
+#include <cstdlib>
 namespace wamba{ namespace prefixdb {
 
 namespace
@@ -89,10 +89,30 @@ namespace
   )
   try
   {
-    if ( ::boost::filesystem::exists(destination) )
-      ::boost::filesystem::remove_all(destination);
+    if ( boost::filesystem::exists(destination) )
+      boost::filesystem::remove_all(destination);
 
-    ::boost::filesystem::rename(source, destination);
+    if ( std::system(nullptr) != 0 )
+    {
+      std::stringstream ss;
+      ss << "mv '" << source << "' '" << destination << "'";
+      int ret = std::system(ss.str().c_str());
+      if ( WIFEXITED(ret) )
+      {
+        int err = WEXITSTATUS(ret);
+        if ( err != 0 )
+        {
+          message=std::strerror(err);
+          return false;
+        }
+      }
+    }
+    else
+    {
+      message="command processor is available";
+      return false;
+    }
+    //boost::filesystem::rename(source, destination);
     return true;
   }
   catch(const ::boost::filesystem::filesystem_error& e)
