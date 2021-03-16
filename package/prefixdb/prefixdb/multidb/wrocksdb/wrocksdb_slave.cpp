@@ -11,15 +11,15 @@
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
+#include <boost/filesystem.hpp>
 
 #include <ctime>
 #include <fstream>
 
 namespace wamba{ namespace prefixdb {
 
-wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_config& opt, db_type& db)
+wrocksdb_slave::wrocksdb_slave(std::string name, const slave_config& opt, db_type& db)
   : _name(name)
-  , _path(path)
   , _opt(opt)
   , _db(db)
 {
@@ -28,26 +28,34 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
 
 void wrocksdb_slave::start(size_t last_sn )
 {
+  if ( !::boost::filesystem::exists(_opt.path) )
+  {
+    ::boost::system::error_code ec;
+    ::boost::filesystem::create_directory(_opt.path, ec);
+    if (ec)
+    {
+      PREFIXDB_LOG_FATAL("Create directory fail (preffix slave)'" << _opt.path << "'" << ec.message() );
+      return;
+    }
+  }
+ 
   if ( last_sn!=0 )
     this->write_sequence_number_(last_sn);
-  this->start();
+  this->start_();
 }
 
-void wrocksdb_slave::start()
+
+void wrocksdb_slave::start_()
 {
+  if ( !_opt.enabled )
+    return;
+
   _last_update_time = 0;
   _update_counter  = 0;
   _op_counter = 0;
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
-  this->start_();
-}
-
-void wrocksdb_slave::start_()
-{
-  if ( !_opt.enabled )
-    return;
 
   if ( _opt.master==nullptr )
   {
@@ -279,7 +287,7 @@ void wrocksdb_slave::create_seq_timer_()
 
 void wrocksdb_slave::write_sequence_number_(uint64_t seq)
 {
-  auto path = _path + "/slave-sequence-number";
+  auto path = _opt.path + "/slave-sequence-number";
   std::ofstream ofs(path);
   ofs << seq;
   ofs.flush();
@@ -288,7 +296,7 @@ void wrocksdb_slave::write_sequence_number_(uint64_t seq)
 uint64_t wrocksdb_slave::read_sequence_number_()
 {
   uint64_t seq = 0;
-  auto path = _path + "/slave-sequence-number";
+  auto path = _opt.path + "/slave-sequence-number";
   std::ifstream ofs(path);
   ofs >> seq;
   return seq;

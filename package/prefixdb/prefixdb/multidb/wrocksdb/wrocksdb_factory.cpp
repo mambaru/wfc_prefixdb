@@ -13,7 +13,7 @@
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/options_util.h>
 #include <rocksdb/utilities/db_ttl.h>
-
+#include <boost/filesystem.hpp>
 #include <memory>
 #include <sys/stat.h>
 #include <list>
@@ -49,12 +49,54 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
   while ( !conf.backup.path.empty() && conf.backup.path.back()=='/' ) conf.backup.path.pop_back();
   while ( !conf.restore.path.empty() && conf.restore.path.back()=='/' ) conf.restore.path.pop_back();
   while ( !conf.archive.path.empty() && conf.archive.path.back()=='/' ) conf.archive.path.pop_back();
+  while ( !conf.slave.path.empty() && conf.slave.path.back()=='/' ) conf.slave.path.pop_back();
 
   if ( !conf.path.empty() )
   {
     if ( conf.backup.enabled && conf.backup.path.empty() ) conf.backup.path = conf.path + "_backup";
     if ( !conf.restore.forbid && conf.restore.path.empty() ) conf.restore.path = conf.path + "_restore";
     if ( conf.archive.enabled && conf.archive.path.empty() ) conf.archive.path = conf.path + "_archive";
+    if ( conf.slave.enabled && conf.slave.path.empty() ) conf.slave.path = conf.path + "_slave";
+    if ( conf.detach_path.empty() ) conf.detach_path = conf.detach_path + "_detach";
+  }
+
+  if ( !::boost::filesystem::exists(conf.detach_path) )
+  {
+    ::boost::system::error_code ec;
+    ::boost::filesystem::create_directory(conf.detach_path, ec);
+    if (ec)
+    {
+      PREFIXDB_LOG_FATAL("Create directory fail (for detached prefix)'" << conf.detach_path << "'" << ec.message() );
+      return false;
+    }
+  }
+
+  if ( conf.slave.enabled )
+  {
+    if ( !::boost::filesystem::exists(conf.slave.path) )
+    {
+      ::boost::system::error_code ec;
+      ::boost::filesystem::create_directory(conf.slave.path, ec);
+      if (ec)
+      {
+        PREFIXDB_LOG_FATAL("Create directory fail (slave)'" << conf.slave.path << "'" << ec.message() );
+        return false;
+      }
+    }
+  }
+
+  if ( conf.slave.enabled )
+  {
+    if ( !::boost::filesystem::exists(conf.slave.path) )
+    {
+      ::boost::system::error_code ec;
+      ::boost::filesystem::create_directory(conf.slave.path, ec);
+      if (ec)
+      {
+        PREFIXDB_LOG_FATAL("Create directory fail (slave)'" << conf.slave.path << "'" << ec.message() );
+        return false;
+      }
+    }
   }
 
   std::lock_guard<std::mutex> lk(_mutex);
@@ -105,6 +147,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
   if ( !conf.detach_path.empty() ) conf.detach_path = _context->config.detach_path + "/" + dbname;
   if ( !conf.backup.path.empty()  ) conf.backup.path = _context->config.backup.path + "/" + dbname;
   if ( !conf.restore.path.empty() ) conf.restore.path = _context->config.restore.path + "/" + dbname;
+  if ( !conf.slave.path.empty() ) conf.slave.path = _context->config.slave.path + "/" + dbname;
 
   auto options = _context->options;
   if ( !conf.wal_path.empty() )

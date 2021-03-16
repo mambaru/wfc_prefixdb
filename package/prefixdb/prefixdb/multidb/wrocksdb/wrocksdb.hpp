@@ -8,6 +8,7 @@
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
+#include <iow/owner/owner.hpp>
 
 #include <memory>
 #include <mutex>
@@ -104,6 +105,7 @@ private:
   std::shared_ptr<wrocksdb_initial> _initial;
   std::shared_ptr<wflow::workflow> _workflow;
   std::shared_ptr<wflow::workflow> _write_workflow;
+  iow::owner _owner;
 
   // реконфигурируемые опции
   std::atomic_bool _check_incoming_merge_json;

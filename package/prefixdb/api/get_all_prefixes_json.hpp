@@ -10,9 +10,9 @@ namespace request
 {
   struct get_all_prefixes_json
   {
-    typedef wfc::json::object<
+    typedef wjson::object<
       get_all_prefixes,
-      wfc::json::member_list<
+      wjson::member_list<
       >
     > type;
     typedef type::target target;
@@ -28,11 +28,11 @@ namespace response
     JSON_NAME(prefixes)
     JSON_NAME(status)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       get_all_prefixes,
-      wfc::json::member_list<
-        wfc::json::member<n_prefixes, get_all_prefixes, get_all_prefixes::prefix_list, &get_all_prefixes::prefixes, wfc::json::vector_of_strings<50> >,
-        wfc::json::member<n_status, get_all_prefixes, common_status, &get_all_prefixes::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_prefixes, get_all_prefixes, get_all_prefixes::prefix_list, &get_all_prefixes::prefixes, wjson::vector_of_strings<50> >,
+        wjson::member<n_status, get_all_prefixes, common_status, &get_all_prefixes::status, common_status_json>
       >
     > type;
     typedef type::target target;

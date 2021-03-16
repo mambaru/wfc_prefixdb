@@ -5,6 +5,7 @@
 #include <wfc/workflow.hpp>
 #include <memory>
 #include <string>
+#include <vector>
 #include <ctime>
 
 namespace wamba{ namespace prefixdb{
@@ -16,6 +17,8 @@ struct slave_config
   std::string target;
   std::string start_time;
 
+  // вспомогательные файлы репликации (last_sequence_number)
+  std::string path;
   // интервал запросов к мастеру в милисекундах
   time_t pull_timeout_ms           = 1000;
   time_t query_prefixes_timeout_ms = 2000;

@@ -14,11 +14,11 @@ namespace request
     JSON_NAME(background_id)
     JSON_NAME(force)
     
-    typedef wfc::json::object<
+    typedef wjson::object<
       continue_background,
-      wfc::json::member_list<
-        wfc::json::member<n_prefixes, continue_background, continue_background::prefix_list, &continue_background::prefixes, wfc::json::vector_of_strings<50> >,
-        wfc::json::member<n_force, continue_background, bool, &continue_background::force >
+      wjson::member_list<
+        wjson::member<n_prefixes, continue_background, continue_background::prefix_list, &continue_background::prefixes, wjson::vector_of_strings<50> >,
+        wjson::member<n_force, continue_background, bool, &continue_background::force >
       >
     > type;
     typedef type::target target;
@@ -33,10 +33,10 @@ namespace response
   {
     JSON_NAME(status)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       continue_background,
-      wfc::json::member_list<
-        wfc::json::member<n_status, continue_background, common_status, &continue_background::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_status, continue_background, common_status, &continue_background::status, common_status_json>
       >
     > type;
     typedef type::target target;

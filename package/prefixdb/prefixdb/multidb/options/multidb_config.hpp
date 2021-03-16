@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
+#include <string>
+#include <vector>
 
 namespace wamba{ namespace prefixdb{
 
@@ -19,6 +20,12 @@ struct multidb_config: db_config
   size_t max_prefixes = 0;
   // Предварительное открытие всех баз префиксов
   bool preopen = true;
+  
+  // Разрешены только эти префиксы (пустой значит все)
+  std::vector<std::string> allowed_prefixes;
+  // Список запрещенных префиксов 
+  std::vector<std::string> denied_prefixes;
+
 };
 
 }}

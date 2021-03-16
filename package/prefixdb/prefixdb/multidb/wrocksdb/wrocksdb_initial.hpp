@@ -36,6 +36,7 @@ private:
   std::shared_ptr<wflow::workflow> _workflow;
   typedef std::mutex mutex_type;
   iow::owner _owner;
+  std::atomic<time_t> _log_timer;
 };
 
 }}

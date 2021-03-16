@@ -64,11 +64,12 @@ private:
   bool close_prefix_(const std::string& prefix);
 
   template<typename Res, typename ReqPtr, typename Callback>
-  bool check_fields_(const ReqPtr& req, const Callback& cb);
+  bool check_fields_(const ReqPtr& req, const Callback& cb) const;
 
   template<typename Res, typename ReqPtr, typename Callback>
-  bool check_prefix_(const ReqPtr& req, const Callback& cb);
+  bool check_prefix_(const ReqPtr& req, const Callback& cb) const;
 
+  bool check_prefix_(const std::string& prefix) const;
 private:
   typedef wflow::workflow::timer_id_t timer_id_t;
 
@@ -77,6 +78,7 @@ private:
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;
+  iow::owner _owner;
   std::shared_ptr<wflow::workflow> _workflow;
 
   wflow::workflow::timer_id_t _compact_timer  = -1;
@@ -91,6 +93,10 @@ private:
   std::atomic_size_t _keys_per_req;
   std::atomic_size_t _value_size_limit;
   std::atomic_size_t _key_size_limit;
+  
+  std::vector<std::string> _allowed_prefixes;
+  std::vector<std::string> _denied_prefixes;
+
 };
 
 }}

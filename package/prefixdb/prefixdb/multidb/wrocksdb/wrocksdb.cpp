@@ -24,6 +24,7 @@
 #include <prefixdb/logger.hpp>
 #include <wfc/json.hpp>
 #include <wrtstat/aggregator/aggregator.hpp>
+#include <boost/filesystem.hpp>
 
 #include <iomanip>
 #include <sstream>
@@ -74,7 +75,7 @@ void wrocksdb::slave_start_( size_t seq_num )
   std::lock_guard<std::mutex> lk(_mutex);
   if ( _conf.slave.enabled )
   {
-    _slave = std::make_shared<wrocksdb_slave>(_name, _conf.path, _conf.slave, *_db);
+    _slave = std::make_shared<wrocksdb_slave>(_name, _conf.slave, *_db);
     _slave->start(seq_num);
   }
 }
@@ -82,6 +83,7 @@ void wrocksdb::slave_start_( size_t seq_num )
 void wrocksdb::stop_()
 {
   PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
+  _owner.reset();
   if ( _slave!=nullptr )
     _slave->stop();
   if ( _initial!=nullptr)
@@ -194,16 +196,18 @@ void wrocksdb::write_batch_(const write_batch_ptr& batch, ReqPtr req, std::funct
   else
   {
     auto preq = std::make_shared<ReqPtr>( std::move(req) );
-    _write_workflow->post([this, batch, preq, cb]()
-    {
-       this->write_batch_2db_<Res>(batch, std::move(*preq), std::move(cb) );
-    },
-    [this, preq, cb]()
-    {
-      PREFIXDB_LOG_ERROR("Запрос на запись WriteBatch в префиксе '" << _name <<"' был выброшен из очереди" );
-      if (cb!=nullptr)
-        cb( aux::create_io_error<Res>( *preq) );
-    });
+    _write_workflow->post(
+      _owner.wrap([this, batch, preq, cb]()
+      {
+        this->write_batch_2db_<Res>(batch, std::move(*preq), std::move(cb) );
+      }, nullptr), 
+      _owner.wrap([this, preq, cb]()
+      {
+        PREFIXDB_LOG_ERROR("Запрос на запись WriteBatch в префиксе '" << _name <<"' был выброшен из очереди" );
+        if (cb!=nullptr)
+          cb( aux::create_io_error<Res>( *preq) );
+      }, nullptr)
+    );
   }
 }
 
@@ -507,10 +511,11 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
     std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
     _workflow->safe_post(
       std::chrono::milliseconds(100),
-      [wthis, cb](){
+      _owner.wrap([wthis, cb](){
       if (auto pthis = wthis.lock() )
         pthis->detach_prefixes(std::make_unique<request::detach_prefixes>(), cb);
-    });
+      }, nullptr)
+    );
     return;
   }
 
@@ -832,10 +837,10 @@ void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::cre
     {
       _workflow->safe_post(
         std::chrono::seconds(req->release_timeout_s),
-        [this, id]()
+        _owner.wrap([this, id]()
         {
           this->release_snapshot_(id);
-        }
+        }, nullptr)
       );
     }
   }
@@ -960,7 +965,7 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
     PREFIXDB_LOG_BEGIN("Delay Background. kIsWriteStopped==" << this->get_property(rocksdb::DB::Properties::kIsWriteStopped) )
     bool force = req->contunue_force;
     std::weak_ptr<db_type> wdb = db;
-    auto cb_fun = [wdb, force]()
+    std::function<void()> cb_fun = _owner.wrap([wdb, force]()
     {
       if ( auto pdb = wdb.lock() )
       {
@@ -969,8 +974,8 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
         pdb->GetProperty(rocksdb::DB::Properties::kIsWriteStopped, &val);
         PREFIXDB_LOG_END("Delay Background [ContinueBackgroundWork]. kIsWriteStopped==" << val )
       }
-    };
-    _workflow->safe_post( std::chrono::seconds(req->delay_timeout_s), cb_fun);
+    }, nullptr);
+    _workflow->safe_post( std::chrono::seconds(req->delay_timeout_s), cb_fun );
   }
   else
   {

@@ -18,14 +18,14 @@ namespace request
     JSON_NAME(sync)
     JSON_NAME(snapshot)
     
-    typedef wfc::json::object<
+    typedef wjson::object<
       packed,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, packed, std::string, &packed::prefix>,
-        wfc::json::member<n_sync,   packed, bool, &packed::sync>,
-        wfc::json::member<n_nores,  packed, bool, &packed::nores>,
-        wfc::json::member<n_snapshot,  packed, size_t, &packed::snapshot>,
-        wfc::json::member<n_update, packed, field_list_t, &packed::fields, fields_list_json>
+      wjson::member_list<
+        wjson::member<n_prefix, packed, std::string, &packed::prefix>,
+        wjson::member<n_sync,   packed, bool, &packed::sync>,
+        wjson::member<n_nores,  packed, bool, &packed::nores>,
+        wjson::member<n_snapshot,  packed, size_t, &packed::snapshot>,
+        wjson::member<n_update, packed, field_list_t, &packed::fields, fields_list_json>
       >
     > type;
     typedef type::target target;
@@ -42,12 +42,12 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       packed,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, packed, std::string, &packed::prefix>,
-        wfc::json::member<n_fields, packed, field_list_t, &packed::fields, fields_list_json>,
-        wfc::json::member<n_status, packed, common_status, &packed::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_prefix, packed, std::string, &packed::prefix>,
+        wjson::member<n_fields, packed, field_list_t, &packed::fields, fields_list_json>,
+        wjson::member<n_status, packed, common_status, &packed::status, common_status_json>
       >
     > type;
     typedef type::target target;

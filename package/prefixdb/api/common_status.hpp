@@ -13,6 +13,7 @@ enum class common_status
   InvalidFieldValue,  ///< Недопустимое значение для merge-операций
   EmptyFields,        ///< Пустой список полей в запросе
   EmptyPrefix,        ///< Не задан префикс в запросе
+  PrefixProhibited,   ///< Префикс запрещен в конфигурации
   CreatePrefixFail,   ///< Ошибка создания нового префикса
   CreateSnapshotFail, ///< Ошибка создания снапшота
   CompactFail,        ///< Ошибка compactoins

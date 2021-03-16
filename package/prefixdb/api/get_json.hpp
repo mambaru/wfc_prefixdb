@@ -15,12 +15,12 @@ namespace request
     JSON_NAME(prefix)
     JSON_NAME(fields)
     JSON_NAME(snapshot)
-    typedef wfc::json::object<
+    typedef wjson::object<
       get,
-      wfc::json::member_list<
-        wfc::json::member<n_snapshot,  get, size_t, &get::snapshot>,
-        wfc::json::member<n_prefix, get, std::string, &get::prefix>,
-        wfc::json::member<n_fields, get, key_list_t, &get::fields, key_list_json >
+      wjson::member_list<
+        wjson::member<n_snapshot,  get, size_t, &get::snapshot>,
+        wjson::member<n_prefix, get, std::string, &get::prefix>,
+        wjson::member<n_fields, get, key_list_t, &get::fields, key_list_json >
       >
     > type;
     typedef type::target target;
@@ -38,12 +38,12 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(fields)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       get,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, get, std::string, &get::prefix>,
-        wfc::json::member<n_status, get, common_status, &get::status, common_status_json>,
-        wfc::json::member<n_fields, get, field_list_t, &get::fields, fields_list_json>
+      wjson::member_list<
+        wjson::member<n_prefix, get, std::string, &get::prefix>,
+        wjson::member<n_status, get, common_status, &get::status, common_status_json>,
+        wjson::member<n_fields, get, field_list_t, &get::fields, fields_list_json>
       >
     > type;
     typedef type::target target;

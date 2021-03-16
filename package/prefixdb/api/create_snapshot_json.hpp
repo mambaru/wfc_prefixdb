@@ -14,11 +14,11 @@ namespace request
     JSON_NAME(release_timeout_s)
     
     
-    typedef wfc::json::object<
+    typedef wjson::object<
       create_snapshot,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, create_snapshot, std::string, &create_snapshot::prefix >,
-        wfc::json::member<n_release_timeout_s, create_snapshot, time_t, &create_snapshot::release_timeout_s >
+      wjson::member_list<
+        wjson::member<n_prefix, create_snapshot, std::string, &create_snapshot::prefix >,
+        wjson::member<n_release_timeout_s, create_snapshot, time_t, &create_snapshot::release_timeout_s >
       >
     > type;
     typedef type::target target;
@@ -36,13 +36,13 @@ namespace response
     JSON_NAME(snapshot)
     JSON_NAME(last_seq)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       create_snapshot,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, create_snapshot, std::string, &create_snapshot::prefix >,
-        wfc::json::member<n_snapshot, create_snapshot, size_t, &create_snapshot::snapshot >,
-        wfc::json::member<n_last_seq, create_snapshot, size_t, &create_snapshot::last_seq >,
-        wfc::json::member<n_status, create_snapshot, common_status, &create_snapshot::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_prefix, create_snapshot, std::string, &create_snapshot::prefix >,
+        wjson::member<n_snapshot, create_snapshot, size_t, &create_snapshot::snapshot >,
+        wjson::member<n_last_seq, create_snapshot, size_t, &create_snapshot::last_seq >,
+        wjson::member<n_status, create_snapshot, common_status, &create_snapshot::status, common_status_json>
       >
     > type;
     typedef type::target target;

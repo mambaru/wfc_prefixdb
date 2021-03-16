@@ -19,6 +19,15 @@ namespace
     auto req = std::make_unique<request::delay_background>();
     req->delay_timeout_s = delay_s;
     req->contunue_force = force;
+    std::string prefix;
+    for (;;)
+    {
+      prefix.clear();
+      ss >> prefix;
+      if (prefix.empty()) break;
+      req->prefixes.push_back(prefix);
+    }
+
     db->delay_background(std::move(req), [handler, delay_s, force](response::delay_background::ptr res)
     {
       std::stringstream ss2;
@@ -34,6 +43,15 @@ namespace
     ss >> force;
     auto req = std::make_unique<request::continue_background>();
     req->force = force;
+    std::string prefix;
+    for (;;)
+    {
+      prefix.clear();
+      ss >> prefix;
+      if (prefix.empty()) break;
+      req->prefixes.push_back(prefix);
+    }
+
     db->continue_background(std::move(req), [handler, force](response::continue_background::ptr res)
     {
       std::stringstream ss2;

@@ -17,9 +17,9 @@ class wrocksdb_slave
 public:
   typedef ::rocksdb::DBWithTTL db_type;
 
-  wrocksdb_slave(std::string name, std::string path, const slave_config& opt, db_type& db);
+  wrocksdb_slave(std::string name, const slave_config& opt, db_type& db);
 
-  void start();
+  //void start();
   void start(size_t last_sn );
 
   void stop();
@@ -44,7 +44,6 @@ private:
 
 private:
   std::string _name;
-  std::string _path;
   slave_config _opt;
   db_type& _db;
   std::shared_ptr<since_reader> _log_parser;
