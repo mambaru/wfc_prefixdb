@@ -15,8 +15,8 @@ struct multidb_config_json
   JSON_NAME(value_size_limit)
   JSON_NAME(prefix_size_limit)
   JSON_NAME(max_prefixes)
-  JSON_NAME(allowed_prefixes)
-  JSON_NAME(denied_prefixes)
+  JSON_NAME(writable_prefixes)
+  JSON_NAME(readonly_prefixes)
 
   typedef wjson::object<
     multidb_config,
@@ -27,10 +27,10 @@ struct multidb_config_json
       wjson::member<n_value_size_limit, multidb_config, size_t, &multidb_config::value_size_limit>,
       wjson::member<n_prefix_size_limit, multidb_config, size_t, &multidb_config::prefix_size_limit>,
       wjson::member<n_max_prefixes, multidb_config, size_t, &multidb_config::max_prefixes>,
-      wjson::member<n_allowed_prefixes, multidb_config, std::vector<std::string>, 
-                                        &multidb_config::allowed_prefixes, wjson::vector_of_strings<> >,
-      wjson::member<n_denied_prefixes, multidb_config, std::vector<std::string>, 
-                                        &multidb_config::denied_prefixes, wjson::vector_of_strings<> >,
+      wjson::member<n_writable_prefixes, multidb_config, std::vector<std::string>, 
+                                        &multidb_config::writable_prefixes, wjson::vector_of_strings<> >,
+      wjson::member<n_readonly_prefixes, multidb_config, std::vector<std::string>, 
+                                        &multidb_config::readonly_prefixes, wjson::vector_of_strings<> >,
 
       wjson::base<db_config_json>
     >,

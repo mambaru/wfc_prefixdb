@@ -25,6 +25,7 @@ private:
   std::shared_ptr<context> _context;
   mutable std::mutex _mutex;
   uint32_t _ttl=0;
+  std::map<std::string, uint32_t> _ttl_map;
 };
 
 }}

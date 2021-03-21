@@ -10,9 +10,12 @@ namespace request
 {
   struct get_all_prefixes_json
   {
+    JSON_NAME(writable_only)
+    
     typedef wjson::object<
       get_all_prefixes,
       wjson::member_list<
+        wjson::member<n_writable_only, get_all_prefixes, bool, &get_all_prefixes::writable_only>
       >
     > type;
     typedef type::target target;

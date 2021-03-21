@@ -25,7 +25,9 @@ struct db_config
   // Файл опций в формате ini
   std::string ini = "";
 
+  // Время жизни полей, после последнего измения для всех префиксов
   uint32_t TTL_seconds = 0;
+  std::map<std::string, uint32_t> TTL_prefix;
   size_t packed_limit = 0;
   size_t array_limit  = 0;
   // range.limit + range.offset, для защиты от перебора. Нужно использовать from и to

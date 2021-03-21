@@ -32,6 +32,7 @@ public:
   typedef std::shared_ptr<write_batch_t> write_batch_ptr;
   typedef const snapshot_type* snapshot_ptr;
 
+  virtual ~wrocksdb();
   wrocksdb( std::string name, const db_config& conf, db_type* db, backup_type* bk);
   void reconfigure(const db_config& conf);
 
@@ -66,7 +67,7 @@ public:
 
 private:
 
-  void stop_();
+  void stop_(bool slave_detach);
   void slave_start_(size_t seq_num);
 
   bool check_inc_(request::inc::ptr& req, response::inc::handler& cb);
@@ -79,7 +80,10 @@ private:
   void merge_(ReqPtr req, Callback cb);
 
   template<typename Res, typename ReqPtr, typename Callback>
-  void get_(ReqPtr req, Callback cb, bool ignore_if_missing /*= false*/);
+  void get_(ReqPtr req, Callback cb, bool ignore_if_missing /*= false*/) const;
+
+  template<typename Callback>
+  bool is_stopped_(const Callback& cb) const;
 
   template<typename Res, typename ReqPtr>
   void write_batch_(const write_batch_ptr& batch, ReqPtr req, std::function<void(std::unique_ptr<Res>)> cb);
@@ -112,6 +116,8 @@ private:
   std::atomic_bool _answer_before_write;
   std::atomic_bool _enable_delayed_write;
   std::atomic_bool _repair_json_values;
+  
+  std::atomic_bool _is_stopped;
 };
 
 }}

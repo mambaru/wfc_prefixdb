@@ -1,4 +1,5 @@
 #include "../aux/base64.hpp"
+#include "../aux/copy_dir.hpp"
 #include "wrocksdb_slave.hpp"
 #include "since_reader.hpp"
 #include <prefixdb/logger.hpp>
@@ -70,13 +71,13 @@ void wrocksdb_slave::start_()
   this->create_seq_timer_();
   PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
   std::lock_guard<mutex_type> lk(_mutex);
-  is_started = true;
+  _is_started = true;
 }
 
 void wrocksdb_slave::stop()
 {
   std::lock_guard<mutex_type> lk(_mutex);
-  is_started = false;
+  _is_started = false;
   if ( !_opt.enabled )
     return;
 
@@ -138,12 +139,28 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
 
+  if ( res->status == common_status::PrefixNotFound )
+  {
+    PREFIXDB_LOG_WARNING( "Slave replication abort. Prefix '" << preq->prefix << "' is no longer available on the master " )
+    return nullptr;
+  }
+    
+  
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    PREFIXDB_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
-      << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final
-      << " status="<<res->status)
-    return nullptr;
+    if ( pthis->_second_chance )
+    {
+      pthis->_second_chance = false;
+      preq->seq = 0;
+      return std::make_unique<request::get_updates_since>(*preq);
+    }
+    else
+    {
+      PREFIXDB_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
+        << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final
+        << " status="<<res->status)
+      return nullptr;
+    }
   }
 
   if ( res->logs.empty() )
@@ -154,9 +171,18 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
     if ( diff > pthis->_opt.acceptable_loss_seq )
     {
-      PREFIXDB_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': "
-                        << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
-      return nullptr;
+      if ( pthis->_second_chance )
+      {
+        pthis->_second_chance = false;
+        preq->seq = 0;
+        return std::make_unique<request::get_updates_since>(*preq);
+      }
+      else
+      {
+        PREFIXDB_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': "
+                          << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
+        return nullptr;
+      }
     }
     else if ( diff > 0)
     {
@@ -181,7 +207,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   pthis->write_sequence_number_( static_cast<uint64_t>(-1) );
   {
     std::lock_guard<mutex_type> lk(pthis->_mutex);
-    if ( pthis->is_started )
+    if ( pthis->_is_started )
     {
       ::rocksdb::WriteOptions wo;
       wo.disableWAL = pthis->_opt.disableWAL;
@@ -285,6 +311,17 @@ void wrocksdb_slave::create_seq_timer_()
   }
 }
 
+void wrocksdb_slave::detach()
+{
+  std::string path1 = _opt.path + "/slave-sequence-number";
+  std::string path2 = _opt.path + "/slave-sequence-number.detach";
+  std::string errmsg;
+  if ( !file::move( path1, path2, errmsg) )
+  {
+    PREFIXDB_LOG_WARNING("Error move file: " << path1 << "->" << path2 << ": " << errmsg)
+  }
+}
+
 void wrocksdb_slave::write_sequence_number_(uint64_t seq)
 {
   auto path = _opt.path + "/slave-sequence-number";
@@ -295,11 +332,21 @@ void wrocksdb_slave::write_sequence_number_(uint64_t seq)
 
 uint64_t wrocksdb_slave::read_sequence_number_()
 {
-  uint64_t seq = 0;
   auto path = _opt.path + "/slave-sequence-number";
-  std::ifstream ofs(path);
-  ofs >> seq;
-  return seq;
+  if ( !file::exist(path) )
+  {
+    path+=".detach";
+    _second_chance = true;
+  }
+  if ( file::exist(path) )
+  {
+    std::ifstream ofs(path);
+    uint64_t seq = 0;
+    ofs >> seq;
+    return seq;
+  }
+  _second_chance = false;
+  return 0;
 }
 
 }}

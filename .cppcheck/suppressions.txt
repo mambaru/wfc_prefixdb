@@ -5,6 +5,6 @@ missingInclude:./package/prefixdb_package.cpp:8
 unmatchedSuppression:./package/prefixdb_package.cpp:8
 duplicateCondition:./package/prefixdb/service/prefixdb_cmd.cpp
 unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:266
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp:648
-useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp:306
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/multidb.cpp
+useStlAlgorithm:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.cpp
 duplicateCondition:./package/prefixdb/prefixdb/multidb/wrocksdb/wrocksdb_factory.cpp:88

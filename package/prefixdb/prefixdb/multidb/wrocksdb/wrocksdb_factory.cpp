@@ -101,6 +101,7 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
 
   std::lock_guard<std::mutex> lk(_mutex);
   _ttl = conf.TTL_seconds;
+  _ttl_map = conf.TTL_prefix;
   _context = std::make_shared<wrocksdb_factory::context>();
   _context->env = ::rocksdb::Env::Default();
   _context->config = conf;
@@ -160,11 +161,17 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
 
   ::rocksdb::DBWithTTL* db;
   std::vector< ::rocksdb::ColumnFamilyHandle*> handles;
+  
+  uint32_t db_ttl = _ttl;
 
-  PREFIXDB_LOG_BEGIN("rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << _ttl << " ...");
+  auto itr = _ttl_map.find(dbname);
+  if ( itr!=_ttl_map.end() )
+    db_ttl = itr->second;
+  
+  PREFIXDB_LOG_BEGIN("rocksdb::DBWithTTL::Open '" << dbname << "' TTL=" << db_ttl << " ...");
 
   std::vector<int32_t> ttls;
-  ttls.push_back( static_cast<int32_t>(_ttl) );
+  ttls.push_back( static_cast<int32_t>(db_ttl) );
   ::rocksdb::Status status;
   if ( !conf.forced_repair )
     status = ::rocksdb::DBWithTTL::Open(options, conf.path, _context->cdf , &handles, &db, ttls);

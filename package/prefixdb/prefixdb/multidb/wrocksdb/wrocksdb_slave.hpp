@@ -24,6 +24,7 @@ public:
 
   void stop();
 
+  void detach();
 private:
 
   void start_();
@@ -62,7 +63,8 @@ private:
   std::shared_ptr<wflow::workflow> _workflow;
   typedef std::mutex mutex_type;
   mutex_type _mutex;
-  bool is_started = false;
+  bool _is_started = false;
+  bool _second_chance = false;
 };
 
 }}

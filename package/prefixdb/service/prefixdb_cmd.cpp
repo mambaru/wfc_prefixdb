@@ -84,6 +84,30 @@ namespace
     } );
   }
 
+  void attach_prefixes_( std::shared_ptr<iprefixdb> db, std::stringstream& ss, wfc::iinterface::output_handler_t handler)
+  {
+    auto req = std::make_unique<request::attach_prefixes>();
+    int opendb = 0;
+    ss >> opendb;
+    req->opendb = opendb!=0;
+
+    std::string prefix;
+    for (;;)
+    {
+      prefix.clear();
+      ss >> prefix;
+      if (prefix.empty()) break;
+      req->prefixes.push_back(prefix);
+    }
+
+    db->attach_prefixes( std::move(req), [handler](response::attach_prefixes::ptr res)
+    {
+      std::stringstream ss2;
+      ss2 << res->status << ". Prefixes attached.";
+      handler( iow::io::make(ss2.str()) );
+    } );
+  }
+
   void get_all_prefixes_( std::shared_ptr<iprefixdb> db, std::stringstream& , wfc::iinterface::output_handler_t handler)
   {
     auto req = std::make_unique<request::get_all_prefixes>();
@@ -368,6 +392,7 @@ namespace
     {"cp", "compact_prefix", "<<prefix>> [<<from>> [<<to>>] ]", "compact для префикса"},
     {"dp", "detach_prefixes",  "[0](access denied in sec) <<prefix1>> [<<prefix2>> ...]", "Отсоединяет префиксы на заданный таймаут. База префиксов перемещаеться в указанное \n"
                                "в конфигурации место. Префикс станет доступен через заданное первым параметром число секунд." },
+    {"ap", "attach_prefixes",  "[0](open db) <<prefix1>> [<<prefix2>> ...]", "Присоединяет отсоединенные префиксы. База предварительно нужно переместить из директории куда префиксы были отсоеденены в дирректорию рабочих префиксов." },
     {"gap", "get_all_prefixes",  "", "Получить спискок всех доступных префиксов" },
     {"g", "get", "<<prefix>> <<key1>> [<<key2>> ....]", "Получить значения полей в указанном префиксе"},
     {"d", "del", "<<prefix>> <<key1>> [<<key2>> ....]", "Удалить поля в указанном префиксе"},
@@ -433,6 +458,10 @@ void prefixdb_cmd( std::shared_ptr<iprefixdb> db, ::wfc::iinterface::data_ptr d,
   else if ( method == "dp" || method=="detach_prefixes")
   {
     detach_prefixes_(db, ss, std::move(handler) );
+  }
+  else if ( method == "ap" || method=="attach_prefixes")
+  {
+    attach_prefixes_(db, ss, std::move(handler) );
   }
   else if ( method == "gap" || method=="get_all_prefixes")
   {

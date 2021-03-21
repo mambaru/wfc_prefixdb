@@ -18,6 +18,7 @@ struct db_config_json
   JSON_NAME(ini)
   JSON_NAME(slave)
   JSON_NAME(TTL_seconds)
+  JSON_NAME(TTL_prefix)
   JSON_NAME(packed_limit)
   JSON_NAME(array_limit)
   JSON_NAME(range_limit)
@@ -40,7 +41,9 @@ struct db_config_json
       wjson::member<n_ini,          db_config, std::string,    &db_config::ini>,
       wjson::member<n_wal_path,    db_config, std::string, &db_config::wal_path>,
       wjson::member<n_detach_path,    db_config, std::string, &db_config::detach_path>,
-      wjson::member<n_TTL_seconds, db_config, uint32_t, &db_config::TTL_seconds>,
+      wjson::member<n_TTL_seconds, db_config, uint32_t, &db_config::TTL_seconds, wjson::time_interval<uint32_t, 1> >,
+      wjson::member<n_TTL_prefix, db_config, std::map<std::string, uint32_t>, &db_config::TTL_prefix, 
+                    wjson::dict_map< wjson::time_interval<uint32_t, 1> > >,
       wjson::member<n_packed_limit, db_config, size_t, &db_config::packed_limit>,
       wjson::member<n_array_limit, db_config, size_t, &db_config::array_limit>,
       wjson::member<n_range_limit, db_config, size_t, &db_config::range_limit>,

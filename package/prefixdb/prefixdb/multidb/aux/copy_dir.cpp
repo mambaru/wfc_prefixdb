@@ -5,11 +5,11 @@
 #include <wfc/boost.hpp>
 #include <sstream>
 #include <cstdlib>
-namespace wamba{ namespace prefixdb {
+namespace wamba{ namespace prefixdb { namespace file{
 
 namespace
 {
-  bool copy_dir(
+  bool copy_(
     boost::filesystem::path const & source,
     boost::filesystem::path const & destination,
     std::string& message
@@ -18,7 +18,7 @@ namespace
     try
     {
       // Check whether the function call is valid
-      if( !::boost::filesystem::exists(source) || !::boost::filesystem::is_directory(source) )
+      if( !boost::filesystem::exists(source) || !boost::filesystem::is_directory(source) )
       {
         std::stringstream ss;
         ss << "Source directory " << source.string() << " does not exist or is not a directory." << '\n';
@@ -26,7 +26,7 @@ namespace
         return false;
       }
 
-      if ( ::boost::filesystem::exists(destination) )
+      if ( boost::filesystem::exists(destination) )
       {
         std::stringstream ss;
         ss << "Destination directory " << destination.string() << " already exists." << '\n';
@@ -35,7 +35,7 @@ namespace
       }
 
       // Create the destination directory
-      if( !::boost::filesystem::create_directory(destination) )
+      if( !boost::filesystem::create_directory(destination) )
       {
         std::stringstream ss;
         ss << "Unable to create destination directory " << destination.string() << '\n';
@@ -43,7 +43,7 @@ namespace
         return false;
       }
     }
-    catch(::boost::filesystem::filesystem_error const & e)
+    catch(boost::filesystem::filesystem_error const & e)
     {
       std::stringstream ss;
       ss << e.what() << '\n';
@@ -52,27 +52,27 @@ namespace
     }
 
     // Iterate through the source directory
-    for( ::boost::filesystem::directory_iterator file(source); file != ::boost::filesystem::directory_iterator(); ++file) try
+    for( boost::filesystem::directory_iterator file(source); file != boost::filesystem::directory_iterator(); ++file) try
     {
-      ::boost::filesystem::path current(file->path());
-      if( ::boost::filesystem::is_directory(current) )
+      boost::filesystem::path current(file->path());
+      if( boost::filesystem::is_directory(current) )
       {
         // Found directory: Recursion
-        if( !copy_dir(current, destination / current.filename(), message) )
+        if( !copy_(current, destination / current.filename(), message) )
           return false;
       }
       else
       {
         // Found file: Copy
-        ::boost::system::error_code ec;
-        ::boost::filesystem::copy_file( current, destination / current.filename(), ec);
+        boost::system::error_code ec;
+        boost::filesystem::copy_file( current, destination / current.filename(), ec);
         if (ec)
         {
           // TODO: Ошибка
         }
       }
     }
-    catch(const ::boost::filesystem::filesystem_error& e)
+    catch(const boost::filesystem::filesystem_error& e)
     {
       std::stringstream ss;
       ss << e.what() << '\n';
@@ -82,16 +82,53 @@ namespace
     return true;
   }
 
-  bool move_dir(
-    ::boost::filesystem::path const & source,
-    ::boost::filesystem::path const & destination,
+  bool remove_( const boost::filesystem::path& path, std::string& message )
+  {
+    boost::system::error_code ec;
+    boost::filesystem::remove_all(path, ec);
+    if (ec)
+    {
+      message = "delete_dir(" + path.string() + "):" + ec.message();
+      return false;
+    }
+    return true;
+  }
+
+  bool move_(
+    boost::filesystem::path const & source,
+    boost::filesystem::path const & destination,
     std::string& message
   )
   try
   {
-    if ( boost::filesystem::exists(destination) )
-      boost::filesystem::remove_all(destination);
+    boost::system::error_code ec;
+    if ( boost::filesystem::exists(destination, ec) )
+    {
+      if ( ec )
+      {
+        message = "move_dir: boost::filesystem::exists(" + destination.string() + ")" + ec.message();
+        return false;
+      }
+      
+      if ( !remove_(destination, message) )
+        return false;
+        
+      /*boost::filesystem::remove_all(destination, ec);
+      if ( ec )
+      {
+        message = "boost::filesystem::remove_all: " + ec.message();
+        return false;
+      }*/
+    }
 
+    boost::filesystem::rename(source, destination, ec);
+    if ( ec )
+    {
+      message = "boost::filesystem::rename(" + source.string() + "," + destination.string() + "):" + ec.message();
+      return false;
+    }
+    
+    /*
     if ( std::system(nullptr) != 0 )
     {
       std::stringstream ss;
@@ -102,7 +139,7 @@ namespace
         int err = WEXITSTATUS(ret);
         if ( err != 0 )
         {
-          message=std::strerror(err);
+          message = std::string(std::strerror(err)) + ": " << ss.str();
           return false;
         }
       }
@@ -111,44 +148,39 @@ namespace
     {
       message="command processor is available";
       return false;
-    }
+    }*/
     //boost::filesystem::rename(source, destination);
     return true;
   }
-  catch(const ::boost::filesystem::filesystem_error& e)
+  catch(const boost::filesystem::filesystem_error& e)
   {
     std::stringstream ss;
-    ss << e.what() << '\n';
+    ss << "move_dir exception: " << e.what() << '\n';
     message = ss.str();
     return false;
   }
 
-  bool delete_dir( const ::boost::filesystem::path& path, std::string& message )
-  {
-    boost::system::error_code ec;
-    ::boost::filesystem::remove_all(path, ec);
-    if (ec)
-    {
-      message = ec.message();
-      return false;
-    }
-    return true;
-  }
 }
 
-bool copy_dir(const std::string& from, const std::string& to, std::string& message)
+bool copy(const std::string& from, const std::string& to, std::string& message)
 {
-  return copy_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
+  return copy_( boost::filesystem::path(from),  boost::filesystem::path(to), message);
 }
 
-bool move_dir(const std::string& from, const std::string& to, std::string& message)
+bool move(const std::string& from, const std::string& to, std::string& message)
 {
-  return move_dir( ::boost::filesystem::path(from),  ::boost::filesystem::path(to), message);
+  return move_( boost::filesystem::path(from),  boost::filesystem::path(to), message);
 }
 
-bool delete_dir(const std::string& path, std::string& message)
+bool remove(const std::string& path, std::string& message)
 {
-  return delete_dir( ::boost::filesystem::path(path), message );
+  return remove_( boost::filesystem::path(path), message );
 }
 
-}}
+bool exist(const std::string& path)
+{
+  boost::system::error_code ec;
+  return boost::filesystem::exists( boost::filesystem::path(path), ec) && !ec;
+}
+
+}}}

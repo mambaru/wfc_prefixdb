@@ -35,6 +35,14 @@
 
 namespace wamba{ namespace prefixdb {
 
+wrocksdb::~wrocksdb()
+{
+  _slave = nullptr;
+  _initial = nullptr;
+  _workflow = nullptr;
+  _write_workflow = nullptr;
+}
+
 wrocksdb::wrocksdb( std::string name, const db_config& conf,  db_type* db, backup_type* bk)
   : _name(name)
   , _conf(conf)
@@ -45,6 +53,7 @@ wrocksdb::wrocksdb( std::string name, const db_config& conf,  db_type* db, backu
   _write_workflow = conf.args.write_workflow;
   if ( _write_workflow == nullptr )
     _write_workflow = _workflow;
+  _is_stopped = false;
   this->reconfigure(conf);
 }
 
@@ -58,6 +67,7 @@ void wrocksdb::reconfigure(const db_config& conf)
 
 void wrocksdb::start( )
 {
+  _is_stopped = false;
   if ( _conf.initial_load.enabled )
   {
     using namespace std::placeholders;
@@ -80,12 +90,17 @@ void wrocksdb::slave_start_( size_t seq_num )
   }
 }
 
-void wrocksdb::stop_()
+void wrocksdb::stop_(bool slave_detach)
 {
-  PREFIXDB_LOG_MESSAGE("preffix DB stop for prefix=" << _name)
+  _is_stopped = true;
+  PREFIXDB_LOG_MESSAGE("PreffixDB stop for prefix '" << _name << "'")
   _owner.reset();
   if ( _slave!=nullptr )
+  {
     _slave->stop();
+    if (slave_detach)
+      _slave->detach();
+  }
   if ( _initial!=nullptr)
     _initial->stop();
   _slave = nullptr;
@@ -96,7 +111,7 @@ void wrocksdb::stop_()
 void wrocksdb::stop()
 {
   std::lock_guard<std::mutex> lk(_mutex);
-  this->stop_();
+  this->stop_(false);
 }
 
 bool wrocksdb::check_inc_(request::inc::ptr& req, response::inc::handler& cb)
@@ -293,8 +308,20 @@ std::string wrocksdb::repair_json_(const std::string& key, std::string&& value, 
   return aux::repair_json_value(_name, key, std::move(value), fix);
 }
 
+template<typename Callback>
+bool wrocksdb::is_stopped_(const Callback& cb) const
+{
+  if ( !_is_stopped )
+    return false;
+  
+  if ( cb!= nullptr )
+    cb(nullptr);
+  
+  return true;
+}
+
 template<typename Res, typename ReqPtr, typename Callback>
-void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
+void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing ) const
 {
   typedef Res response_type;
   typedef ::rocksdb::Slice slice_type;
@@ -363,6 +390,8 @@ void wrocksdb::get_(ReqPtr req, Callback cb, bool ignore_if_missing )
 
 void wrocksdb::set( request::set::ptr req, response::set::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
+  
   auto batch = std::make_shared< ::rocksdb::WriteBatch >();
 
   for ( auto& field : req->fields)
@@ -379,16 +408,19 @@ void wrocksdb::set( request::set::ptr req, response::set::handler cb)
 
 void wrocksdb::get( request::get::ptr req, response::get::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   this->get_<response::get>( std::move(req), std::move(cb), true );
 }
 
 void wrocksdb::has( request::has::ptr req, response::has::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   this->get_<response::has>( std::move(req), std::move(cb), false );
 }
 
 void wrocksdb::del( request::del::ptr req, response::del::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto db = _db;
   if ( db == nullptr )
   {
@@ -420,29 +452,34 @@ void wrocksdb::del( request::del::ptr req, response::del::handler cb)
 
 void wrocksdb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   this->merge_<merge_mode::setnx, response::setnx>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::inc( request::inc::ptr req, response::inc::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   if ( this->check_inc_(req, cb) )
     this->merge_<merge_mode::inc, response::inc>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::add( request::add::ptr req, response::add::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   if ( this->check_add_(req, cb) )
     this->merge_<merge_mode::add, response::add>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::packed( request::packed::ptr req, response::packed::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   if ( this->check_packed_(req, cb) )
     this->merge_<merge_mode::packed, response::packed>( std::move(req), std::move(cb) );
 }
 
 void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto db = _db;
   if ( db == nullptr )
   {
@@ -497,6 +534,7 @@ void wrocksdb::get_updates_since( request::get_updates_since::ptr req, response:
 
 void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_all_prefixes::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto res = std::make_unique<response::get_all_prefixes>();
   res->prefixes.push_back( this->_name );
   cb(std::move(res));
@@ -504,9 +542,12 @@ void wrocksdb::get_all_prefixes( request::get_all_prefixes::ptr, response::get_a
 
 void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response::detach_prefixes::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto db = _db;
   if ( db.use_count() > 2 )
   {
+    PREFIXDB_LOG_MESSAGE("Wait detach '" << _name << "' ...");
+
     db.reset();
     std::weak_ptr<wrocksdb> wthis = this->shared_from_this();
     _workflow->safe_post(
@@ -518,15 +559,16 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
     );
     return;
   }
-
-  this->stop_();
+  
+  db.reset(); // Иначе лочится 
+  this->stop_(true);
 
   PREFIXDB_LOG_MESSAGE("Detach Prefix " << _name)
 
   if ( !_conf.detach_path.empty() )
   {
     std::string errmsg;
-    if ( !move_dir( _conf.path, _conf.detach_path, errmsg ) )
+    if ( !file::move( _conf.path, _conf.detach_path, errmsg ) )
     {
       PREFIXDB_LOG_ERROR("wrocksdb::detach_prefixes " << errmsg);
     }
@@ -541,12 +583,14 @@ void wrocksdb::detach_prefixes( request::detach_prefixes::ptr /*req*/, response:
 
 void wrocksdb::attach_prefixes( request::attach_prefixes::ptr /*req*/, response::attach_prefixes::handler cb)
 {
-  PREFIXDB_LOG_MESSAGE("Attach Prefixes " << _name)
+  if ( is_stopped_(cb) ) return;
+  PREFIXDB_LOG_MESSAGE("Attach Prefix: " << _name)
   if ( cb!=nullptr ) cb(nullptr);
 }
 
 void wrocksdb::range( request::range::ptr req, response::range::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto db = _db;
   if ( db == nullptr )
   {
@@ -791,6 +835,7 @@ void wrocksdb::repair_json( request::repair_json::ptr req, response::repair_json
 
 void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto preq = std::make_shared<request::compact_prefix>( std::move(*req) );
   std::thread([preq, this, cb](){
     PREFIXDB_LOG_BEGIN("Manual Compaction " << this->_name);
@@ -828,6 +873,7 @@ void wrocksdb::compact_prefix( request::compact_prefix::ptr req, response::compa
 
 void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   auto res = std::make_unique<response::create_snapshot>();
   res->prefix = std::move(req->prefix);
   if ( auto id = this->create_snapshot_( &(res->last_seq) ) )
@@ -853,6 +899,7 @@ void wrocksdb::create_snapshot( request::create_snapshot::ptr req, response::cre
 
 void wrocksdb::release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
   bool status = this->release_snapshot_(req->snapshot);
   if (cb!=nullptr)
   {
@@ -866,6 +913,7 @@ void wrocksdb::release_snapshot( request::release_snapshot::ptr req, response::r
 
 bool wrocksdb::backup()
 {
+  if ( _is_stopped ) return false;
   std::lock_guard<std::mutex> lk(_mutex);
 
   if ( _backup == nullptr ) return false;
@@ -907,8 +955,8 @@ bool wrocksdb::backup()
     PREFIXDB_LOG_ERROR("Create Backup ERROR for " << _name << ": " << status.ToString() )
     std::string tmp = _conf.backup.path + ".bak";
     std::string msg;
-    delete_dir(tmp, msg);
-    move_dir( _conf.backup.path, tmp, msg );
+    file::remove(tmp, msg);
+    file::move( _conf.backup.path, tmp, msg );
     return false;
   }
   return true;
@@ -924,7 +972,7 @@ bool wrocksdb::archive(std::string path)
 
   PREFIXDB_LOG_MESSAGE("Archive for '" << _name << " from " << _conf.backup.path << " ' to " << path)
   std::string error;
-  if ( !copy_dir( _conf.backup.path, path, error ) )
+  if ( !file::copy( _conf.backup.path, path, error ) )
   {
     PREFIXDB_LOG_ERROR("Archive for '" << _name << "' fail. " << error );
     return true;
@@ -934,6 +982,7 @@ bool wrocksdb::archive(std::string path)
 
 bool wrocksdb::compact()
 {
+  if ( _is_stopped ) return false;
   bool result  = false;
   if ( auto db = _db )
   {
@@ -952,6 +1001,8 @@ bool wrocksdb::compact()
 
 void wrocksdb::delay_background( request::delay_background::ptr req, response::delay_background::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
+
   auto db = _db;
   if (db == nullptr)
   {
@@ -988,6 +1039,8 @@ void wrocksdb::delay_background( request::delay_background::ptr req, response::d
 
 void wrocksdb::continue_background( request::continue_background::ptr req, response::continue_background::handler cb)
 {
+  if ( is_stopped_(cb) ) return;
+
   auto res = std::make_unique<response::continue_background>();
   if ( auto db = _db )
   {

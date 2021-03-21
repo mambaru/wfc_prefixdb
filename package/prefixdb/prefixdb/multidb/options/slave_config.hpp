@@ -19,6 +19,14 @@ struct slave_config
 
   // вспомогательные файлы репликации (last_sequence_number)
   std::string path;
+  
+  // Реплицировать только префиксы разрешенные для записи на мастере
+  bool writable_only = false;
+  // Разрешенные префиксы для репликации
+  std::vector<std::string> allowed_prefixes;
+  // Запрещенные префиксы для репликации
+  std::vector<std::string> denied_prefixes;
+
   // интервал запросов к мастеру в милисекундах
   time_t pull_timeout_ms           = 1000;
   time_t query_prefixes_timeout_ms = 2000;

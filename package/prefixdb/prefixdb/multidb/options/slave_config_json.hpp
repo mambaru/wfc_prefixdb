@@ -11,6 +11,10 @@ struct slave_config_json
   JSON_NAME(target)
   JSON_NAME(path)
 
+  JSON_NAME(writable_only)
+  JSON_NAME(allowed_prefixes)
+  JSON_NAME(denied_prefixes)
+
   JSON_NAME(start_time)
   JSON_NAME(pull_timeout_ms)
   JSON_NAME(log_limit_per_req)
@@ -29,6 +33,12 @@ struct slave_config_json
       wjson::member<n_target,            slave_config, std::string, &slave_config::target>,
       wjson::member<n_start_time,        slave_config, std::string, &slave_config::start_time>,
       wjson::member<n_path,          slave_config, std::string, &slave_config::path>,
+      wjson::member<n_writable_only,   slave_config, bool,      &slave_config::writable_only>,
+      wjson::member<n_allowed_prefixes, slave_config, std::vector<std::string>, 
+                                        &slave_config::allowed_prefixes, wjson::vector_of_strings<> >,
+      wjson::member<n_denied_prefixes, slave_config, std::vector<std::string>, 
+                                        &slave_config::denied_prefixes, wjson::vector_of_strings<> >,
+
       wjson::member<n_pull_timeout_ms,   slave_config, time_t,      &slave_config::pull_timeout_ms>,
       wjson::member<n_query_prefixes_timeout_ms, slave_config, time_t,      &slave_config::query_prefixes_timeout_ms>,
       wjson::member<n_log_limit_per_req, slave_config, size_t,      &slave_config::log_limit_per_req>,

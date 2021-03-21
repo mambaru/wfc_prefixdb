@@ -12,7 +12,7 @@ struct common_status_json
   JSON_NAME(EmptyFields)
   JSON_NAME(EmptyPrefix)
   JSON_NAME(CreatePrefixFail)
-  JSON_NAME(PrefixProhibited)
+  JSON_NAME(PrefixReadonly)
   JSON_NAME(CreateSnapshotFail)
   JSON_NAME(PrefixNotFound)
   JSON_NAME(SnapshotNotFound)
@@ -32,7 +32,7 @@ struct common_status_json
         wjson::enum_value<n_InvalidFieldValue, common_status, common_status::InvalidFieldValue>,
         wjson::enum_value<n_EmptyFields, common_status, common_status::EmptyFields>,
         wjson::enum_value<n_EmptyPrefix, common_status, common_status::EmptyPrefix>,
-        wjson::enum_value<n_PrefixProhibited, common_status, common_status::PrefixProhibited>,
+        wjson::enum_value<n_PrefixReadonly, common_status, common_status::PrefixReadonly>,
         wjson::enum_value<n_CreatePrefixFail, common_status, common_status::CreatePrefixFail>,
         wjson::enum_value<n_PrefixNotFound, common_status, common_status::PrefixNotFound>,
         wjson::enum_value<n_CreateSnapshotFail, common_status, common_status::CreateSnapshotFail>,
