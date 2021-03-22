@@ -4,6 +4,7 @@
 #include <prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.hpp>
 #include <memory>
 #include <map>
+#include <set>
 #include <mutex>
 
 namespace wamba{ namespace prefixdb{
@@ -104,6 +105,8 @@ private:
   bool _slave_writable_only = false;
   std::vector<std::string> _slave_allowed_prefixes;
   std::vector<std::string> _slave_denied_prefixes;
+  // Префиксы полученые от мастера, чтобы не удалять перрфиксы созданные на слейве, когда они удаляются на мастере 
+  std::set<std::string> _master_prefixes;
 
 };
 

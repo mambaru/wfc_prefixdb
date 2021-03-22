@@ -388,6 +388,7 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
         });
 
       std::lock_guard<std::mutex> lk(_mutex);
+      //_self_slave_prefixes.erase(prefix);
       if ( req->deny_timeout_s == 0)
       {
         _db_map.erase( prefix );
@@ -809,8 +810,16 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
     return gap;
   }
 
+  /*
   auto preflist = this->all_prefixes_();
   std::set<std::string> prefset( preflist.begin(), preflist.end() );
+  */
+  std::set<std::string> prefset;
+  {
+    std::lock_guard<std::mutex> lk(_mutex);
+    prefset=_master_prefixes;
+  }
+  
   if ( res->status == common_status::OK)
   {
     PREFIXDB_LOG_MESSAGE("Prefix list from master: " << res->prefixes.size() )
@@ -824,9 +833,15 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
 
       if ( this->allowed_for_slave_(x) )
       {
-        PREFIXDB_LOG_MESSAGE("Check prefix '" << x << "' from master")
+        // PREFIXDB_LOG_MESSAGE("Check prefix '" << x << "' from master")
         this->prefix_(x, true);
         prefset.erase(x);
+        
+        std::lock_guard<std::mutex> lk(_mutex);
+        if ( _master_prefixes.insert(x).second)
+        {
+          PREFIXDB_LOG_MESSAGE("New prefix '" << x << "' from master")
+        }
       }
     }
 
@@ -837,13 +852,19 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
       preq->prefixes.reserve(prefset.size());
       for ( auto& x : prefset )
       {
-        PREFIXDB_LOG_WARNING("Not received prefix '" << x << "' from master")
+        {
+          std::lock_guard<std::mutex> lk(_mutex);
+          _master_prefixes.erase(x);
+          /*if ( _self_slave_prefixes.count(x) > 0 )
+            continue;*/
+        }
+        PREFIXDB_LOG_WARNING("Removed prefix '" << x << "' from master")
         preq->prefixes.push_back( std::move(x) );
       }
 
-      PREFIXDB_LOG_BEGIN("Detach not received prefixes from master...")
+      PREFIXDB_LOG_BEGIN("Detach removed prefixes from master...")
       this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
-      PREFIXDB_LOG_END("Detach not received prefixes from master. Done!")
+      PREFIXDB_LOG_END("Detach removed prefixes from master. Done!")
       /*
       _workflow->safe_post(_owner.wrap([this, preq]
       {
@@ -926,6 +947,11 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
   if ( auto db = _factory->create_db(prefix, create_if_missing) )
   {
     PREFIXDB_LOG_MESSAGE("Open new prefix: " << prefix)
+    if ( _opt.slave.enabled )
+    {
+      //_self_slave_prefixes.insert(prefix);
+      PREFIXDB_LOG_WARNING("This prefix created on slave: " << prefix)
+    }
     _db_map.insert(itr, std::make_pair(prefix, db));
     db->start();
     return db;
