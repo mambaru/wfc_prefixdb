@@ -222,7 +222,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
 
   preq->seq = sn;
 
-  if ( res->seq_last == res->seq_final )
+  if ( res->seq_last == res->seq_final || pthis->_opt.expires_for_req)
     return nullptr;
 
   return std::make_unique<request::get_updates_since>(*preq);
