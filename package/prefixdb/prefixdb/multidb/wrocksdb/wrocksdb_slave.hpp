@@ -12,18 +12,19 @@ class since_reader;
 class wrocksdb_slave
   : public std::enable_shared_from_this<wrocksdb_slave>
 {
-  typedef wfc::workflow::timer_id_t timer_id_t;
+  typedef wflow::workflow::timer_id_t timer_id_t;
 
 public:
   typedef ::rocksdb::DBWithTTL db_type;
 
-  wrocksdb_slave(std::string name, std::string path, const slave_config& opt, db_type& db);
+  wrocksdb_slave(std::string name, const slave_config& opt, db_type& db);
 
-  void start();
+  //void start();
   void start(size_t last_sn );
 
   void stop();
 
+  void detach();
 private:
 
   void start_();
@@ -44,7 +45,6 @@ private:
 
 private:
   std::string _name;
-  std::string _path;
   slave_config _opt;
   db_type& _db;
   std::shared_ptr<since_reader> _log_parser;
@@ -60,10 +60,11 @@ private:
   timer_id_t _diff_timer_id = -1;
   timer_id_t _seq_timer_id = -1;
 
-  std::shared_ptr<wfc::workflow> _workflow;
+  std::shared_ptr<wflow::workflow> _workflow;
   typedef std::mutex mutex_type;
   mutex_type _mutex;
-  bool is_started = false;
+  bool _is_started = false;
+  bool _second_chance = false;
 };
 
 }}

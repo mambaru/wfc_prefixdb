@@ -1,4 +1,5 @@
 #include "../aux/base64.hpp"
+#include "../aux/copy_dir.hpp"
 #include "wrocksdb_slave.hpp"
 #include "since_reader.hpp"
 #include <prefixdb/logger.hpp>
@@ -11,15 +12,15 @@
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
+#include <boost/filesystem.hpp>
 
 #include <ctime>
 #include <fstream>
 
 namespace wamba{ namespace prefixdb {
 
-wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_config& opt, db_type& db)
+wrocksdb_slave::wrocksdb_slave(std::string name, const slave_config& opt, db_type& db)
   : _name(name)
-  , _path(path)
   , _opt(opt)
   , _db(db)
 {
@@ -28,26 +29,34 @@ wrocksdb_slave::wrocksdb_slave(std::string name,  std::string path, const slave_
 
 void wrocksdb_slave::start(size_t last_sn )
 {
+  if ( !::boost::filesystem::exists(_opt.path) )
+  {
+    ::boost::system::error_code ec;
+    ::boost::filesystem::create_directory(_opt.path, ec);
+    if (ec)
+    {
+      PREFIXDB_LOG_FATAL("Create directory fail (preffix slave)'" << _opt.path << "'" << ec.message() );
+      return;
+    }
+  }
+ 
   if ( last_sn!=0 )
     this->write_sequence_number_(last_sn);
-  this->start();
+  this->start_();
 }
 
-void wrocksdb_slave::start()
+
+void wrocksdb_slave::start_()
 {
+  if ( !_opt.enabled )
+    return;
+
   _last_update_time = 0;
   _update_counter  = 0;
   _op_counter = 0;
   _current_differens  = 0;
   _last_sequence  = 0;
   _lost_counter = 0;
-  this->start_();
-}
-
-void wrocksdb_slave::start_()
-{
-  if ( !_opt.enabled )
-    return;
 
   if ( _opt.master==nullptr )
   {
@@ -62,13 +71,13 @@ void wrocksdb_slave::start_()
   this->create_seq_timer_();
   PREFIXDB_LOG_END("Start Slave '" << _name << "' ")
   std::lock_guard<mutex_type> lk(_mutex);
-  is_started = true;
+  _is_started = true;
 }
 
 void wrocksdb_slave::stop()
 {
   std::lock_guard<mutex_type> lk(_mutex);
-  is_started = false;
+  _is_started = false;
   if ( !_opt.enabled )
     return;
 
@@ -130,12 +139,28 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   if ( res == nullptr )
     return std::make_unique<request::get_updates_since>(*preq);
 
+  if ( res->status == common_status::PrefixNotFound )
+  {
+    PREFIXDB_LOG_WARNING( "Slave replication abort. Prefix '" << preq->prefix << "' is no longer available on the master " )
+    return nullptr;
+  }
+    
+  
   if ( res->status != common_status::OK || preq->seq > (res->seq_final + 1 ))
   {
-    PREFIXDB_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
-      << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final
-      << " status="<<res->status)
-    return nullptr;
+    if ( pthis->_second_chance )
+    {
+      pthis->_second_chance = false;
+      preq->seq = 0;
+      return std::make_unique<request::get_updates_since>(*preq);
+    }
+    else
+    {
+      PREFIXDB_LOG_FATAL( "Slave replication error. Invalid master responce for '" << pthis->_name << "'"
+        << " need sequence == " << preq->seq << ", but last acceptable == " << res->seq_final
+        << " status="<<res->status)
+      return nullptr;
+    }
   }
 
   if ( res->logs.empty() )
@@ -146,9 +171,18 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
     auto diff = static_cast<std::ptrdiff_t>( res->seq_first - preq->seq );
     if ( diff > pthis->_opt.acceptable_loss_seq )
     {
-      PREFIXDB_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': "
-                        << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
-      return nullptr;
+      if ( pthis->_second_chance )
+      {
+        pthis->_second_chance = false;
+        preq->seq = 0;
+        return std::make_unique<request::get_updates_since>(*preq);
+      }
+      else
+      {
+        PREFIXDB_LOG_FATAL( "Slave not acceptable loss sequence '" << pthis->_name << "': "
+                          << diff << " request segment=" << preq->seq << " response=" << res->seq_first)
+        return nullptr;
+      }
     }
     else if ( diff > 0)
     {
@@ -173,7 +207,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   pthis->write_sequence_number_( static_cast<uint64_t>(-1) );
   {
     std::lock_guard<mutex_type> lk(pthis->_mutex);
-    if ( pthis->is_started )
+    if ( pthis->_is_started )
     {
       ::rocksdb::WriteOptions wo;
       wo.disableWAL = pthis->_opt.disableWAL;
@@ -188,7 +222,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
 
   preq->seq = sn;
 
-  if ( res->seq_last == res->seq_final )
+  if ( res->seq_last == res->seq_final || pthis->_opt.expires_for_req)
     return nullptr;
 
   return std::make_unique<request::get_updates_since>(*preq);
@@ -277,9 +311,20 @@ void wrocksdb_slave::create_seq_timer_()
   }
 }
 
+void wrocksdb_slave::detach()
+{
+  std::string path1 = _opt.path + "/slave-sequence-number";
+  std::string path2 = _opt.path + "/slave-sequence-number.detach";
+  std::string errmsg;
+  if ( !file::move( path1, path2, errmsg) )
+  {
+    PREFIXDB_LOG_WARNING("Error move file: " << path1 << "->" << path2 << ": " << errmsg)
+  }
+}
+
 void wrocksdb_slave::write_sequence_number_(uint64_t seq)
 {
-  auto path = _path + "/slave-sequence-number";
+  auto path = _opt.path + "/slave-sequence-number";
   std::ofstream ofs(path);
   ofs << seq;
   ofs.flush();
@@ -287,11 +332,21 @@ void wrocksdb_slave::write_sequence_number_(uint64_t seq)
 
 uint64_t wrocksdb_slave::read_sequence_number_()
 {
-  uint64_t seq = 0;
-  auto path = _path + "/slave-sequence-number";
-  std::ifstream ofs(path);
-  ofs >> seq;
-  return seq;
+  auto path = _opt.path + "/slave-sequence-number";
+  if ( !file::exist(path) )
+  {
+    path+=".detach";
+    _second_chance = true;
+  }
+  if ( file::exist(path) )
+  {
+    std::ifstream ofs(path);
+    uint64_t seq = 0;
+    ofs >> seq;
+    return seq;
+  }
+  _second_chance = false;
+  return 0;
 }
 
 }}

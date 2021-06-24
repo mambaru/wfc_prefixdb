@@ -3,8 +3,8 @@
 #include <prefixdb/api/range.hpp>
 #include <prefixdb/api/fields_json.hpp>
 #include <prefixdb/api/common_status_json.hpp>
+#include <wrtstat/aggregator/api/json/aggregated_info_json.hpp>
 #include <wfc/json.hpp>
-#include <wfc/statistics/api/aggregated_json.hpp>
 
 namespace wamba { namespace prefixdb {
 
@@ -24,20 +24,20 @@ namespace request
     JSON_NAME(limit)
     JSON_NAME(offset)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       range,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, range, std::string, &range::prefix>,
-        wfc::json::member<n_nores, range, bool, &range::nores>,
-        wfc::json::member<n_noval, range, bool, &range::noval>,
-        wfc::json::member<n_stat, range, bool, &range::stat>,
-        wfc::json::member<n_snapshot,  range, size_t, &range::snapshot>,
-        wfc::json::member<n_beg, range, bool, &range::beg>,
-        wfc::json::member<n_repair_json, range, bool, &range::repair_json>,
-        wfc::json::member<n_from, range, std::string, &range::from>,
-        wfc::json::member<n_to, range, std::string, &range::to>,
-        wfc::json::member<n_limit, range, size_t, &range::limit>,
-        wfc::json::member<n_offset, range, size_t, &range::offset>
+      wjson::member_list<
+        wjson::member<n_prefix, range, std::string, &range::prefix>,
+        wjson::member<n_nores, range, bool, &range::nores>,
+        wjson::member<n_noval, range, bool, &range::noval>,
+        wjson::member<n_stat, range, bool, &range::stat>,
+        wjson::member<n_snapshot,  range, size_t, &range::snapshot>,
+        wjson::member<n_beg, range, bool, &range::beg>,
+        wjson::member<n_repair_json, range, bool, &range::repair_json>,
+        wjson::member<n_from, range, std::string, &range::from>,
+        wjson::member<n_to, range, std::string, &range::to>,
+        wjson::member<n_limit, range, size_t, &range::limit>,
+        wjson::member<n_offset, range, size_t, &range::offset>
       >
     > type;
 
@@ -63,19 +63,21 @@ namespace response
       JSON_NAME(keys)
       JSON_NAME(values)
 
-      typedef wfc::json::object<
+      typedef wjson::object<
         range::stat_info,
-        wfc::json::member_list<
-          wfc::json::member<n_null_count,  range::stat_info, size_t, &range::stat_info::null_count>,
-          wfc::json::member<n_bool_count,  range::stat_info, size_t, &range::stat_info::bool_count>,
-          wfc::json::member<n_number_count,  range::stat_info, size_t, &range::stat_info::number_count>,
-          wfc::json::member<n_string_count,  range::stat_info, size_t, &range::stat_info::string_count>,
-          wfc::json::member<n_array_count,  range::stat_info, size_t, &range::stat_info::array_count>,
-          wfc::json::member<n_object_count,  range::stat_info, size_t, &range::stat_info::object_count>,
-          wfc::json::member<n_repair_count,  range::stat_info, size_t, &range::stat_info::repair_count>,
-          wfc::json::member<n_empty_count,  range::stat_info, size_t, &range::stat_info::empty_count>,
-          wfc::json::member<n_keys,  range::stat_info, wrtstat::aggregated_info, &range::stat_info::keys, wfc::statistics::aggregated_info_json>,
-          wfc::json::member<n_values,  range::stat_info, wrtstat::aggregated_info, &range::stat_info::values, wfc::statistics::aggregated_info_json>
+        wjson::member_list<
+          wjson::member<n_null_count,  range::stat_info, size_t, &range::stat_info::null_count>,
+          wjson::member<n_bool_count,  range::stat_info, size_t, &range::stat_info::bool_count>,
+          wjson::member<n_number_count,  range::stat_info, size_t, &range::stat_info::number_count>,
+          wjson::member<n_string_count,  range::stat_info, size_t, &range::stat_info::string_count>,
+          wjson::member<n_array_count,  range::stat_info, size_t, &range::stat_info::array_count>,
+          wjson::member<n_object_count,  range::stat_info, size_t, &range::stat_info::object_count>,
+          wjson::member<n_repair_count,  range::stat_info, size_t, &range::stat_info::repair_count>,
+          wjson::member<n_empty_count,  range::stat_info, size_t, &range::stat_info::empty_count>,
+          wjson::member<n_keys,  range::stat_info, wrtstat::aggregated_info, &range::stat_info::keys, 
+                            wrtstat::aggregated_info_json>,
+          wjson::member<n_values,  range::stat_info, wrtstat::aggregated_info, &range::stat_info::values, 
+                            wrtstat::aggregated_info_json>
         >
       > type;
       typedef type::target target;
@@ -90,14 +92,14 @@ namespace response
     JSON_NAME(fields)
     JSON_NAME(stat)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       range,
-      wfc::json::member_list<
-        wfc::json::member<n_final,  range, bool, &range::fin>,
-        wfc::json::member<n_prefix, range, std::string, &range::prefix>,
-        wfc::json::member<n_status, range, common_status, &range::status, common_status_json>,
-        wfc::json::member<n_fields, range, field_list_t, &range::fields, fields_list_json>,
-        wfc::json::member<n_stat, range, range::stat_info::ptr, &range::stat, wfc::json::pointer<range::stat_info::ptr, stat_json> >
+      wjson::member_list<
+        wjson::member<n_final,  range, bool, &range::fin>,
+        wjson::member<n_prefix, range, std::string, &range::prefix>,
+        wjson::member<n_status, range, common_status, &range::status, common_status_json>,
+        wjson::member<n_fields, range, field_list_t, &range::fields, fields_list_json>,
+        wjson::member<n_stat, range, range::stat_info::ptr, &range::stat, wjson::pointer<range::stat_info::ptr, stat_json> >
       >
     > type;
     typedef type::target target;

@@ -37,6 +37,7 @@ void wrocksdb_initial::load(std::function<void(size_t)> ready)
   req->prefix = this->_name;
   req->release_timeout_s = 3600 * 24;
   std::weak_ptr<wrocksdb_initial> wthis = this->shared_from_this();
+  _log_timer = 0;
 
   auto create_snapshot_handler = [wthis, ready](response::create_snapshot::ptr res)
   {
@@ -77,14 +78,18 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
   req->offset = 0;
   req->limit = _opt.initial_range;
   std::weak_ptr<wrocksdb_initial> wthis = this->shared_from_this();
-  PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from
-                      << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
+  time_t now = time(nullptr);
+  if ( _log_timer < now )
+  {
+    PREFIXDB_LOG_BEGIN("Initial load query range prefix: " << _name << ", from: '" << from
+                       << "', limit: " << _opt.initial_range << ", snapshot: " << snapshot  )
+  }
   std::string lastkey = from;
-  _opt.remote->range( std::move(req), _owner.callback([wthis, snapshot, lastkey, ready](response::range::ptr res) mutable
+  _opt.remote->range( std::move(req), _owner.callback([wthis, now, snapshot, lastkey, ready](response::range::ptr res) mutable
   {
     if (auto pthis = wthis.lock() )
     {
-      PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name )
+      if ( pthis->_log_timer < now ) { PREFIXDB_LOG_END("Initial load query range prefix: " << pthis->_name ) }
       if ( res==nullptr )
       {
         PREFIXDB_LOG_ERROR("Initial load (range): " << pthis->_name << ": Bad Gateway")
@@ -106,7 +111,7 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
 
       if ( !pthis->_opt.use_setnx )
       {
-        PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+        if ( pthis->_log_timer < now ) { PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() ) }
         rocksdb::WriteBatch batch;
 
         for ( const auto& field : res->fields)
@@ -115,18 +120,18 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
         rocksdb::WriteOptions wo;
         wo.disableWAL = pthis->_opt.disableWAL;
         pthis->_db.Write( wo, &batch);
-        PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() )
+        if ( pthis->_log_timer < now ) { PREFIXDB_LOG_END("Initial load: " << pthis->_name << " write recived range "<< res->fields.size() ) }
       }
       else
       {
-        PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
+        if ( pthis->_log_timer < now ) { PREFIXDB_LOG_BEGIN("Initial load: " << pthis->_name << " setnx "<< res->fields.size() ) }
         auto req1 = std::make_unique<request::setnx>();
         req1->prefix = pthis->_name;
         req1->fields.reserve(res->fields.size());
         for ( const auto& field : res->fields)
           req1->fields.emplace_back( field.first, field.second );
         pthis->_opt.local->setnx(std::move(req1), nullptr);
-        PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() )
+        if ( pthis->_log_timer < now ) { PREFIXDB_LOG_END("Initial load: " << pthis->_name << " setnx "<< res->fields.size() ) } 
       }
 
       if ( res->fin )
@@ -145,6 +150,10 @@ void wrocksdb_initial::query_initial_range_(size_t snapshot, const std::string& 
           }
         }));
       }
+      
+      if ( pthis->_log_timer < now )
+        pthis->_log_timer = time(nullptr);
+        
     }
   }));
 }

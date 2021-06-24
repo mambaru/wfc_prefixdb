@@ -1,10 +1,10 @@
 #include <fas/testing.hpp>
-#include <wfc/module/testing_domain.hpp>
+#include <wfc/testing/testing_domain.hpp>
 #include <prefixdb/prefixdb/prefixdb.hpp>
 
 
 namespace {
-  
+
 UNIT(init, "")
 {
   using namespace fas::testing;

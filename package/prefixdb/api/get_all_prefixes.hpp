@@ -11,6 +11,7 @@ namespace request
   struct get_all_prefixes
   {
     typedef std::unique_ptr<get_all_prefixes> ptr;
+    bool writable_only=false;
   };
 }
 

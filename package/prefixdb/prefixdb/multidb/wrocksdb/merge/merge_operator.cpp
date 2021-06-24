@@ -155,7 +155,7 @@ try
 
   return true;
 }
-catch(std::exception e)
+catch(const std::exception& e)
 {
   if ( merge_in.existing_value )
     merge_out->new_value = merge_in.existing_value->ToString();

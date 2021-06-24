@@ -14,12 +14,12 @@ namespace request
     JSON_NAME(from)
     JSON_NAME(to)
     
-    typedef wfc::json::object<
+    typedef wjson::object<
       compact_prefix,
-        wfc::json::member_list<
-          wfc::json::member<n_prefix, compact_prefix, std::string, &compact_prefix::prefix >,
-          wfc::json::member<n_from, compact_prefix, std::string, &compact_prefix::from>,
-          wfc::json::member<n_to, compact_prefix, std::string, &compact_prefix::to>
+        wjson::member_list<
+          wjson::member<n_prefix, compact_prefix, std::string, &compact_prefix::prefix >,
+          wjson::member<n_from, compact_prefix, std::string, &compact_prefix::from>,
+          wjson::member<n_to, compact_prefix, std::string, &compact_prefix::to>
         >
     > type;
     typedef type::target target;
@@ -35,11 +35,11 @@ namespace response
     JSON_NAME(status)
     JSON_NAME(prefix)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       compact_prefix,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, compact_prefix, std::string, &compact_prefix::prefix>,
-        wfc::json::member<n_status, compact_prefix, common_status, &compact_prefix::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_prefix, compact_prefix, std::string, &compact_prefix::prefix>,
+        wjson::member<n_status, compact_prefix, common_status, &compact_prefix::status, common_status_json>
       >
     > type;
     typedef type::target target;

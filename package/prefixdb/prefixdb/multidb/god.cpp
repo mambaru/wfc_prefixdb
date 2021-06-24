@@ -5,7 +5,7 @@
 
 namespace wamba{ namespace prefixdb{
 
-std::shared_ptr<ifactory> god::create(std::string type, wfc::asio::io_service& )
+std::shared_ptr<ifactory> god::create(const std::string& type, boost::asio::io_context& )
 {
   PREFIXDB_LOG_MESSAGE("CREATE FACTORY [" << type << "]")
 

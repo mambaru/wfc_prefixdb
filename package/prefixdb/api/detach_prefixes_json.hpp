@@ -13,11 +13,11 @@ namespace request
     JSON_NAME(prefixes)
     JSON_NAME(deny_timeout_s)
     
-    typedef wfc::json::object<
+    typedef wjson::object<
       detach_prefixes,
-      wfc::json::member_list<
-        wfc::json::member<n_prefixes, detach_prefixes, detach_prefixes::prefix_list, &detach_prefixes::prefixes, wfc::json::vector_of_strings<50> >,
-        wfc::json::member<n_deny_timeout_s, detach_prefixes, time_t, &detach_prefixes::deny_timeout_s >
+      wjson::member_list<
+        wjson::member<n_prefixes, detach_prefixes, detach_prefixes::prefix_list, &detach_prefixes::prefixes, wjson::vector_of_strings<50> >,
+        wjson::member<n_deny_timeout_s, detach_prefixes, time_t, &detach_prefixes::deny_timeout_s >
       >
     > type;
     typedef type::target target;
@@ -32,10 +32,10 @@ namespace response
   {
     JSON_NAME(status)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       detach_prefixes,
-      wfc::json::member_list<
-        wfc::json::member<n_status, detach_prefixes, common_status, &detach_prefixes::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_status, detach_prefixes, common_status, &detach_prefixes::status, common_status_json>
       >
     > type;
     typedef type::target target;

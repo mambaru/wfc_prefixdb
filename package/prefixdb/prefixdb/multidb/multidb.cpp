@@ -9,6 +9,7 @@
 #include <wfc/logger.hpp>
 #include <wfc/boost.hpp>
 #include <prefixdb/logger.hpp>
+#include <algorithm>
 
 namespace wamba{ namespace prefixdb {
 
@@ -53,10 +54,21 @@ bool multidb::configure(const multidb_config& opt, const std::shared_ptr<ifactor
     ::boost::filesystem::create_directory(opt.path, ec);
     if (ec)
     {
-      PREFIXDB_LOG_ERROR("Create directory fail '" << opt.path << "'" << ec.message() );
+      PREFIXDB_LOG_ERROR("Create directory fail (main)'" << opt.path << "'" << ec.message() );
       return false;
     }
   }
+  
+  _writable_prefixes = opt.writable_prefixes;
+  _readonly_prefixes = opt.readonly_prefixes;
+  std::sort(_writable_prefixes.begin(), _writable_prefixes.end());
+  std::sort(_readonly_prefixes.begin(), _readonly_prefixes.end());
+
+  _slave_writable_only = opt.slave.writable_only;
+  _slave_allowed_prefixes = opt.slave.allowed_prefixes;
+  _slave_denied_prefixes = opt.slave.denied_prefixes;
+  std::sort(_slave_allowed_prefixes.begin(), _slave_allowed_prefixes.end());
+  std::sort(_slave_denied_prefixes.begin(), _slave_denied_prefixes.end());
 
   // Еще базы не открыты, конфигурация только этого
   this->reconfigure(opt);
@@ -97,7 +109,7 @@ void multidb::start()
 
 void multidb::set( request::set::ptr req, response::set::handler cb)
 {
-  if ( !check_fields_<response::set>(req, cb) )
+  if ( !check_fields_<response::set>(req, cb, true) )
     return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
@@ -112,7 +124,7 @@ void multidb::set( request::set::ptr req, response::set::handler cb)
 
 void multidb::setnx( request::setnx::ptr req, response::setnx::handler cb)
 {
-  if ( !check_fields_<response::setnx>(req, cb) )
+  if ( !check_fields_<response::setnx>(req, cb, true) )
     return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
@@ -154,6 +166,9 @@ void multidb::del( request::del::ptr req, response::del::handler cb)
   if ( empty_fields<response::del>(req, cb) )
     return;
 
+  if ( !is_writable_<response::del>(req, cb) )
+    return;
+
   if ( auto db = this->prefix_(req->prefix, false) )
   {
     db->del( std::move(req), std::move(cb) );
@@ -166,7 +181,7 @@ void multidb::del( request::del::ptr req, response::del::handler cb)
 
 void multidb::inc( request::inc::ptr req, response::inc::handler cb)
 {
-  if ( !check_fields_<response::inc>(req, cb) )
+  if ( !check_fields_<response::inc>(req, cb, true) )
     return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
@@ -181,7 +196,7 @@ void multidb::inc( request::inc::ptr req, response::inc::handler cb)
 
 void multidb::add( request::add::ptr req, response::add::handler cb)
 {
-  if ( !check_fields_<response::add>(req, cb) )
+  if ( !check_fields_<response::add>(req, cb, true) )
     return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
@@ -196,7 +211,7 @@ void multidb::add( request::add::ptr req, response::add::handler cb)
 
 void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 {
-  if ( !check_fields_<response::packed>(req, cb) )
+  if ( !check_fields_<response::packed>(req, cb, true) )
     return;
 
   if ( auto db = this->prefix_(req->prefix, true) )
@@ -210,7 +225,7 @@ void multidb::packed( request::packed::ptr req, response::packed::handler cb)
 }
 
 void multidb::range( request::range::ptr req, response::range::handler cb)
-{
+{  
   if ( _range_limit!=0 && (req->limit + req->offset > _range_limit) )
   {
     send_error<common_status::RangeLimitExceeded, response::range>(std::move(req), std::move(cb) );
@@ -294,10 +309,16 @@ void multidb::get_updates_since( request::get_updates_since::ptr req, response::
   }
 }
 
-void multidb::get_all_prefixes( request::get_all_prefixes::ptr /*req*/, response::get_all_prefixes::handler cb)
+void multidb::get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb)
 {
   auto res = std::make_unique<response::get_all_prefixes>();
-  res->prefixes = this->all_prefixes_();
+  auto prefixes = this->all_prefixes_();
+  res->prefixes.reserve( prefixes.size() );
+  for ( const std::string& prefix: prefixes)
+  {
+    if ( !req->writable_only || this->is_writable_(prefix) )
+      res->prefixes.push_back(prefix);
+  }
   cb(std::move(res));
 }
 
@@ -306,16 +327,38 @@ void multidb::attach_prefixes( request::attach_prefixes::ptr req, response::atta
   bool ready = false;
   for (const auto& prefix : req->prefixes )
   {
-    std::lock_guard<std::mutex> lk(this->_mutex);
-    auto itr = this->_db_map.find(prefix);
-    if ( itr != this->_db_map.end() && itr->second == nullptr )
     {
-      PREFIXDB_LOG_MESSAGE("Attach Prefix: " << prefix)
-      ready = true;
-      _db_map.erase(itr);
-      if ( req->opendb )
-        this->prefix_(prefix, false);
+      std::lock_guard<std::mutex> lk(this->_mutex);
+      auto path1 = _opt.path + "/" + prefix;
+      auto path2 = _opt.detach_path + "/" + prefix;
+      if ( file::exist(path2) && !file::exist(path1) )
+      {
+        std::string errmsg;
+        if ( !file::move(path2, path1, errmsg) )
+        {
+          PREFIXDB_LOG_ERROR("Attach detached prefix '" << prefix << "': " << errmsg);
+        }
+        else
+        {
+          PREFIXDB_LOG_MESSAGE("Moved attached prefix '" << prefix << "' from " << path2 << " to " << path1 );
+        }
+      }
+      auto itr = this->_db_map.find(prefix);
+      if ( itr != this->_db_map.end() && itr->second == nullptr )
+      {
+        _db_map.erase(itr);
+      }
     }
+    
+    PREFIXDB_LOG_MESSAGE("Attach Prefix: " << prefix)
+    if ( req->opendb )
+    {
+      PREFIXDB_LOG_BEGIN("Open attached Prefix: " << prefix)
+      ready &= nullptr != this->prefix_(prefix, false);
+      PREFIXDB_LOG_END("Open attached Prefix: " << prefix)
+    }
+    else
+      ready &= true;
   }
 
   if ( cb!=nullptr )
@@ -324,6 +367,7 @@ void multidb::attach_prefixes( request::attach_prefixes::ptr req, response::atta
     res->status = ready
       ? common_status::OK
       : common_status::CreatePrefixFail;
+    cb(std::move(res));
   }
 }
 
@@ -338,11 +382,13 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
       req1->deny_timeout_s = req->deny_timeout_s;
       db->detach_prefixes(
         std::move(req1),
-        [db](response::detach_prefixes::ptr){
+        [db, prefix](response::detach_prefixes::ptr){
           /*захватываем db, на случай если detach_prefixes работает асинхронно*/
+          PREFIXDB_LOG_MESSAGE("Delete database for prefix '" << prefix << "'")
         });
 
       std::lock_guard<std::mutex> lk(_mutex);
+      //_self_slave_prefixes.erase(prefix);
       if ( req->deny_timeout_s == 0)
       {
         _db_map.erase( prefix );
@@ -350,18 +396,23 @@ void multidb::detach_prefixes( request::detach_prefixes::ptr req, response::deta
       else
       {
         _db_map[prefix]=nullptr;
+        std::weak_ptr<multidb> wthis = this->shared_from_this();
         _workflow->safe_post(
           std::chrono::seconds(req->deny_timeout_s),
-          [this,prefix]()->bool
+          _owner.wrap([wthis,prefix]()->bool
           {
-            std::lock_guard<std::mutex> lk2(this->_mutex);
-            auto itr = this->_db_map.find(prefix);
-            if ( itr != this->_db_map.end() && itr->second == nullptr )
+            if ( auto pthis = wthis.lock() )
             {
-              _db_map.erase(itr);
+              std::lock_guard<std::mutex> lk2(pthis->_mutex);
+              auto itr = pthis->_db_map.find(prefix);
+              if ( itr != pthis->_db_map.end() && itr->second == nullptr )
+              {
+                pthis->_db_map.erase(itr);
+              }
             }
+
             return false;
-          }
+          }, nullptr)
         );
       }
     }
@@ -460,6 +511,7 @@ void  multidb::release_snapshot( request::release_snapshot::ptr req, response::r
 
 void multidb::stop()
 {
+  _owner.reset();
   if ( _workflow )
   {
     _workflow->release_timer(_archive_timer);
@@ -494,7 +546,7 @@ bool multidb::backup()
     ::boost::filesystem::create_directory(_opt.backup.path, ec);
     if (ec)
     {
-      PREFIXDB_LOG_ERROR("Create directory fail '" << _opt.backup.path << "'" << ec.message() );
+      PREFIXDB_LOG_ERROR("Create directory fail (backup)'" << _opt.backup.path << "'" << ec.message() );
       return true;
     }
   }
@@ -565,7 +617,7 @@ bool multidb::restore()
     ::boost::filesystem::create_directory(this->_opt.path, ec);
     if ( ec )
     {
-      PREFIXDB_LOG_ERROR( "Create directory FAIL: '" << this->_opt.path << "'" )
+      PREFIXDB_LOG_ERROR( "Create directory FAIL (resore): '" << this->_opt.path << "'" )
       return false;
     }
   }
@@ -613,7 +665,7 @@ bool multidb::archive()
     {
       auto dir = path + '/' + name;
       std::string message;
-      if ( !delete_dir(dir, message) )
+      if ( !file::remove(dir, message) )
       {
         PREFIXDB_LOG_ERROR("Delete old archive '" << path << "': " << message)
       }
@@ -652,7 +704,7 @@ void multidb::configure_archive_timer_()
     _archive_timer = _workflow->create_timer(
       _opt.archive.start_time,
       std::chrono::seconds( _opt.archive.period_s ),
-      [this]()->bool { this->archive(); return true; },
+      _owner.wrap([this]()->bool { this->archive(); return true; }, nullptr),
       ::wflow::expires_at::before
     );
   }
@@ -671,7 +723,7 @@ bool multidb::preopen_(const std::string& path, bool create_if_missing)
   PREFIXDB_LOG_BEGIN("Pre open prefixes ...")
   for (auto name: dirs)
   {
-    PREFIXDB_LOG_MESSAGE("Pre open prefix " << name << "...")
+    PREFIXDB_LOG_MESSAGE("Pre open prefix '" << name << "'...")
     if ( nullptr == this->prefix_(name, create_if_missing) )
     {
       PREFIXDB_LOG_WARNING("Pre open prefix FAIL")
@@ -690,7 +742,7 @@ void multidb::configure_compact_timer_()
     _compact_timer = _workflow->create_timer(
       c.start_time,
       std::chrono::seconds( c.period_s ),
-      [this]() { this->compact(); return true; },
+      _owner.wrap([this]() { this->compact(); return true; }, nullptr),
       ::wflow::expires_at::before
     );
   }
@@ -702,11 +754,11 @@ void multidb::configure_backup_timer_()
 
   if ( _opt.backup.enabled &&  !_opt.backup.path.empty() )
   {
-    DEBUG_LOG_MESSAGE("Backup timer start '" << _opt.backup.start_time  << "' ws period " << _opt.backup.period_s << " second")
+    PREFIXDB_LOG_MESSAGE("Backup timer start '" << _opt.backup.start_time  << "' ws period " << _opt.backup.period_s << " second")
     _backup_timer = _workflow->create_timer(
       _opt.backup.start_time,
       std::chrono::seconds( _opt.backup.period_s ),
-      [this]() { this->backup(); return true; },
+      _owner.wrap([this]() { this->backup(); return true; }, nullptr),
       ::wflow::expires_at::before
     );
   }
@@ -722,8 +774,10 @@ void multidb::configure_prefix_reqester_()
   if( _opt.initial_load.enabled )
   {
     PREFIXDB_LOG_MESSAGE("Get All Prefixes for initial load")
+    auto gap = std::make_unique<request::get_all_prefixes>();
+    gap->writable_only = _slave_writable_only;
     _opt.initial_load.remote->get_all_prefixes(
-      std::make_unique<request::get_all_prefixes>(),
+      std::move(gap),
       std::bind( &multidb::get_all_prefixes_generator_, this, std::placeholders::_1)
     );
   }
@@ -751,13 +805,24 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
 {
   if ( res == nullptr )
   {
-    return std::make_unique<request::get_all_prefixes>();
+    auto gap = std::make_unique<request::get_all_prefixes>();
+    gap->writable_only = _slave_writable_only;
+    return gap;
   }
 
+  /*
   auto preflist = this->all_prefixes_();
   std::set<std::string> prefset( preflist.begin(), preflist.end() );
+  */
+  std::set<std::string> prefset;
+  {
+    std::lock_guard<std::mutex> lk(_mutex);
+    prefset=_master_prefixes;
+  }
+  
   if ( res->status == common_status::OK)
   {
+    PREFIXDB_LOG_MESSAGE("Prefix list from master: " << res->prefixes.size() )
     for ( const auto& x : res->prefixes )
     {
       if ( x.empty() )
@@ -765,8 +830,19 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
         PREFIXDB_LOG_WARNING("get_all_prefixes: empty prefix")
         continue;
       }
-      this->prefix_(x, true);
-      prefset.erase(x);
+
+      if ( this->allowed_for_slave_(x) )
+      {
+        // PREFIXDB_LOG_MESSAGE("Check prefix '" << x << "' from master")
+        this->prefix_(x, true);
+        prefset.erase(x);
+        
+        std::lock_guard<std::mutex> lk(_mutex);
+        if ( _master_prefixes.insert(x).second)
+        {
+          PREFIXDB_LOG_MESSAGE("New prefix '" << x << "' from master")
+        }
+      }
     }
 
     if ( !prefset.empty() )
@@ -776,13 +852,25 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
       preq->prefixes.reserve(prefset.size());
       for ( auto& x : prefset )
       {
+        {
+          std::lock_guard<std::mutex> lk(_mutex);
+          _master_prefixes.erase(x);
+          /*if ( _self_slave_prefixes.count(x) > 0 )
+            continue;*/
+        }
+        PREFIXDB_LOG_WARNING("Removed prefix '" << x << "' from master")
         preq->prefixes.push_back( std::move(x) );
       }
 
-      _workflow->post([this, preq]
+      PREFIXDB_LOG_BEGIN("Detach removed prefixes from master...")
+      this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
+      PREFIXDB_LOG_END("Detach removed prefixes from master. Done!")
+      /*
+      _workflow->safe_post(_owner.wrap([this, preq]
       {
         this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
-      }, nullptr);
+      }, nullptr), nullptr);
+      */
     }
   }
   else if ( res != nullptr )
@@ -842,14 +930,7 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
 
   auto itr = _db_map.find(prefix);
   if ( itr != _db_map.end() )
-  {
-    if ( itr->second)
-      return itr->second;
-
-    // Для get не создаем для несуществующих префиксов
-    if ( !create_if_missing )
-      return nullptr;
-  }
+    return itr->second;
 
   if ( _max_prefixes!=0 && _db_map.size() >= _max_prefixes )
     return nullptr;
@@ -866,6 +947,11 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
   if ( auto db = _factory->create_db(prefix, create_if_missing) )
   {
     PREFIXDB_LOG_MESSAGE("Open new prefix: " << prefix)
+    if ( _opt.slave.enabled )
+    {
+      //_self_slave_prefixes.insert(prefix);
+      PREFIXDB_LOG_WARNING("This prefix created on slave: " << prefix)
+    }
     _db_map.insert(itr, std::make_pair(prefix, db));
     db->start();
     return db;
@@ -876,12 +962,59 @@ multidb::prefixdb_ptr multidb::prefix_(const std::string& prefix,  bool create_i
   return nullptr;
 }
 
+
+bool multidb::allowed_for_slave_(const std::string& prefix) const
+{
+  if ( !_slave_allowed_prefixes.empty() ) 
+  {
+    if ( !std::binary_search(_slave_allowed_prefixes.begin(), _slave_allowed_prefixes.end(), prefix) )
+      return false;
+  }
+  
+  if ( !_slave_denied_prefixes.empty() ) 
+  {
+    if ( std::binary_search(_slave_denied_prefixes.begin(), _slave_denied_prefixes.end(), prefix) )
+      return false;
+  }
+  
+  return true;
+}
+
+bool multidb::is_writable_(const std::string& prefix) const
+{
+  if ( !_writable_prefixes.empty() ) 
+  {
+    if ( !std::binary_search(_writable_prefixes.begin(), _writable_prefixes.end(), prefix) )
+      return false;
+  }
+  
+  if ( !_readonly_prefixes.empty() ) 
+  {
+    if ( std::binary_search(_readonly_prefixes.begin(), _readonly_prefixes.end(), prefix) )
+      return false;
+  }
+  
+  return true;
+}
+
+
 template<typename Res, typename ReqPtr, typename Callback>
-bool multidb::check_prefix_(const ReqPtr& req, const Callback& cb)
+bool multidb::is_writable_(const ReqPtr& req, const Callback& cb) const
+{
+  if (!this->is_writable_(req->prefix) )
+    return send_error<common_status::PrefixReadonly, Res>(std::move(req), std::move(cb) );
+  return true;
+}
+
+template<typename Res, typename ReqPtr, typename Callback>
+bool multidb::check_prefix_(const ReqPtr& req, const Callback& cb, bool is_writable ) const
 {
   if ( req->prefix.empty() )
     return send_error<common_status::EmptyPrefix, Res>(std::move(req), std::move(cb) );
 
+  if ( is_writable && !this->is_writable_<Res>(req, cb) )
+    return false;
+  
   if ( _prefix_size_limit!=0 && req->prefix.size() > _prefix_size_limit )
     return send_error<common_status::PrefixLengthExceeded, Res>(std::move(req), std::move(cb) );
 
@@ -889,12 +1022,12 @@ bool multidb::check_prefix_(const ReqPtr& req, const Callback& cb)
 }
 
 template<typename Res, typename ReqPtr, typename Callback>
-bool multidb::check_fields_(const ReqPtr& req, const Callback& cb)
+bool multidb::check_fields_(const ReqPtr& req, const Callback& cb, bool is_writable) const
 {
   if ( empty_fields<Res>(req, cb) )
     return false;
 
-  if ( !this->check_prefix_<Res>(req, cb) )
+  if ( !this->check_prefix_<Res>(req, cb, is_writable) )
     return false;
 
   if ( _keys_per_req!=0 && req->fields.size() > _keys_per_req )

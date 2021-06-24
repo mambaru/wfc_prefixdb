@@ -14,11 +14,11 @@ namespace request
     JSON_NAME(snapshot)
     
     
-    typedef wfc::json::object<
+    typedef wjson::object<
       release_snapshot,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, release_snapshot, std::string, &release_snapshot::prefix >,
-        wfc::json::member<n_snapshot, release_snapshot, size_t, &release_snapshot::snapshot >
+      wjson::member_list<
+        wjson::member<n_prefix, release_snapshot, std::string, &release_snapshot::prefix >,
+        wjson::member<n_snapshot, release_snapshot, size_t, &release_snapshot::snapshot >
       >
     > type;
     typedef type::target target;
@@ -34,11 +34,11 @@ namespace response
     JSON_NAME(prefix)
     JSON_NAME(status)
 
-    typedef wfc::json::object<
+    typedef wjson::object<
       release_snapshot,
-      wfc::json::member_list<
-        wfc::json::member<n_prefix, release_snapshot, std::string, &release_snapshot::prefix >,
-        wfc::json::member<n_status, release_snapshot, common_status, &release_snapshot::status, common_status_json>
+      wjson::member_list<
+        wjson::member<n_prefix, release_snapshot, std::string, &release_snapshot::prefix >,
+        wjson::member<n_status, release_snapshot, common_status, &release_snapshot::status, common_status_json>
       >
     > type;
     typedef type::target target;

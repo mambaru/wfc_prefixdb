@@ -1,7 +1,7 @@
 #pragma once
 
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
-#include <iow/owner/owner.hpp>
+#include <wflow/owner.hpp>
 #include <mutex>
 
 namespace rocksdb{ class DBWithTTL;}
@@ -13,7 +13,7 @@ class since_reader;
 class wrocksdb_initial
   : public std::enable_shared_from_this<wrocksdb_initial>
 {
-  typedef wfc::workflow::timer_id_t timer_id_t;
+  typedef wflow::workflow::timer_id_t timer_id_t;
 
 public:
   typedef ::rocksdb::DBWithTTL db_type;
@@ -33,9 +33,10 @@ private:
   initial_config _opt;
   db_type& _db;
 
-  std::shared_ptr<wfc::workflow> _workflow;
+  std::shared_ptr<wflow::workflow> _workflow;
   typedef std::mutex mutex_type;
-  iow::owner _owner;
+  wflow::owner _owner;
+  std::atomic<time_t> _log_timer;
 };
 
 }}

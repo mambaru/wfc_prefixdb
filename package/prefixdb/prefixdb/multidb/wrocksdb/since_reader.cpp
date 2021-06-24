@@ -212,7 +212,7 @@ const char*  since_reader::read_op_(const char* beg, const char* end, bool ignor
 
 unsigned int since_reader::read_record_(const char *beg, const char *end)
 {
-  uint64_t sn = *reinterpret_cast<const uint64_t *>(beg);
+  uint64_t sn = *reinterpret_cast<const uint64_t *>( static_cast<const void*>(beg) );
   const unsigned int type = static_cast<unsigned int>(beg[8]);
   size_t head = 12;
   beg += head;

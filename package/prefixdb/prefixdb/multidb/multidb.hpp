@@ -4,6 +4,7 @@
 #include <prefixdb/prefixdb/multidb/wrocksdb/wrocksdb.hpp>
 #include <memory>
 #include <map>
+#include <set>
 #include <mutex>
 
 namespace wamba{ namespace prefixdb{
@@ -63,26 +64,32 @@ private:
   prefixdb_ptr prefix_(const std::string& prefix, bool create_if_missing);
   bool close_prefix_(const std::string& prefix);
 
-  template<typename Res, typename ReqPtr, typename Callback>
-  bool check_fields_(const ReqPtr& req, const Callback& cb);
+  bool allowed_for_slave_(const std::string& prefix) const;
 
   template<typename Res, typename ReqPtr, typename Callback>
-  bool check_prefix_(const ReqPtr& req, const Callback& cb);
+  bool check_fields_(const ReqPtr& req, const Callback& cb, bool is_writable) const;
 
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool check_prefix_(const ReqPtr& req, const Callback& cb, bool is_writable) const;
+
+  template<typename Res, typename ReqPtr, typename Callback>
+  bool is_writable_(const ReqPtr& req, const Callback& cb) const;
+
+  bool is_writable_(const std::string& prefix) const;
 private:
-  typedef wfc::workflow::timer_id_t timer_id_t;
 
-
+  typedef wflow::workflow::timer_id_t timer_id_t;
   std::shared_ptr<ifactory> _factory;
   db_map _db_map;
   std::mutex _mutex;
   multidb_config _opt;
-  std::shared_ptr< ::wfc::workflow> _workflow;
+  wflow::owner _owner;
+  std::shared_ptr<wflow::workflow> _workflow;
 
-  ::wfc::workflow::timer_id_t _compact_timer  = -1;
-  ::wfc::workflow::timer_id_t _backup_timer  = -1;
-  ::wfc::workflow::timer_id_t _archive_timer  = -1;
-  ::wfc::workflow::timer_id_t _prefix_reqester = -1;
+  wflow::workflow::timer_id_t _compact_timer  = -1;
+  wflow::workflow::timer_id_t _backup_timer  = -1;
+  wflow::workflow::timer_id_t _archive_timer  = -1;
+  wflow::workflow::timer_id_t _prefix_reqester = -1;
 
   // реконфигурируемые опции
   std::atomic_size_t _range_limit;
@@ -91,6 +98,16 @@ private:
   std::atomic_size_t _keys_per_req;
   std::atomic_size_t _value_size_limit;
   std::atomic_size_t _key_size_limit;
+
+  std::vector<std::string> _writable_prefixes;
+  std::vector<std::string> _readonly_prefixes;
+
+  bool _slave_writable_only = false;
+  std::vector<std::string> _slave_allowed_prefixes;
+  std::vector<std::string> _slave_denied_prefixes;
+  // Префиксы полученые от мастера, чтобы не удалять перрфиксы созданные на слейве, когда они удаляются на мастере
+  std::set<std::string> _master_prefixes;
+
 };
 
 }}
