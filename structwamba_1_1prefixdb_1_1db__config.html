@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wfc_prefixdb: Структура wamba::prefixdb::db_config</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">wfc_prefixdb
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.17 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="namespacewamba.html">wamba</a></li><li class="navelem"><a class="el" href="namespacewamba_1_1prefixdb.html">prefixdb</a></li><li class="navelem"><a class="el" href="structwamba_1_1prefixdb_1_1db__config.html">db_config</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Открытые атрибуты</a> &#124;
+<a href="structwamba_1_1prefixdb_1_1db__config-members.html">Полный список членов класса</a>  </div>
+  <div class="headertitle">
+<div class="title">Структура wamba::prefixdb::db_config</div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>Конфигурация  
+</p>
+
+<p><code>#include &lt;<a class="el" href="db__config_8hpp_source.html">db_config.hpp</a>&gt;</code></p>
+
+<p>Производные классы:wamba::prefixdb::multidb_config.</p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Открытые атрибуты</h2></td></tr>
+<tr class="memitem:a303348dacdd9ba64aac032b2c688626f"><td class="memItemLeft" align="right" valign="top"><a id="a303348dacdd9ba64aac032b2c688626f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1db__config.html#a303348dacdd9ba64aac032b2c688626f">enable_delayed_write</a> = false</td></tr>
+<tr class="memdesc:a303348dacdd9ba64aac032b2c688626f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Запись batch в отдельном потоке <br /></td></tr>
+<tr class="separator:a303348dacdd9ba64aac032b2c688626f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4878bb7294260efc4ded4267f7239c74"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1db__config.html#a4878bb7294260efc4ded4267f7239c74">answer_before_write</a> = false</td></tr>
+<tr class="memdesc:a4878bb7294260efc4ded4267f7239c74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Сначала ответить на запрос (всегда ОК), потом сделать запись  <a href="structwamba_1_1prefixdb_1_1db__config.html#a4878bb7294260efc4ded4267f7239c74">Подробнее...</a><br /></td></tr>
+<tr class="separator:a4878bb7294260efc4ded4267f7239c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Данные класса</h2>
+<a id="a4878bb7294260efc4ded4267f7239c74"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4878bb7294260efc4ded4267f7239c74">&#9670;&nbsp;</a></span>answer_before_write</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool wamba::prefixdb::db_config::answer_before_write = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Только для отладки или временный костыль. Сработает только для запросов с sync=false, nores=false. Может поломать логику клиента </p>
+
+</div>
+</div>
+<hr/>Объявления и описания членов структуры находятся в файле:<ul>
+<li>package/prefixdb/prefixdb/multidb/options/<a class="el" href="db__config_8hpp_source.html">db_config.hpp</a></li>
+</ul>
+</div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.17
+</small></address>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wfc_prefixdb: Структура wamba::prefixdb::iprefixdb</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">wfc_prefixdb
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.17 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="namespacewamba.html">wamba</a></li><li class="navelem"><a class="el" href="namespacewamba_1_1prefixdb.html">prefixdb</a></li><li class="navelem"><a class="el" href="structwamba_1_1prefixdb_1_1iprefixdb.html">iprefixdb</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Открытые члены</a> &#124;
+<a href="structwamba_1_1prefixdb_1_1iprefixdb-members.html">Полный список членов класса</a>  </div>
+  <div class="headertitle">
+<div class="title">Структура wamba::prefixdb::iprefixdb<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>Интерфейс к PrefixDB.  
+ <a href="structwamba_1_1prefixdb_1_1iprefixdb.html#details">Подробнее...</a></p>
+
+<p><code>#include &lt;<a class="el" href="iprefixdb_8hpp_source.html">iprefixdb.hpp</a>&gt;</code></p>
+
+<p>Базовые классы:iinterface.</p>
+
+<p>Производные классы:wamba::prefixdb::iprefixdb_ex и wamba::prefixdb::multidb.</p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Открытые члены</h2></td></tr>
+<tr class="memitem:a7a11e6f23be8aa6b8fef06e66f46aecf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1iprefixdb.html#a7a11e6f23be8aa6b8fef06e66f46aecf">set</a> (<a class="el" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a85e9226659956781b4d50cd3dd50326a">request::set::ptr</a> req, <a class="el" href="structwamba_1_1prefixdb_1_1response_1_1set.html#a79b1a398080babe5e2e42c537257d85a">response::set::handler</a> cb)=0</td></tr>
+<tr class="memdesc:a7a11e6f23be8aa6b8fef06e66f46aecf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Установка значений для нескольких ключей.  <a href="structwamba_1_1prefixdb_1_1iprefixdb.html#a7a11e6f23be8aa6b8fef06e66f46aecf">Подробнее...</a><br /></td></tr>
+<tr class="separator:a7a11e6f23be8aa6b8fef06e66f46aecf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><p>Основные операции </p><table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Метод </th><th class="markdownTableHeadNone">Запрос (JSON) </th><th class="markdownTableHeadNone">Ответ (JSON) </th><th class="markdownTableHeadNone">Кратко  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="structwamba_1_1prefixdb_1_1iprefixdb.html#a7a11e6f23be8aa6b8fef06e66f46aecf">set</a> </td><td class="markdownTableBodyNone"><a class="el" href="structwamba_1_1prefixdb_1_1request_1_1set.html">request::set</a> (<a class="el" href="structwamba_1_1prefixdb_1_1request_1_1set__json.html">json</a>) </td><td class="markdownTableBodyNone"><a class="el" href="structwamba_1_1prefixdb_1_1response_1_1set.html">response::set</a> (<a class="el" href="structwamba_1_1prefixdb_1_1response_1_1set__json.html">json</a>) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">get </td><td class="markdownTableBodyNone">request::get (json) </td><td class="markdownTableBodyNone">response::get (json) </td><td class="markdownTableBodyNone">Чтение  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">del </td><td class="markdownTableBodyNone">request::del (json) </td><td class="markdownTableBodyNone">response::del (json) </td><td class="markdownTableBodyNone">Удаление  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">has </td><td class="markdownTableBodyNone">request::has (json) </td><td class="markdownTableBodyNone">response::has (json) </td><td class="markdownTableBodyNone">Проверка  </td></tr>
+</table>
+<p>Операции слияния </p><table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Метод </th><th class="markdownTableHeadNone">Запрос (JSON) </th><th class="markdownTableHeadNone">Ответ (JSON) </th><th class="markdownTableHeadNone">Кратко  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">inc </td><td class="markdownTableBodyNone">request::inc (json) </td><td class="markdownTableBodyNone">response::inc (json) </td><td class="markdownTableBodyNone">Целочисленный счетчик  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">add </td><td class="markdownTableBodyNone">request::add (json) </td><td class="markdownTableBodyNone">response::add (json) </td><td class="markdownTableBodyNone">Циклический массив  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">setnx </td><td class="markdownTableBodyNone">request::setnx (json) </td><td class="markdownTableBodyNone">response::setnx (json) </td><td class="markdownTableBodyNone">Записать, если не существует  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">packed </td><td class="markdownTableBodyNone">request::packed (json) </td><td class="markdownTableBodyNone">response::packed (json) </td><td class="markdownTableBodyNone">Пакетное обновление полей JSON-объекта  </td></tr>
+</table>
+<p>Работа с диапазоном </p><table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Метод </th><th class="markdownTableHeadNone">Запрос (JSON) </th><th class="markdownTableHeadNone">Ответ (JSON) </th><th class="markdownTableHeadNone">Кратко  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">range </td><td class="markdownTableBodyNone">request::range (request::range_json) </td><td class="markdownTableBodyNone">response::range (response::range_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+</table>
+<p>Префиксы </p><table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Метод </th><th class="markdownTableHeadNone">Запрос (JSON) </th><th class="markdownTableHeadNone">Ответ (JSON) </th><th class="markdownTableHeadNone">Кратко  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">get_all_prefixes </td><td class="markdownTableBodyNone">request::get_all_prefixes (request::get_all_prefixes_json) </td><td class="markdownTableBodyNone">response::get_all_prefixes (response::get_all_prefixes_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">detach_prefixes </td><td class="markdownTableBodyNone">request::detach_prefixes (request::detach_prefixes_json) </td><td class="markdownTableBodyNone">response::detach_prefixes (response::detach_prefixes_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">attach_prefixes </td><td class="markdownTableBodyNone">request::attach_prefixes (request::attach_prefixes_json) </td><td class="markdownTableBodyNone">response::attach_prefixes (response::attach_prefixes_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">compact_prefix </td><td class="markdownTableBodyNone">request::compact_prefix (request::compact_prefix_json) </td><td class="markdownTableBodyNone">response::compact_prefix (response::compact_prefix_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+</table>
+<p>Снапшоты </p><table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Метод </th><th class="markdownTableHeadNone">Запрос (JSON) </th><th class="markdownTableHeadNone">Ответ (JSON) </th><th class="markdownTableHeadNone">Кратко  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">create_snapshot </td><td class="markdownTableBodyNone">request::create_snapshot (request::create_snapshot_json) </td><td class="markdownTableBodyNone">response::create_snapshot (response::create_snapshot_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">release_snapshot </td><td class="markdownTableBodyNone">request::release_snapshot (request::release_snapshot_json) </td><td class="markdownTableBodyNone">response::release_snapshot (response::release_snapshot_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+</table>
+<p>Репликация и бэкапы </p><table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Метод </th><th class="markdownTableHeadNone">Запрос (JSON) </th><th class="markdownTableHeadNone">Ответ (JSON) </th><th class="markdownTableHeadNone">Кратко  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">delay_background </td><td class="markdownTableBodyNone">request::delay_background (request::delay_background_json) </td><td class="markdownTableBodyNone">response::delay_background (response::delay_background_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">continue_background </td><td class="markdownTableBodyNone">request::continue_background (request::continue_background_json) </td><td class="markdownTableBodyNone">response::continue_background (response::continue_background_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">get_updates_since </td><td class="markdownTableBodyNone">request::get_updates_since (request::get_updates_since_json) </td><td class="markdownTableBodyNone">response::get_updates_since (response::get_updates_since_json) </td><td class="markdownTableBodyNone">Запись  </td></tr>
+</table>
+</div><h2 class="groupheader">Методы</h2>
+<a id="a7a11e6f23be8aa6b8fef06e66f46aecf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a11e6f23be8aa6b8fef06e66f46aecf">&#9670;&nbsp;</a></span>set()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void wamba::prefixdb::iprefixdb::set </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a85e9226659956781b4d50cd3dd50326a">request::set::ptr</a>&#160;</td>
+          <td class="paramname"><em>req</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structwamba_1_1prefixdb_1_1response_1_1set.html#a79b1a398080babe5e2e42c537257d85a">response::set::handler</a>&#160;</td>
+          <td class="paramname"><em>cb</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">req</td><td>запрос <a class="el" href="structwamba_1_1prefixdb_1_1request_1_1set.html">request::set</a> </td></tr>
+    <tr><td class="paramname">cb</td><td>обработчик обратного вызова <a class="el" href="structwamba_1_1prefixdb_1_1response_1_1set.html">response::set</a> </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Объявления и описания членов структуры находятся в файле:<ul>
+<li>package/prefixdb/<a class="el" href="iprefixdb_8hpp_source.html">iprefixdb.hpp</a></li>
+</ul>
+</div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.17
+</small></address>
+</body>
+</html>

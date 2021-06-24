@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wfc_prefixdb: Исходный файл package/prefixdb/iprefixdb.hpp</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">wfc_prefixdb
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.17 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_49723ebcbd6fe8f0b24287e7094945fb.html">package</a></li><li class="navelem"><a class="el" href="dir_5ddace9f1317d7706c2c45b897e0496b.html">prefixdb</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">iprefixdb.hpp</div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;wfc/iinterface.hpp&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/set.hpp&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/setnx.hpp&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/get.hpp&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/has.hpp&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/del.hpp&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/inc.hpp&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/add.hpp&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/packed.hpp&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/range.hpp&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/repair_json.hpp&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/get_updates_since.hpp&gt;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/get_all_prefixes.hpp&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/detach_prefixes.hpp&gt;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/attach_prefixes.hpp&gt;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/delay_background.hpp&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/continue_background.hpp&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/compact_prefix.hpp&gt;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/create_snapshot.hpp&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;prefixdb/api/release_snapshot.hpp&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacewamba.html">wamba</a> { <span class="keyword">namespace </span>prefixdb{</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="structwamba_1_1prefixdb_1_1iprefixdb.html">   72</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structwamba_1_1prefixdb_1_1iprefixdb.html">iprefixdb</a>: <span class="keyword">public</span> ::wfc::iinterface</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;{</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="structwamba_1_1prefixdb_1_1iprefixdb.html">iprefixdb</a>() {}</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="structwamba_1_1prefixdb_1_1iprefixdb.html#a7a11e6f23be8aa6b8fef06e66f46aecf">set</a>( <a class="code" href="structwamba_1_1prefixdb_1_1request_1_1set.html#a85e9226659956781b4d50cd3dd50326a">request::set::ptr</a> req, <a class="code" href="structwamba_1_1prefixdb_1_1response_1_1set.html#a79b1a398080babe5e2e42c537257d85a">response::set::handler</a> cb) = 0;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> get( request::get::ptr req, response::get::handler cb) = 0;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> del( request::del::ptr req, response::del::handler cb) = 0;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> has( request::has::ptr req, response::has::handler cb) = 0;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> inc( request::inc::ptr req, response::inc::handler cb) = 0;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> add( request::add::ptr req, response::add::handler cb) = 0;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> setnx( request::setnx::ptr req, response::setnx::handler cb) = 0;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> packed( request::packed::ptr req, response::packed::handler cb) = 0;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> range( request::range::ptr req, response::range::handler cb) = 0;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> get_all_prefixes( request::get_all_prefixes::ptr req, response::get_all_prefixes::handler cb) = 0;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> detach_prefixes( request::detach_prefixes::ptr req, response::detach_prefixes::handler cb) = 0;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> attach_prefixes( request::attach_prefixes::ptr req, response::attach_prefixes::handler cb) = 0;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> compact_prefix( request::compact_prefix::ptr req, response::compact_prefix::handler cb) = 0;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> repair_json( request::repair_json::ptr req, response::repair_json::handler cb) = 0;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> create_snapshot( request::create_snapshot::ptr req, response::create_snapshot::handler cb) = 0;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> release_snapshot( request::release_snapshot::ptr req, response::release_snapshot::handler cb) = 0;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> delay_background( request::delay_background::ptr req, response::delay_background::handler cb) = 0;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> continue_background( request::continue_background::ptr req, response::continue_background::handler cb) = 0;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> get_updates_since( request::get_updates_since::ptr req, response::get_updates_since::handler cb) = 0;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;};</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}}</div>
+</div><!-- fragment --></div><!-- contents -->
+<div class="ttc" id="astructwamba_1_1prefixdb_1_1iprefixdb_html_a7a11e6f23be8aa6b8fef06e66f46aecf"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1iprefixdb.html#a7a11e6f23be8aa6b8fef06e66f46aecf">wamba::prefixdb::iprefixdb::set</a></div><div class="ttdeci">virtual void set(request::set::ptr req, response::set::handler cb)=0</div><div class="ttdoc">Установка значений для нескольких ключей.</div></div>
+<div class="ttc" id="astructwamba_1_1prefixdb_1_1response_1_1set_html_a79b1a398080babe5e2e42c537257d85a"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1response_1_1set.html#a79b1a398080babe5e2e42c537257d85a">wamba::prefixdb::response::set::handler</a></div><div class="ttdeci">std::function&lt; void(ptr) &gt; handler</div><div class="ttdoc">Тип функции обратного вызова обработки ответа в методах API.</div><div class="ttdef"><b>Definition:</b> set.hpp:120</div></div>
+<div class="ttc" id="astructwamba_1_1prefixdb_1_1iprefixdb_html"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1iprefixdb.html">wamba::prefixdb::iprefixdb</a></div><div class="ttdoc">Интерфейс к PrefixDB.</div><div class="ttdef"><b>Definition:</b> iprefixdb.hpp:72</div></div>
+<div class="ttc" id="astructwamba_1_1prefixdb_1_1request_1_1set_html_a85e9226659956781b4d50cd3dd50326a"><div class="ttname"><a href="structwamba_1_1prefixdb_1_1request_1_1set.html#a85e9226659956781b4d50cd3dd50326a">wamba::prefixdb::request::set::ptr</a></div><div class="ttdeci">std::unique_ptr&lt; set &gt; ptr</div><div class="ttdoc">Тип указателя для удобного использования в интерфейсах</div><div class="ttdef"><b>Definition:</b> set.hpp:71</div></div>
+<div class="ttc" id="anamespacewamba_html"><div class="ttname"><a href="namespacewamba.html">wamba</a></div><div class="ttdoc">wamba</div><div class="ttdef"><b>Definition:</b> add.hpp:8</div></div>
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.17
+</small></address>
+</body>
+</html>

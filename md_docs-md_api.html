@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wfc_prefixdb: api</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">wfc_prefixdb
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.17 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div class="PageDoc"><div class="header">
+  <div class="headertitle">
+<div class="title">api </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>Все методы работают с конкретным префиксом, который нужно указывать в поле <b>prefix</b>. Нет методов, которые работают сразу с несколькими префиксами. Префикс должен быть совместим с файловой системой linux. По сути это имя директории хранилища. Желательно чтобы он не требовал экранирования json, а в идеале только латинские буквы, цифры, "_" и ".".</p>
+<p>У всех методов, за исключением <a href="methods.md#Метод-range">range</a>, есть параметр <b>fields</b>. У методов <a href="API#Метод-get">get</a>, <a href="API#Метод-has">has</a> и <a href="API#Метод-del">del</a> - это массив ключей. У метода <a href="API#Метод-set">set</a> ассоциативный массив (объект) с фактическими значениями, у остальных <a href="API#Метод-inc">inc</a>, <a href="API#Метод-add">add</a> и <a href="API#Метод-packed">packed</a> - ассоциативный массив с параметрами обновления.</p>
+<p>Все модифицирующие методы имеют параметр <b>sync</b>, который по умолчанию отключен. Его допустимо использовать только для критически важных данных, которым в принципе тут не место - это влияет на производительность. При штатном перезапуске, и в большинстве аварийных случаев (за исключением отключения питания), данные будут сохранены. Более вероятна ситуация когда демон упадет в момент обработки запроса, а тут никакие <b>sync</b> не помогут. И с учетом того, что пока еще его уронить не получилось, то забудьте про него.</p>
+<p>Кроме того, все модифицирующие методы могут возвращать значения измененных ключей. Эти параметры так-же по умолчанию отключены ( флаги <b>nores=true</b> и <b>noval=true</b>) из-за соображений производительности. Более подробное описание в смотрите для каждого метода.</p>
+<p>У всех методов в ответе есть поле <b>status</b>, которое принимает значение "OK" случае успешного выполнения операции. Если нужно проверить прошла операция или нет, то проверяем только это поле. Этого достаточно. Не нужно отключать <b>nores</b> и <b>noval</b> у модифицирующих операций, чтобы потом проверять, что-же там записалось. В этом нет никакого смысла. Все методы пишут пакетно, поэтому срабатывает все или ничего.</p>
+<h2><a class="anchor" id="autotoc_md2"></a>
+Ограничения</h2>
+<p>Прописаны в конфиги и накладывают ограничения на размер ключа, значений и пр. Значения по умолчанию:</p>
+<ul>
+<li>prefix_size_limit = 256 - максимальная длинна префикса <br  />
+</li>
+<li>key_size_limit = 128 - максимальная длинна ключа</li>
+<li>value_size_limit = 10240 - максимальная длинна значения</li>
+<li>keys_per_req = 100 - максимальное количество ключей в запросе</li>
+<li>max_prefixes = 128 - максимально допустимое количество префиксов</li>
+<li>packed_limit = 1000 - максимальное количество элементов при пакетном обновлении (<a href="API#Метод-packed">packed</a> )</li>
+<li>array_limit = 1000 - максимально допустимые размер циклического массива (<a href="API#Метод-add">add</a> )</li>
+</ul>
+<p>Список методов </p>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.17
+</small></address>
+</body>
+</html>

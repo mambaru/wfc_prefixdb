@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>wfc_prefixdb: methods</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">wfc_prefixdb
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.8.17 -->
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',false,false,'search.php','Поиск');
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div class="PageDoc"><div class="header">
+  <div class="headertitle">
+<div class="title">methods </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>Общая информация</p>
+<p><a href="#Метод-set">set, setnx</a> - записать данные по ключам <br  />
+ <a href="#Метод-get">get</a> - получить данные по ключам<br  />
+ <a href="#Метод-del">del</a> - удалить по ключам <br  />
+ <a href="#Метод-has">has</a> - проверить наличие по по ключам <br  />
+ <a href="#Метод-inc">inc</a> - увеличить(уменьшить) значения полей <br  />
+ <a href="#Метод-add">add</a> - добавить элементы в циклический массив <br  />
+ <a href="#Метод-packed">packed</a> - пакетное обновление <br  />
+ <a href="#Метод-range">range</a> - работа с диапазонами <br  />
+</p>
+<h2><a class="anchor" id="autotoc_md3"></a>
+Метод set, setnx</h2>
+<p>Установка значений для нескольких ключей. Значение ключа - произвольный json-объект, строка, число или флаг. Объект сохраняется в базу как есть, без десериализации, в таком же виде и возвращается при запросе.</p>
+<p><b>setnx</b> - вариант метода set, но работает только если ключ новый. Для существующих в базе ключей запись игнорируется и возвращается старое значение (если задан noval=true). Реализован с использованием механизма мерджинга (см. примечание в <a href="#Метод-inc">inc</a>)</p>
+<h3><a class="anchor" id="autotoc_md4"></a>
+запрос (set)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;nores&quot;:true,</div>
+<div class="line">  &quot;noval&quot;:false,</div>
+<div class="line">  &quot;sync&quot; :false,</div>
+<div class="line">  &quot;fields&quot;:</div>
+<div class="line">    {</div>
+<div class="line">      &quot;ключ1&quot;:json,</div>
+<div class="line">      &quot;ключ2&quot;:json,</div>
+<div class="line">      &quot;ключ3&quot;:json</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>sync</b> - синхронная запись на диск (без кэширования). Использовать только для реально критичных данных</li>
+<li><b>nores</b> - если <b>true</b>(по умолчанию), то пустой результат в ответе. Используется когда нужно дождаться ответа, но результат не важен. Если задан, то <b>noval</b> игнорируется</li>
+<li><b>noval</b> - по умолчанию <b>false</b>. Если задан, то возвращает <b>true</b> или <b>false</b> вместо значения поля, в зависимости от того существует поле или нет</li>
+<li><b>fields</b> - объект, ассоциативный массив полей для записи</li>
+</ul>
+<p>Если нужно получить в ответе значения записанных полей (например для тестирования, в бою это <em><b>не нужно</b></em>), то используете <b>nores=false</b> и <b>noval=false</b>. В этом случае после записи будет произведен полноценный <a href="#Метод-get">get</a> из хранилища, что замедляет работу демона. <em><b>Внимание!!!</b></em> <b>Не использовать для проверки того, записалось ли конкретное поля в базу или нет!</b> Если в результате <b>status==OK</b> то все гарантированно записалось! Если в ответе не нужны значения, установите <b>noval=true</b> - в место значений будут флаги: <b>true</b> если поле существует и <b>false</b> в противном случае. <em><b>Внимание!!!</b></em> <b>Это также не использовать для проверки записи</b>. Значение <b>false</b> может быть только когда между записью и вызовом <a href="#Метод-get">get</a> для формирования результата, поле было удалено. Описанные возможности допустимо использовать только на этапах разработки и тестирования.</p>
+<h3><a class="anchor" id="autotoc_md5"></a>
+ответ (set)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:json,</div>
+<div class="line">    &quot;ключ2&quot;:json,</div>
+<div class="line">    &quot;ключ3&quot;:json</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> имя префикса или пустая строка (для <b>nores</b>==**true**)</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>WriteError</b> - ошибка записи</li>
+<li><b>CreatePrefixFail</b> - ошибка создания префикса</li>
+</ul>
+</li>
+<li><b>fields</b> - в зависимости от параметров запроса пустой объект, объект ключ-json или ключ-флаг</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md6"></a>
+Метод get</h2>
+<p>Возвращает значения нескольких ключей.</p>
+<h3><a class="anchor" id="autotoc_md7"></a>
+запрос (get)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;fields&quot;:[&quot;ключ1&quot;,&quot;ключ2&quot;,&quot;ключ3&quot;]</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>fields</b> - массив ключей</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md8"></a>
+ответ (get)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:json,</div>
+<div class="line">    &quot;ключ2&quot;:json,</div>
+<div class="line">    &quot;ключ3&quot;:json</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - объект, ассоциативный массив ключ/значения. Если ключа нет, то возвращает "null".</li>
+</ul>
+<p>Примечание. Можно записать в поле <b>null</b>, но понять, что оно существует используя это метод не получится. Чтобы точно определить существует поле или нет используйте метод <a href="#Метод-has">has</a>.</p>
+<h2><a class="anchor" id="autotoc_md9"></a>
+Метод has</h2>
+<p>Проверка на существования набора ключей.</p>
+<h3><a class="anchor" id="autotoc_md10"></a>
+запрос (has)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;fields&quot;:[&quot;ключ1&quot;,&quot;ключ2&quot;,&quot;ключ3&quot;]</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>fields</b> - массив ключей</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md11"></a>
+ответ (has)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:true,</div>
+<div class="line">    &quot;ключ2&quot;:true,</div>
+<div class="line">    &quot;ключ3&quot;:false</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - объект, ассоциативный массив ключ/флаг ( <b>true</b> или <b>false</b> ).</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md12"></a>
+Метод del</h2>
+<p>Удаление набора ключей</p>
+<h3><a class="anchor" id="autotoc_md13"></a>
+запрос (del)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;sync&quot; :false,</div>
+<div class="line">  &quot;nores&quot;:true,</div>
+<div class="line">  &quot;noval&quot;:true,</div>
+<div class="line">  &quot;fields&quot;:[&quot;ключ1&quot;,&quot;ключ2&quot;,&quot;ключ3&quot;]</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>sync</b> - синхронное удаление с диска. Использовать только для реально критичных данных.</li>
+<li><b>nores</b> - если <b>true</b>(по умолчанию), то пустой результат в ответе. Используется для получение значений удаляемых данных.</li>
+<li><b>noval</b> - по умолчанию <b>false</b>. Используется для получение флагов существования удаляемых полей.</li>
+<li><b>fields</b> - объект, ассоциативный массив полей для записи</li>
+</ul>
+<p><em><b>Примечание.</b></em> <b>Механизм работы <em>nores</em> и <em>noval</em> такой-же как и у <a href="#Метод-set">set</a></b> В бою использовать можно, но только там, где реально необходимо получить удаляемые данные. Обратите внимание, что комбинация <em>nores=true</em> и <em>noval=false</em> дает объект ассоциативный массив флагов существующих до удаления объектов, а не флаг того, что ключ реально удален.</p>
+<h3><a class="anchor" id="autotoc_md14"></a>
+ответ (del)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:json,</div>
+<div class="line">    &quot;ключ2&quot;:json,</div>
+<div class="line">    &quot;ключ3&quot;:json</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> имя префикса или пустая строка (для <b>nores</b>==**true**)</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>WriteError</b> - ошибка записи</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - в зависимости от параметров запроса пустой объект, объект ключ-json или ключ-флаг</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md15"></a>
+Метод inc</h2>
+<p>Увеличивает или уменьшает значения набора ключей целочисленного типа на заданное значение. Если ключа не существует или оно не числового типа, то записывается значение по умолчанию. <b>Внимание! Читайте примечание!</b></p>
+<h3><a class="anchor" id="autotoc_md16"></a>
+запрос (inc)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;sync&quot; :false,</div>
+<div class="line">  &quot;nores&quot;:true,</div>
+<div class="line">  &quot;update&quot;:</div>
+<div class="line">    {</div>
+<div class="line">      &quot;ключ1&quot;:{&quot;inc&quot;:1, &quot;val&quot;:0},</div>
+<div class="line">      &quot;ключ2&quot;:{&quot;inc&quot;:-1, &quot;val&quot;:100},</div>
+<div class="line">      &quot;ключ3&quot;:{&quot;inc&quot;:10, &quot;val&quot;:-100}</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>sync</b> - синхронная запись запроса на диск</li>
+<li><b>nores</b> - если <b>true</b>(по умолчанию), то пустой результат в ответе. Используется для получение значений после операции инкремента.</li>
+<li><b>fields</b> - объект, ассоциативный массив полей для записи</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md17"></a>
+ответ (inc)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:0,</div>
+<div class="line">    &quot;ключ2&quot;:100,</div>
+<div class="line">    &quot;ключ3&quot;:-100</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса или пустая строка (для <b>nores</b>==**true**)</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - в зависимости от параметров запроса пустой объект или объект ключ-число. Возможно в качестве значения ключа получить <b>null</b> или не числовой объект, если после инкремента из другого потока ключ был удален или изменен.</li>
+</ul>
+<p><em><b>Примечание.</b></em> Для этого метода используется специфичная для rocksdb операция мерджинга. В leveldb, для аналогичной операции, для каждого ключа блокировался мьютекс из пула (это 0.1% всех счетчиков), производилось чтение, изменялось значение, производилось запись и снималась блокирока. С использованием мерджинга мы избавляемся не только от блокировок, но и от лишних операций чтения/записи. Фактически все операции производятся отложено при Get-запросах. Например, если было 10 операций инкремента, то все они записываются в специальный лог на диск. При запросе, отрабатываются все десять инкрементов последовательно и производиться запись результата - это хорошо влияет на общую производительность. Выключая <b>nores</b> вы также частично теряете и эту оптимизацию, так как сразу после записи запроса, для получения результата, производится Get-запрос который запускает механизм мерждинга.</p>
+<h2><a class="anchor" id="autotoc_md18"></a>
+Метод add</h2>
+<p>Добавляет произвольные объекты в циклический массив (Round-robin) заданного размера. Если исходное значение ключа не является массивом, то оно удаляется.</p>
+<h3><a class="anchor" id="autotoc_md19"></a>
+запрос (add)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;sync&quot; :false,</div>
+<div class="line">  &quot;nores&quot;:true,</div>
+<div class="line">  &quot;noval&quot;:true,</div>
+<div class="line">  &quot;update&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:{&quot;lim&quot;:10, &quot;arr&quot;:[1,2]},</div>
+<div class="line">    &quot;ключ2&quot;:{&quot;lim&quot;:0, &quot;arr&quot;:[]}</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>sync</b> - синхронная запись операции на диск. Использовать только для реально критичных данных.</li>
+<li><b>nores</b> - если <b>true</b>(по умолчанию), то пустой результат в ответе. Используется для получение значений обновленных данных.</li>
+<li><b>noval</b> - по умолчанию <b>false</b>. Используется для получение флагов вместо значений полей.</li>
+<li><b>update</b> - объект, ассоциативный массив ключей с параметрами обновления:<ul>
+<li><b>lim</b> - ограничение на размер массива. Если происходит превышение, то удаляются значения из головы массива</li>
+<li><b>arr</b> - массив значений, которые будут добавлены в конец исходного массива</li>
+<li>Для очистки массива <b>lim=0</b>, для удаления используете <a href="#Метод-get">get</a></li>
+</ul>
+</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md20"></a>
+ответ (add)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:[1,2],</div>
+<div class="line">    &quot;ключ2&quot;:[]</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса или пустая строка (для <b>nores</b>==**true**)</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - в зависимости от параметров запроса пустой объект, объект ассоциативный массив флагов или значений. В последнем варианте значением также будет ассоциативный массив с обновленными значениями.</li>
+</ul>
+<p><em><b>Примечание.</b></em> Для этого метода также задействован механизм мерждинга. Читай примечание метода <a href="#Метод-inc_ответ-inc">inc</a>.</p>
+<h2><a class="anchor" id="autotoc_md21"></a>
+Метод packed</h2>
+<p>Пакетное обновление json-объектов (ассоциативных массивов). Если ключа не существует или типом значения не json-объект, то такой объект создается. Доступны операции изменения, удаления и инкремента.</p>
+<h3><a class="anchor" id="autotoc_md22"></a>
+запрос (packed)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;sync&quot; :false,</div>
+<div class="line">  &quot;nores&quot;:true,</div>
+<div class="line">  &quot;noval&quot;:true,</div>
+<div class="line">  &quot;update&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:{</div>
+<div class="line">       &quot;k1&quot;:{&quot;inc&quot;:1, &quot;val&quot;:0},</div>
+<div class="line">       &quot;k2&quot;:{&quot;inc&quot;:null, &quot;val&quot;:[1,2,3]},</div>
+<div class="line">       &quot;k3&quot;:{&quot;inc&quot;:null, &quot;val&quot;:null}</div>
+<div class="line">    }</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса или пустая строка (для <b>nores</b>==**true**)</li>
+<li><b>sync</b> - синхронная запись операции на диск. Использовать только для реально критичных данных.</li>
+<li><b>nores</b> - если <b>true</b>(по умолчанию), то пустой результат в ответе. Используется для получение значений обновленных данных.</li>
+<li><b>noval</b> - по умолчанию <b>false</b>. Используется для получение флагов вместо значений полей.</li>
+<li><b>update</b> - объект, ассоциативный массив ключей с параметрами обновления:<ul>
+<li><b>inc</b> - если не <b>null</b>, то это операция инкремента, а в <b>val</b> стартовое значение (если ключа не существует). Если в <b>val</b> не число, то значение <b>val</b> игнорируется, а стартовым значением будет ноль. Если ключ существует и не числового типа, то он замещается стартовым значением</li>
+<li><b>val</b> - новое значение поля поля, если **"inc":null**</li>
+<li>Для удаление поля **{"inc":null, "val":null}**</li>
+</ul>
+</li>
+</ul>
+<p><em><b>Примечание.</b></em> Для этого метода также задействован механизм мерждинга. Читай примечание метода <a href="#Метод-inc_ответ-inc">inc</a>. По примеру:</p>
+<ul>
+<li>k1 - инкремент поля</li>
+<li>k2 - новое значение поля</li>
+<li>k3 - удаление ключа</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md23"></a>
+ответ (packed)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:{</div>
+<div class="line">       &quot;k1&quot;:0,</div>
+<div class="line">       &quot;k2&quot;:[1,2,3]</div>
+<div class="line">    }</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - в зависимости от параметров запроса пустой объект, объект ассоциативный массив флагов или объектов. В последнем варианте значением также будет ассоциативный массив с обновленными значениями.</li>
+</ul>
+<p><em><b>Примечание.</b></em> Если по примеру выше, сделать запрос <a href="#Метод-get">get</a> для <em>ключ1</em>, то результатом будет <code>{"k1":0,"k2":[1,2,3]}</code></p>
+<h2><a class="anchor" id="autotoc_md24"></a>
+Метод range</h2>
+<p>Запрос диапазона счетчиков.</p>
+<h3><a class="anchor" id="autotoc_md25"></a>
+запрос (range)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;from&quot;:&quot;ключ1&quot;,</div>
+<div class="line">  &quot;to&quot;:&quot;ключ2&quot;,</div>
+<div class="line">  &quot;offset&quot;:0,</div>
+<div class="line">  &quot;limit&quot;:10</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>from</b> - начальный ключ. Пустая строка если с начала.</li>
+<li><b>to</b> - последний ключ. Пустая строка если до конца.</li>
+<li><b>offset</b> - смещение относительно <b>from</b></li>
+<li><b>limit</b> - максимальное количество полей в результате</li>
+<li><b>noval</b> - в место значений возвращать пустые строки "". Используется, если значения полей не интересны.</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md26"></a>
+ответ (range)</h3>
+<div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;prefix&quot;:&quot;префикс&quot;,</div>
+<div class="line">  &quot;status&quot;:&quot;OK&quot;,</div>
+<div class="line">  &quot;final&quot;:true,</div>
+<div class="line">  &quot;fields&quot;:{</div>
+<div class="line">    &quot;ключ1&quot;:json,</div>
+<div class="line">    &quot;ключ2&quot;:json,</div>
+<div class="line">    &quot;ключ3&quot;:json</div>
+<div class="line">  }</div>
+<div class="line">}</div>
+</div><!-- fragment --><ul>
+<li><b>prefix</b> - имя префикса</li>
+<li><b>final</b> - конец диапазона, больше нет ключей. Позволяет избежать лишний запрос.</li>
+<li><b>status</b> - результат запроса<ul>
+<li><b>OK</b> - OK</li>
+<li><b>PrefixNotFound</b> - префикс не существует</li>
+</ul>
+</li>
+<li><b>fields</b> - объект, ассоциативный массив ключ/значения. </li>
+</ul>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+Создано системой &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.17
+</small></address>
+</body>
+</html>
