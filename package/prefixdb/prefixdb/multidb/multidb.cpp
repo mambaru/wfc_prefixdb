@@ -698,6 +698,9 @@ bool multidb::archive()
 
 void multidb::configure_archive_timer_()
 {
+  if ( _workflow == nullptr )
+    return;
+
   _workflow->release_timer(_archive_timer);
   if ( _opt.archive.enabled && !_opt.archive.path.empty() )
   {
@@ -735,6 +738,9 @@ bool multidb::preopen_(const std::string& path, bool create_if_missing)
 
 void multidb::configure_compact_timer_()
 {
+  if ( _workflow == nullptr )
+    return;
+
   _workflow->release_timer(_compact_timer);
   auto c = _opt.compact;
   if ( c.enabled)
@@ -750,6 +756,9 @@ void multidb::configure_compact_timer_()
 
 void multidb::configure_backup_timer_()
 {
+  if ( _workflow == nullptr )
+    return;
+  
   _workflow->release_timer(_backup_timer);
 
   if ( _opt.backup.enabled &&  !_opt.backup.path.empty() )
@@ -762,10 +771,14 @@ void multidb::configure_backup_timer_()
       ::wflow::expires_at::before
     );
   }
+  
 }
 
 void multidb::configure_prefix_reqester_()
 {
+  if ( _workflow == nullptr )
+    return;
+
   _workflow->release_timer(_prefix_reqester);
 
   if ( !_opt.slave.enabled && !_opt.initial_load.enabled )
@@ -855,8 +868,6 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
         {
           std::lock_guard<std::mutex> lk(_mutex);
           _master_prefixes.erase(x);
-          /*if ( _self_slave_prefixes.count(x) > 0 )
-            continue;*/
         }
         PREFIXDB_LOG_WARNING("Removed prefix '" << x << "' from master")
         preq->prefixes.push_back( std::move(x) );
@@ -865,12 +876,6 @@ request::get_all_prefixes::ptr multidb::get_all_prefixes_generator_(response::ge
       PREFIXDB_LOG_BEGIN("Detach removed prefixes from master...")
       this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
       PREFIXDB_LOG_END("Detach removed prefixes from master. Done!")
-      /*
-      _workflow->safe_post(_owner.wrap([this, preq]
-      {
-        this->detach_prefixes( std::make_unique<request::detach_prefixes>(*preq), nullptr );
-      }, nullptr), nullptr);
-      */
     }
   }
   else if ( res != nullptr )
