@@ -6,7 +6,7 @@ include(cmake/ci.cmake)
 include(cmake/rocksdb.cmake)
 
 
-wci_getlib(NAME wfc ${WCI_SUPERMODULE})
+wci_submodule(NAME wfc SUPERMODULE)
 get_rocksdb()
 
 add_subdirectory(package)
