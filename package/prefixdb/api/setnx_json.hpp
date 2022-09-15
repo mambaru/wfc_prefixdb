@@ -28,10 +28,10 @@ namespace request
         wjson::member<n_snapshot, setnx, size_t, &setnx::snapshot>,
         wjson::member<n_fields, setnx, field_list_t, &setnx::fields, fields_list_json >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -50,10 +50,10 @@ namespace response
         wjson::member<n_status, setnx, common_status,     &setnx::status, common_status_json>,
         wjson::member<n_fields, setnx, field_list_t, &setnx::fields, fields_list_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

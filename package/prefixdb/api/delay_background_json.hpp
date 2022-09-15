@@ -21,10 +21,10 @@ namespace request
         wjson::member<n_delay_timeout_s, delay_background, time_t, &delay_background::delay_timeout_s >,
         wjson::member<n_contunue_force, delay_background, bool, &delay_background::contunue_force >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -39,10 +39,10 @@ namespace response
       wjson::member_list<
         wjson::member<n_status, delay_background, common_status, &delay_background::status, common_status_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

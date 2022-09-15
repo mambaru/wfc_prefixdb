@@ -39,10 +39,10 @@ namespace request
         wjson::member<n_limit, range, size_t, &range::limit>,
         wjson::member<n_offset, range, size_t, &range::offset>
       >
-    > type;
+    > meta;
 
-    typedef type::target target;
-    typedef type::serializer serializer;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
   };
 }
 
@@ -79,10 +79,10 @@ namespace response
           wjson::member<n_values,  range::stat_info, wrtstat::aggregated_info, &range::stat_info::values, 
                             wrtstat::aggregated_info_json>
         >
-      > type;
-      typedef type::target target;
-      typedef type::serializer serializer;
-      typedef type::member_list member_list;
+      > meta;
+      typedef meta::target target;
+      typedef meta::serializer serializer;
+      typedef meta::member_list member_list;
     };
 
 
@@ -101,10 +101,10 @@ namespace response
         wjson::member<n_fields, range, field_list_t, &range::fields, fields_list_json>,
         wjson::member<n_stat, range, range::stat_info::ptr, &range::stat, wjson::pointer<range::stat_info::ptr, stat_json> >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

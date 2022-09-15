@@ -3,13 +3,13 @@
        
 namespace wamba{ namespace prefixdb {
   
-std::vector<std::string> scan_dir(std::string path, bool& fail)
+std::vector<std::string> scan_dir(const std::string& path, bool& fail)
 {
   fail = false;
   std::vector<std::string> result;
 
   DIR *dir;
-  struct dirent *entry;
+  dirent *entry;
 
   dir = opendir(path.c_str());
   if (!dir) 

@@ -36,10 +36,10 @@ namespace request
         wjson::member<n_limit, repair_json, size_t, &repair_json::limit>,
         wjson::member<n_offset, repair_json, size_t, &repair_json::offset>
       >
-    > type;
+    > meta;
 
-    typedef type::target target;
-    typedef type::serializer serializer;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
   };
 }
 
@@ -68,10 +68,10 @@ namespace response
         wjson::member<n_fields, repair_json, field_list_t, &repair_json::fields, fields_list_json>
 
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

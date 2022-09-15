@@ -19,10 +19,10 @@ namespace request
         wjson::member<n_prefixes, attach_prefixes, attach_prefixes::prefix_list, &attach_prefixes::prefixes, wjson::vector_of_strings<50> >,
         wjson::member<n_opendb, attach_prefixes, bool, &attach_prefixes::opendb >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -37,10 +37,10 @@ namespace response
       wjson::member_list<
         wjson::member<n_status, attach_prefixes, common_status, &attach_prefixes::status, common_status_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

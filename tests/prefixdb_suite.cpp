@@ -48,7 +48,7 @@ UNIT(get, "")
   g->prefix="test1";
   g->fields={"field1", "field2", "field3", "field4", "field5","field6", "bad_field1"};
   response::get::ptr gg;
-  db->get(std::move(g), [&gg](response::get::ptr res){ gg = std::move(res);});
+  db->get(std::move(g), [&gg](response::get::ptr res) noexcept { gg = std::move(res);});
   t << equal<expect, std::string>(gg->prefix, "test1") << FAS_FL;
   t << equal<assert, size_t>(gg->fields.size(), 7) << FAS_FL;
   t << equal<expect, std::string>(gg->fields[0].first, "field1") << FAS_FL;
@@ -87,7 +87,7 @@ UNIT(inc, "")
   g->prefix="test1";
   g->fields={"inc1", "inc2", "inc3", "inc4", "inc5"};
   response::get::ptr gg;
-  db->get(std::move(g), [&gg](response::get::ptr res){ gg = std::move(res);});
+  db->get(std::move(g), [&gg](response::get::ptr res) noexcept { gg = std::move(res);});
   t << equal<expect, std::string>(gg->prefix, "test1") << FAS_FL;
   t << equal<assert, size_t>(gg->fields.size(), 4) << FAS_FL;
   t << equal<expect, std::string>(gg->fields[0].first, "inc1") << FAS_FL;
@@ -109,14 +109,14 @@ UNIT(clear, "")
   auto db = GET_REF(_prefixdb_);
   auto gap = std::make_unique< request::get_all_prefixes>();
   response::get_all_prefixes::ptr rgap;
-  db->get_all_prefixes(std::move(gap), [&rgap]( response::get_all_prefixes::ptr res ) { rgap=std::move(res); });
+  db->get_all_prefixes(std::move(gap), [&rgap]( response::get_all_prefixes::ptr res ) noexcept { rgap=std::move(res); });
   for ( const std::string& prefix : rgap->prefixes )
   {
     auto r = std::make_unique<request::range>();
     r->limit = 1000000;
     r->prefix = prefix;
     response::range::ptr rr;
-    db->range(std::move(r), [&rr]( response::range::ptr res ) { rr=std::move(res); });
+    db->range(std::move(r), [&rr]( response::range::ptr res ) noexcept { rr=std::move(res); });
     auto d = std::make_unique<request::del>();
     d->prefix = prefix;
     for (auto& f: rr->fields)

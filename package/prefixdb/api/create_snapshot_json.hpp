@@ -20,10 +20,10 @@ namespace request
         wjson::member<n_prefix, create_snapshot, std::string, &create_snapshot::prefix >,
         wjson::member<n_release_timeout_s, create_snapshot, time_t, &create_snapshot::release_timeout_s >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -44,10 +44,10 @@ namespace response
         wjson::member<n_last_seq, create_snapshot, size_t, &create_snapshot::last_seq >,
         wjson::member<n_status, create_snapshot, common_status, &create_snapshot::status, common_status_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

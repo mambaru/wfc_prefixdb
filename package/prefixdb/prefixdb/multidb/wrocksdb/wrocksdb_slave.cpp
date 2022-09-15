@@ -7,10 +7,9 @@
 #include <wfc/wfc_exit.hpp>
 
 #include <rocksdb/db.h>
-#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/backup_engine.h>
 #include <rocksdb/iterator.h>
 #include <rocksdb/write_batch.h>
-#include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
 #include <boost/filesystem.hpp>
 
@@ -228,7 +227,7 @@ request::get_updates_since::ptr wrocksdb_slave::updates_generator_(
   return std::make_unique<request::get_updates_since>(*preq);
 }
 
-void wrocksdb_slave::logs_parser_( response::get_updates_since::ptr& res)
+void wrocksdb_slave::logs_parser_( const response::get_updates_since::ptr& res)
 {
   auto count = res->seq_first;
   for (auto& log : res->logs ) try

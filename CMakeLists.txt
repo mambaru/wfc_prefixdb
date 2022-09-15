@@ -5,7 +5,6 @@ project(wfc_prefixdb)
 include(cmake/ci.cmake)
 include(cmake/rocksdb.cmake)
 
-
 wci_submodule(NAME wfc SUPERMODULE)
 get_rocksdb()
 

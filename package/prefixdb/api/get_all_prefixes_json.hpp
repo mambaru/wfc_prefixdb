@@ -17,10 +17,10 @@ namespace request
       wjson::member_list<
         wjson::member<n_writable_only, get_all_prefixes, bool, &get_all_prefixes::writable_only>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -37,10 +37,10 @@ namespace response
         wjson::member<n_prefixes, get_all_prefixes, get_all_prefixes::prefix_list, &get_all_prefixes::prefixes, wjson::vector_of_strings<50> >,
         wjson::member<n_status, get_all_prefixes, common_status, &get_all_prefixes::status, common_status_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

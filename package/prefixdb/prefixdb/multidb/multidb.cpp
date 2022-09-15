@@ -266,7 +266,7 @@ void multidb::repair_json( request::repair_json::ptr req, response::repair_json:
       {
         auto prefix_req = std::make_unique<request::repair_json>(*req);
         prefix_req->prefix = prefix;
-        db->repair_json(std::move(prefix_req), [&total, &repaired](response::repair_json::ptr res){
+        db->repair_json(std::move(prefix_req), [&total, &repaired](response::repair_json::ptr res) noexcept {
           total += res->total;
           repaired += res->repaired;
         });

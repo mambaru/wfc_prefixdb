@@ -45,11 +45,11 @@ struct common_status_json
         wjson::enum_value<n_InvalidSeqNumber, common_status, common_status::InvalidSeqNumber>,
         wjson::enum_value<n_CompactFail, common_status, common_status::CompactFail>
     >
-  > type;
+  > meta;
 
-  typedef type::target target;
-  typedef type::serializer serializer;
-  typedef type::member_list member_list;
+  typedef meta::target target;
+  typedef meta::serializer serializer;
+  typedef meta::member_list member_list;
 };
 
 }}

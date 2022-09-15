@@ -1,7 +1,7 @@
 #include "wrocksdb_restore.hpp"
 #include <prefixdb/logger.hpp>
 #include <rocksdb/db.h>
-#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/backup_engine.h>
 
 
 namespace wamba{ namespace prefixdb {

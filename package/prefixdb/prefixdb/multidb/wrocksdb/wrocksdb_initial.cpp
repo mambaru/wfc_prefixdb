@@ -7,10 +7,9 @@
 #include <wfc/wfc_exit.hpp>
 
 #include <rocksdb/db.h>
-#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/backup_engine.h>
 #include <rocksdb/iterator.h>
 #include <rocksdb/write_batch.h>
-#include <rocksdb/utilities/backupable_db.h>
 #include <rocksdb/utilities/db_ttl.h>
 
 #include <ctime>

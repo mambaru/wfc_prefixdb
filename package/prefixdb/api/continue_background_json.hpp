@@ -20,10 +20,10 @@ namespace request
         wjson::member<n_prefixes, continue_background, continue_background::prefix_list, &continue_background::prefixes, wjson::vector_of_strings<50> >,
         wjson::member<n_force, continue_background, bool, &continue_background::force >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -38,10 +38,10 @@ namespace response
       wjson::member_list<
         wjson::member<n_status, continue_background, common_status, &continue_background::status, common_status_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

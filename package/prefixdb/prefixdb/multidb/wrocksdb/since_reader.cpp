@@ -3,7 +3,7 @@
 #include <prefixdb/logger.hpp>
 #include <wfc/memory.hpp>
 #include <wfc/wfc_exit.hpp>
-#include <db/log_format.h>
+//#include <db/log_format.h>
 #include <wjson/wjson.hpp>
 
 namespace wamba{ namespace prefixdb {

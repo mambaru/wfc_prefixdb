@@ -21,10 +21,10 @@ namespace request
         wjson::member<n_seq, get_updates_since, size_t, &get_updates_since::seq>,
         wjson::member<n_limit, get_updates_since, size_t, &get_updates_since::limit>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 
@@ -49,10 +49,10 @@ namespace response
         wjson::member<n_logs, get_updates_since, get_updates_since::logs_type, &get_updates_since::logs, wjson::vector_of_strings<16> >,
         wjson::member<n_status, get_updates_since, common_status, &get_updates_since::status, common_status_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

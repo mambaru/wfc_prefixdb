@@ -72,7 +72,7 @@ inline std::string repair_json_value(const std::string& prefix, const std::strin
   // если нет ошибок и нет мусора в конце
   auto last = wjson::parser::parse_value(beg, end, &er);
   if ( !er && last==end )
-    return value;
+    return std::move(value);
 
   if ( fix!=nullptr )
       *fix = true;

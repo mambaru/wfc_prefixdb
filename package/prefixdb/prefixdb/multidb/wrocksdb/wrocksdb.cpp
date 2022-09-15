@@ -17,7 +17,7 @@
 
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
-#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/backup_engine.h>
 #include <rocksdb/iterator.h>
 #include <rocksdb/utilities/db_ttl.h>
 
@@ -296,7 +296,7 @@ std::string wrocksdb::repair_json_(const std::string& key, std::string&& value, 
     *fix = false;
 
   if ( !force && !_repair_json_values)
-    return value;
+    return std::move(value);
 
   if ( value.empty() )
   {

@@ -22,10 +22,10 @@ namespace request
         wjson::member<n_prefix, get, std::string, &get::prefix>,
         wjson::member<n_fields, get, key_list_t, &get::fields, key_list_json >
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 
 }
@@ -45,10 +45,10 @@ namespace response
         wjson::member<n_status, get, common_status, &get::status, common_status_json>,
         wjson::member<n_fields, get, field_list_t, &get::fields, fields_list_json>
       >
-    > type;
-    typedef type::target target;
-    typedef type::serializer serializer;
-    typedef type::member_list member_list;
+    > meta;
+    typedef meta::target target;
+    typedef meta::serializer serializer;
+    typedef meta::member_list member_list;
   };
 }
 

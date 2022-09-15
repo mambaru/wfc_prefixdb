@@ -5,7 +5,7 @@
 #include <prefixdb/prefixdb/multidb/options/db_config.hpp>
 
 #include <rocksdb/db.h>
-#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/backup_engine.h>
 
 #include <memory>
 #include <mutex>

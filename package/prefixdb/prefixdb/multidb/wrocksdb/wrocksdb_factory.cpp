@@ -10,7 +10,7 @@
 #include <rocksdb/options.h>
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/compaction_filter.h>
-#include <rocksdb/utilities/backupable_db.h>
+#include <rocksdb/utilities/backup_engine.h>
 #include <rocksdb/utilities/options_util.h>
 #include <rocksdb/utilities/db_ttl.h>
 #include <boost/filesystem.hpp>
@@ -233,7 +233,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
     if ( !conf.backup.path.empty() &&  conf.backup.enabled )
     {
       PREFIXDB_LOG_MESSAGE("Backup path: " << conf.backup.path)
-      ::rocksdb::BackupableDBOptions backup_opt( conf.backup.path );
+      ::rocksdb::BackupEngineOptions backup_opt( conf.backup.path );
 
       ::rocksdb::Status backup_status = ::rocksdb::BackupEngine::Open(
         _context->env,
@@ -249,7 +249,7 @@ ifactory::prefixdb_ptr wrocksdb_factory::create_db(std::string dbname, bool crea
 
       if ( !conf.restore.path.empty() )
       {
-        ::rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
+        ::rocksdb::BackupEngineOptions restore_opt( conf.restore.path );
       }
     }
     auto pwrdb = std::make_shared< wrocksdb >(dbname, conf, db, backup_engine);
@@ -270,7 +270,7 @@ wrocksdb_factory::restore_ptr wrocksdb_factory::create_restore(std::string dbnam
   rocksdb::BackupEngineReadOnly* backup_engine = nullptr;
   if ( !conf.restore.path.empty() )
   {
-    rocksdb::BackupableDBOptions restore_opt( conf.restore.path );
+    rocksdb::BackupEngineOptions restore_opt( conf.restore.path );
     rocksdb::Status s = rocksdb::BackupEngineReadOnly::Open( _context->env, restore_opt, &backup_engine);
     if ( s.ok() )
       return std::make_shared< wrocksdb_restore >(dbname, conf, backup_engine);

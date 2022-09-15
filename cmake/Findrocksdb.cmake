@@ -11,6 +11,8 @@
 #  ROCKSDB_LIBRARIES - The libraries needed to use Rocksdb
 #  ROCKSDB_VERSION - This is set to $major.$minor.$patch (eg. 0.9.8)
 
+unset(_ROCKSDB_EPIC_FAIL)
+
 include(FindPackageHandleStandardArgs)
 
 if(rocksdb_FIND_REQUIRED)

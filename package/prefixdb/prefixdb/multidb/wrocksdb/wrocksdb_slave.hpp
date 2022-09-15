@@ -36,7 +36,7 @@ private:
     std::shared_ptr<request::get_updates_since> preq
   );
 
-  void logs_parser_( response::get_updates_since::ptr& res);
+  void logs_parser_( const response::get_updates_since::ptr& res);
   void create_diff_timer_();
   void create_seq_timer_();
   void     write_sequence_number_(uint64_t seq);
