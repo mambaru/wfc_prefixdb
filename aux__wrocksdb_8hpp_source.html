@@ -121,7 +121,7 @@ $(function() {
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="comment">// если нет ошибок и нет мусора в конце</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">auto</span> last = wjson::parser::parse_value(beg, end, &amp;er);</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="keywordflow">if</span> ( !er &amp;&amp; last==end )</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">return</span> value;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">return</span> std::move(value);</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keywordflow">if</span> ( fix!=<span class="keyword">nullptr</span> )</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;      *fix = <span class="keyword">true</span>;</div>

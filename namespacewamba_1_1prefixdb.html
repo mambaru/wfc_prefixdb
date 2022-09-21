@@ -1,9 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<meta name="generator" content="Doxygen 1.8.15"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>wfc_prefixdb: Пространство имен wamba::prefixdb</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
@@ -27,7 +27,7 @@
 </table>
 </div>
 <!-- end header part -->
-<!-- Создано системой Doxygen 1.8.15 -->
+<!-- Создано системой Doxygen 1.8.17 -->
 <script type="text/javascript" src="menudata.js"></script>
 <script type="text/javascript" src="menu.js"></script>
 <script type="text/javascript">
@@ -44,7 +44,9 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#typedef-members">Определения типов</a>  </div>
+<a href="#nested-classes">Классы</a> &#124;
+<a href="#typedef-members">Определения типов</a> &#124;
+<a href="#enum-members">Перечисления</a>  </div>
   <div class="headertitle">
 <div class="title">Пространство имен wamba::prefixdb</div>  </div>
 </div><!--header-->
@@ -53,6 +55,15 @@ $(function() {
 <p>prefixdb  
 </p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Классы</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1db__config.html">db_config</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Конфигурация  <a href="structwamba_1_1prefixdb_1_1db__config.html#details">Подробнее...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1iprefixdb.html">iprefixdb</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Интерфейс к PrefixDB.  <a href="structwamba_1_1prefixdb_1_1iprefixdb.html#details">Подробнее...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Определения типов</h2></td></tr>
 <tr class="memitem:a3f5a6a7abe432b54c66a5051b1af97cf"><td class="memItemLeft" align="right" valign="top"><a id="a3f5a6a7abe432b54c66a5051b1af97cf"></a>
@@ -67,13 +78,97 @@ typedef std::vector&lt; <a class="el" href="namespacewamba_1_1prefixdb.html#a3f5
 typedef std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacewamba_1_1prefixdb.html#a734069a23ef19a1fcbea25ff995b410b">key_list_t</a></td></tr>
 <tr class="memdesc:a734069a23ef19a1fcbea25ff995b410b"><td class="mdescLeft">&#160;</td><td class="mdescRight">список ключей <br /></td></tr>
 <tr class="separator:a734069a23ef19a1fcbea25ff995b410b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Перечисления</h2></td></tr>
+<tr class="memitem:ac3fcdf11818809a6a219e55e16ff62db"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">common_status</a> { <br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbae0aa021e21dddbd6d8cecec71e9cf564">common_status::OK</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad7e877ae1a8c09a88f9ee9b0ea84913e">common_status::InvalidFieldValue</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba3de426e1db28ac111fa049e5628d1c46">common_status::EmptyFields</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba3c769b187d3c6402cc8c8a26ef4e6b30">common_status::EmptyPrefix</a>, 
+<br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaff1a8691a59a650e8a099f751c81dfd8">common_status::PrefixReadonly</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbacfbb375c49e8a8afaab1c8510129533a">common_status::CreatePrefixFail</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbab897e6fe1d58ea0a7e978792d85746ad">common_status::CreateSnapshotFail</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba8209d8ebe84fe1ffa8016a593c0c14c2">common_status::CompactFail</a>, 
+<br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba93f7948e7454949e9cc65066fc461261">common_status::PrefixNotFound</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaad7a4fc91aa12015e4227a25c46ebe2e">common_status::SnapshotNotFound</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad6af520434f2d33750ec849bf9b5c84c">common_status::TooManyKeys</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad6beec5911181537ba3ca36563f58366">common_status::KeyLengthExceeded</a>, 
+<br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba75a6e0cd1a63bc51a84429e00ca77795">common_status::ValueLengthExceeded</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba48f696d51fcf54e90d187dbfd74588fe">common_status::PrefixLengthExceeded</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaec85826ac251ef5ad27633b6c8d14f9c">common_status::RangeLimitExceeded</a>, 
+<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba22059bbe84ce4571b6276fe967dcbb79">common_status::InvalidSeqNumber</a>
+<br />
+ }</td></tr>
+<tr class="memdesc:ac3fcdf11818809a6a219e55e16ff62db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Общий результат выполнения операции TODO: сделать отсылки в конфиг  <a href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">Подробнее...</a><br /></td></tr>
+<tr class="separator:ac3fcdf11818809a6a219e55e16ff62db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Перечисления</h2>
+<a id="ac3fcdf11818809a6a219e55e16ff62db"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3fcdf11818809a6a219e55e16ff62db">&#9670;&nbsp;</a></span>common_status</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">wamba::prefixdb::common_status</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Элементы перечислений</th></tr><tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbae0aa021e21dddbd6d8cecec71e9cf564"></a>OK&#160;</td><td class="fielddoc"><p>Успех </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbad7e877ae1a8c09a88f9ee9b0ea84913e"></a>InvalidFieldValue&#160;</td><td class="fielddoc"><p>Недопустимое значение для merge-операций </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba3de426e1db28ac111fa049e5628d1c46"></a>EmptyFields&#160;</td><td class="fielddoc"><p>Пустой список полей в запросе </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba3c769b187d3c6402cc8c8a26ef4e6b30"></a>EmptyPrefix&#160;</td><td class="fielddoc"><p>Не задан префикс в запросе </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbaff1a8691a59a650e8a099f751c81dfd8"></a>PrefixReadonly&#160;</td><td class="fielddoc"><p>Префикс запрещен в конфигурации </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbacfbb375c49e8a8afaab1c8510129533a"></a>CreatePrefixFail&#160;</td><td class="fielddoc"><p>Ошибка создания нового префикса </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbab897e6fe1d58ea0a7e978792d85746ad"></a>CreateSnapshotFail&#160;</td><td class="fielddoc"><p>Ошибка создания снапшота </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba8209d8ebe84fe1ffa8016a593c0c14c2"></a>CompactFail&#160;</td><td class="fielddoc"><p>Ошибка compactoins. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba93f7948e7454949e9cc65066fc461261"></a>PrefixNotFound&#160;</td><td class="fielddoc"><p>Префикс не найден </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbaad7a4fc91aa12015e4227a25c46ebe2e"></a>SnapshotNotFound&#160;</td><td class="fielddoc"><p>Не найден снапшот </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbad6af520434f2d33750ec849bf9b5c84c"></a>TooManyKeys&#160;</td><td class="fielddoc"><p>Слишком много ключей в запросе </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbad6beec5911181537ba3ca36563f58366"></a>KeyLengthExceeded&#160;</td><td class="fielddoc"><p>Превышен лимит символов имени в одном из ключей </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba75a6e0cd1a63bc51a84429e00ca77795"></a>ValueLengthExceeded&#160;</td><td class="fielddoc"><p>Превышен лимит размера в одном из значений </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba48f696d51fcf54e90d187dbfd74588fe"></a>PrefixLengthExceeded&#160;</td><td class="fielddoc"><p>Превышен лимит символов имени префикса </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dbaec85826ac251ef5ad27633b6c8d14f9c"></a>RangeLimitExceeded&#160;</td><td class="fielddoc"><p>Превышен лимит параметров range. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac3fcdf11818809a6a219e55e16ff62dba22059bbe84ce4571b6276fe967dcbb79"></a>InvalidSeqNumber&#160;</td><td class="fielddoc"><p>Ошибка репликации </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Создано системой &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
-</a> 1.8.15
+</a> 1.8.17
 </small></address>
 </body>
 </html>

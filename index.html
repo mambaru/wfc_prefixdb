@@ -1,11 +1,11 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<meta name="generator" content="Doxygen 1.8.15"/>
+<meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>wfc_prefixdb: wfc_prefixdb - пакет WFC префиксного key-value хранилища на базе RocksDB</title>
+<title>wfc_prefixdb: Титульная страница</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -27,7 +27,7 @@
 </table>
 </div>
 <!-- end header part -->
-<!-- Создано системой Doxygen 1.8.15 -->
+<!-- Создано системой Doxygen 1.8.17 -->
 <script type="text/javascript" src="menudata.js"></script>
 <script type="text/javascript" src="menu.js"></script>
 <script type="text/javascript">
@@ -40,55 +40,26 @@ $(function() {
 </div><!-- top -->
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">wfc_prefixdb - пакет WFC префиксного key-value хранилища на базе RocksDB </div>  </div>
+<div class="title">wfc_prefixdb Документация</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ul>
-<li>Репозитарий на <a href="https://github.com/mambaru/wfc_prefixdb">github.com</a>.</li>
-<li>Документация <a href="https://mambaru.github.io/wfc_prefixdb/index.html">doxygen</a>.</li>
-<li>Отчет <a href="https://mambaru.github.io/wfc_prefixdb/cov-report/index.html">coverage</a></li>
-</ul>
-<p class="">На данный момент реализован один модуль, собсвенно prefixdb, состоящий из трех компонент:</p>
+<div class="textblock"><p><a href="https://github.com/mambaru/wfc_prefixdb/tree/master"><object type="image/svg+xml" data="https://img.shields.io/github/v/tag/mambaru/wfc_prefixdb.svg?sort=semver" style="pointer-events: none;">tag</object></a> <a href="https://github.com/mambaru/wfc_prefixdb/tree/master"><object type="image/svg+xml" data="https://github.com/mambaru/wfc_prefixdb/workflows/C++%20CI/badge.svg?branch=master" style="pointer-events: none;">Build Status</object></a> <a href="https://github.com/mambaru/wfc_prefixdb/tree/mambaru"><object type="image/svg+xml" data="https://github.com/mambaru/wfc_prefixdb/workflows/C++%20CI/badge.svg?branch=mambaru" style="pointer-events: none;">Build Status</object></a> <a href="https://travis-ci.com/mambaru/wfc_prefixdb"><object type="image/svg+xml" data="https://travis-ci.com/mambaru/wfc_prefixdb.svg?branch=master" style="pointer-events: none;">Build Status</object></a> <a href="https://travis-ci.com/mambaru/wfc_prefixdb"><object type="image/svg+xml" data="https://travis-ci.com/mambaru/wfc_prefixdb.svg?branch=mambaru" style="pointer-events: none;">Build Status</object></a> <a href="https://codecov.io/gh/mambaru/wfc_prefixdb"><object type="image/svg+xml" data="https://codecov.io/gh/mambaru/wfc_prefixdb/branch/master/graph/badge.svg" style="pointer-events: none;">codecov</object></a></p>
+<h1><a class="anchor" id="autotoc_md0"></a>
+wfc_prefixdb - wfc-пакет для PrefixDB ( префиксное key-value хранилище на базе RocksDB )</h1>
+<h1><a class="anchor" id="autotoc_md1"></a>
+На github.com</h1>
 <ul>
-<li>prefixdb - реализует основную логику, доступен напрямую из других модулей по интерфейсу iprefixdb</li>
-<li>prefixdb-service - обработчик входящих jsonrpc-запросов от модуля server-tcp или server-udp ( udp не реализовано)</li>
-<li>prefixdb-gateway - позволяет другим модулям обращатся к prefixdb(через prefixdb-service) удаленно</li>
+<li>Репозитарий на <a href="https://github.com/mambaru/wfc_prefixdb">github.com</a></li>
+<li>Документация <a href="https://mambaru.github.io/wfc_prefixdb/index.html">doxygen</a></li>
+<li>Отчет <a href="https://mambaru.github.io/wfc_prefixdb/cov-report/index.html">coverage</a> </li>
 </ul>
-<p class="">Планируються к разработке в ближайшее время:</p>
-<ul>
-<li>prefixdb-backup - полный и инкрементальный бэкап средствами RocksDB</li>
-<li>prefixdb-repli - репликация средствами RocksDB</li>
-<li>prefixdb-lua - поддержка Lua. Возможно полностью или частично будет реализован в prefixdb</li>
-</ul>
-<p class="">В prefixdb - в каждом запросе указываеться префикс, а сами ключи передаются в "чистом" виде. Для каждого префикса, создаеться отдельное хранилище, представляющее собой директорию с именем префикса. Таким образом, единственное ограничение на имя префикса, за исключением здравого смысла - это совместимость с файловой системой linux. Также очень желательно не использовать символы требующие экранирования jsonrpc. Идеальный вариант - это латинские буквы, цифры и "_". Важно! нельзя префиксы на стороне клиента создавать динамически, иначе получим тот же бардак, что и с leveldb.</p>
-<p class="">Префиксная реализация имеет следующие преемущества:</p>
-<ul>
-<li>Контролируемость. Всегда можно отследить ключи какого префикса генерируються неконтролируемо (нампример в ключ по ошибке внедрили timestamp) или хранятся значения неадекватных размеров (например кто-то решил фотки тут хранить).</li>
-<li>Управляемость. Можно простым копированием перенести данные одного или нескольких префиксов на другой сервер без перезапуска.</li>
-<li>Компактность. Префиксы не являються частью ключа - это всего лишь имя дериктории, где хранятся файлы хранилища. В явном виде префикс нигде не храниться</li>
-</ul>
-<p class="">Реализация на базе RocksDB по сравнению с LevelDB, дает следующие преемущества:</p>
-<ul>
-<li>Слияние! (мерджинг). Позволяет избавится от блокировок и уменьшить количество операций с диском, сохряняя при этом ту же надежность.</li>
-<li>Настраиваемость. Больше возможностей тюнинга, больше опций, которые вынесены в ini-файл (указывается в конфиге)</li>
-<li>Встроеный multi-get. В текущей версии RocksDB весьма условный</li>
-<li>Ускоряется перебор ключей. Тяжелая операция range (в leveldb get_range) теперь влияет только на тот префикс, из которого производиться выборка.</li>
-<li>встроеные механизмы backup и репликации на уровне файловой системы. Позволяет добиться 100% консистености, в отличие от сетевой репликации, которая не может дать таких гарантий</li>
-<li>встроенные механизмы восстановления (TODO)</li>
-</ul>
-<p class="">Слияние (мерджинг) - мощный механизм обновления данных, которые требуют предарительного чтения, когда нужно прочитать данные, изменить и сохранить. В реализации LevelDB чтобы, например, инкрементировать значение, нужно его прочитать, изменить и записать (Read-&gt;Modify-&gt;Write). В промежуток между этими операциями могут прийти другие модифицирующие запросы (наприме Delete), поэтому ключ надо блокировать, чтобы не допустить изменений.</p>
-<p class="">Архитектура LevelDB (так же как и RocksDB) не имеет встроеного функционала блокирования ключей. Поэтому нужно делать внешнюю блокировку. Блокировать все хранилище не эффективно по производительности, а создавать отдельный мьютекс на ключ накладно по ресурсам. Поэтому в демоне LevelDB мы работаем с пулом мьютексов, каждый из которых блокирует кратный набор ключей по хэшу, что приводит хоть и не часто, к существенному увеличению времени ответа.</p>
-<p class="">Идея слияния заключается в следующем. Мы откладываем операцию обновления, например инкремента, на не определенный срок, например, до первой попытки получения значения. До этого момента могут прийти еще несколько запросов на обновление, котороы мы также отложим. В тот момент, когда нам необходимо получить значение ключа, происходит слияние. В результате которого на исходное значение, атамарно, накладываются все накопленные операции обновления, и только потом происходит запись и возврат результата на запрос.</p>
-<p class="">Важно понимать, что отложенные операции также являються персистентными и реплицируемыми на уровне RocksDB. Т.е. в результате падения или перезапуска они не будут потеряны.</p>
-<h1>API</h1>
-<p class="">PrefixDB API Список методов </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Создано системой &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
-</a> 1.8.15
+</a> 1.8.17
 </small></address>
 </body>
 </html>
