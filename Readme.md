@@ -2,8 +2,6 @@
 [![tag](https://img.shields.io/github/v/tag/mambaru/wfc_prefixdb.svg?sort=semver)](https://github.com/mambaru/wfc_prefixdb/tree/master)
 [![Build Status](https://github.com/mambaru/wfc_prefixdb/workflows/C++%20CI/badge.svg?branch=master)](https://github.com/mambaru/wfc_prefixdb/tree/master)
 [![Build Status](https://github.com/mambaru/wfc_prefixdb/workflows/C++%20CI/badge.svg?branch=mambaru)](https://github.com/mambaru/wfc_prefixdb/tree/mambaru)
-[![Build Status](https://travis-ci.com/mambaru/wfc_prefixdb.svg?branch=master)](https://travis-ci.com/mambaru/wfc_prefixdb)
-[![Build Status](https://travis-ci.com/mambaru/wfc_prefixdb.svg?branch=mambaru)](https://travis-ci.com/mambaru/wfc_prefixdb)
 [![codecov](https://codecov.io/gh/mambaru/wfc_prefixdb/branch/master/graph/badge.svg)](https://codecov.io/gh/mambaru/wfc_prefixdb)
 
 wfc_prefixdb - wfc-пакет для PrefixDB ( префиксное key-value хранилище на базе RocksDB )
