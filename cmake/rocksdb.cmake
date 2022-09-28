@@ -31,6 +31,7 @@ macro(get_rocksdb)
   find_package(Snappy)
   message(STATUS "Find Snappy=${SNAPPY_FOUND}" )
   if ( NOT SNAPPY_FOUND )
+    set(snappy_REPO "https://github.com/google/snappy.git")
     wci_third_party(NAME snappy PARAMS
       "-DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF -DSNAPPY_INSTALL=ON -DCMAKE_CXX_FLAGS=-fPIC" )
     find_package(Snappy REQUIRED)
