@@ -1,5 +1,5 @@
-missingInclude:./package/prefixdb_package.cpp:8
-unmatchedSuppression:./package/prefixdb_package.cpp:8
+missingInclude:./package/prefixdb_package.cpp
+unmatchedSuppression:./package/prefixdb_package.cpp
 unusedFunction:./package/prefixdb/prefixdb/multidb/wrocksdb/since_reader.cpp:266
 syntaxError:./tests/prefixdb_suite.cpp:11
 unknownMacro:*
