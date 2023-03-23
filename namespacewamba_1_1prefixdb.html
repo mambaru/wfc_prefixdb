@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>wfc_prefixdb: Пространство имен wamba::prefixdb</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
@@ -27,7 +27,7 @@
 </table>
 </div>
 <!-- end header part -->
-<!-- Создано системой Doxygen 1.8.17 -->
+<!-- Создано системой Doxygen 1.9.1 -->
 <script type="text/javascript" src="menudata.js"></script>
 <script type="text/javascript" src="menu.js"></script>
 <script type="text/javascript">
@@ -57,11 +57,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Классы</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1db__config.html">db_config</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Конфигурация  <a href="structwamba_1_1prefixdb_1_1db__config.html#details">Подробнее...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1iprefixdb.html">iprefixdb</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Интерфейс к PrefixDB.  <a href="structwamba_1_1prefixdb_1_1iprefixdb.html#details">Подробнее...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structwamba_1_1prefixdb_1_1db__config.html">db_config</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Конфигурация  <a href="structwamba_1_1prefixdb_1_1db__config.html#details">Подробнее...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -81,26 +81,28 @@ typedef std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" vali
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Перечисления</h2></td></tr>
-<tr class="memitem:ac3fcdf11818809a6a219e55e16ff62db"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">common_status</a> { <br />
-&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbae0aa021e21dddbd6d8cecec71e9cf564">common_status::OK</a>
-, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad7e877ae1a8c09a88f9ee9b0ea84913e">common_status::InvalidFieldValue</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba3de426e1db28ac111fa049e5628d1c46">common_status::EmptyFields</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba3c769b187d3c6402cc8c8a26ef4e6b30">common_status::EmptyPrefix</a>, 
-<br />
-&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaff1a8691a59a650e8a099f751c81dfd8">common_status::PrefixReadonly</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbacfbb375c49e8a8afaab1c8510129533a">common_status::CreatePrefixFail</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbab897e6fe1d58ea0a7e978792d85746ad">common_status::CreateSnapshotFail</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba8209d8ebe84fe1ffa8016a593c0c14c2">common_status::CompactFail</a>, 
-<br />
-&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba93f7948e7454949e9cc65066fc461261">common_status::PrefixNotFound</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaad7a4fc91aa12015e4227a25c46ebe2e">common_status::SnapshotNotFound</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad6af520434f2d33750ec849bf9b5c84c">common_status::TooManyKeys</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad6beec5911181537ba3ca36563f58366">common_status::KeyLengthExceeded</a>, 
-<br />
-&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba75a6e0cd1a63bc51a84429e00ca77795">common_status::ValueLengthExceeded</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba48f696d51fcf54e90d187dbfd74588fe">common_status::PrefixLengthExceeded</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaec85826ac251ef5ad27633b6c8d14f9c">common_status::RangeLimitExceeded</a>, 
-<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba22059bbe84ce4571b6276fe967dcbb79">common_status::InvalidSeqNumber</a>
+<tr class="memitem:ac3fcdf11818809a6a219e55e16ff62db"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">common_status</a> { <br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbae0aa021e21dddbd6d8cecec71e9cf564">OK</a>
+, <b>IOError</b>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad7e877ae1a8c09a88f9ee9b0ea84913e">InvalidFieldValue</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba3de426e1db28ac111fa049e5628d1c46">EmptyFields</a>
+, <br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba3c769b187d3c6402cc8c8a26ef4e6b30">EmptyPrefix</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaff1a8691a59a650e8a099f751c81dfd8">PrefixReadonly</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbacfbb375c49e8a8afaab1c8510129533a">CreatePrefixFail</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbab897e6fe1d58ea0a7e978792d85746ad">CreateSnapshotFail</a>
+, <br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba8209d8ebe84fe1ffa8016a593c0c14c2">CompactFail</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba93f7948e7454949e9cc65066fc461261">PrefixNotFound</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaad7a4fc91aa12015e4227a25c46ebe2e">SnapshotNotFound</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad6af520434f2d33750ec849bf9b5c84c">TooManyKeys</a>
+, <br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbad6beec5911181537ba3ca36563f58366">KeyLengthExceeded</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba75a6e0cd1a63bc51a84429e00ca77795">ValueLengthExceeded</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba48f696d51fcf54e90d187dbfd74588fe">PrefixLengthExceeded</a>
+, <a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dbaec85826ac251ef5ad27633b6c8d14f9c">RangeLimitExceeded</a>
+, <br />
+&#160;&#160;<a class="el" href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62dba22059bbe84ce4571b6276fe967dcbb79">InvalidSeqNumber</a>
 <br />
  }</td></tr>
 <tr class="memdesc:ac3fcdf11818809a6a219e55e16ff62db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Общий результат выполнения операции TODO: сделать отсылки в конфиг  <a href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">Подробнее...</a><br /></td></tr>
@@ -166,9 +168,7 @@ typedef std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" vali
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Создано системой &#160;<a href="http://www.doxygen.org/index.html">
-<img class="footer" src="doxygen.png" alt="doxygen"/>
-</a> 1.8.17
+Создано системой&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>
