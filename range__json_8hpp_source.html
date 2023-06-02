@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<meta name="generator" content="Doxygen 1.8.17"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>wfc_prefixdb: Исходный файл package/prefixdb/api/range_json.hpp</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
@@ -27,7 +27,7 @@
 </table>
 </div>
 <!-- end header part -->
-<!-- Создано системой Doxygen 1.8.17 -->
+<!-- Создано системой Doxygen 1.9.1 -->
 <script type="text/javascript" src="menudata.js"></script>
 <script type="text/javascript" src="menu.js"></script>
 <script type="text/javascript">
@@ -88,10 +88,10 @@ $(function() {
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        wjson::member&lt;n_limit, range, size_t, &amp;range::limit&gt;,</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        wjson::member&lt;n_offset, range, size_t, &amp;range::offset&gt;</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;      &gt;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    &gt; type;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    &gt; meta;</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">typedef</span> type::target target;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keyword">typedef</span> type::serializer serializer;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">typedef</span> meta::target target;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keyword">typedef</span> meta::serializer serializer;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  };</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;}</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
@@ -128,10 +128,10 @@ $(function() {
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;          wjson::member&lt;n_values,  range::stat_info, wrtstat::aggregated_info, &amp;range::stat_info::values, </div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                            wrtstat::aggregated_info_json&gt;</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        &gt;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      &gt; type;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      <span class="keyword">typedef</span> type::target target;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keyword">typedef</span> type::serializer serializer;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="keyword">typedef</span> type::member_list member_list;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      &gt; meta;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      <span class="keyword">typedef</span> meta::target target;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keyword">typedef</span> meta::serializer serializer;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="keyword">typedef</span> meta::member_list member_list;</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    };</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
@@ -150,23 +150,21 @@ $(function() {
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        wjson::member&lt;n_fields, range, <a class="code" href="namespacewamba_1_1prefixdb.html#a9c949240c82e52d1cd4ba4eb63a5ab49">field_list_t</a>, &amp;range::fields, fields_list_json&gt;,</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        wjson::member&lt;n_stat, range, range::stat_info::ptr, &amp;range::stat, wjson::pointer&lt;range::stat_info::ptr, stat_json&gt; &gt;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      &gt;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    &gt; type;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    typedef type::target target;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    typedef type::serializer serializer;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    typedef type::member_list member_list;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    &gt; meta;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    typedef meta::target target;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    typedef meta::serializer serializer;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    typedef meta::member_list member_list;</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  };</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;}}</div>
-</div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="anamespacewamba_1_1prefixdb_html_a9c949240c82e52d1cd4ba4eb63a5ab49"><div class="ttname"><a href="namespacewamba_1_1prefixdb.html#a9c949240c82e52d1cd4ba4eb63a5ab49">wamba::prefixdb::field_list_t</a></div><div class="ttdeci">std::vector&lt; field_pair &gt; field_list_t</div><div class="ttdoc">список пар ключ-значение</div><div class="ttdef"><b>Definition:</b> fields.hpp:21</div></div>
+<div class="ttc" id="anamespacewamba_1_1prefixdb_html_ac3fcdf11818809a6a219e55e16ff62db"><div class="ttname"><a href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">wamba::prefixdb::common_status</a></div><div class="ttdeci">common_status</div><div class="ttdoc">Общий результат выполнения операции TODO: сделать отсылки в конфиг</div><div class="ttdef"><b>Definition:</b> common_status.hpp:10</div></div>
 <div class="ttc" id="anamespacewamba_html"><div class="ttname"><a href="namespacewamba.html">wamba</a></div><div class="ttdoc">wamba</div><div class="ttdef"><b>Definition:</b> add.hpp:8</div></div>
-<div class="ttc" id="anamespacewamba_1_1prefixdb_html_ac3fcdf11818809a6a219e55e16ff62db"><div class="ttname"><a href="namespacewamba_1_1prefixdb.html#ac3fcdf11818809a6a219e55e16ff62db">wamba::prefixdb::common_status</a></div><div class="ttdeci">common_status</div><div class="ttdoc">Общий результат выполнения операции TODO: сделать отсылки в конфиг</div><div class="ttdef"><b>Definition:</b> common_status.hpp:9</div></div>
+</div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Создано системой &#160;<a href="http://www.doxygen.org/index.html">
-<img class="footer" src="doxygen.png" alt="doxygen"/>
-</a> 1.8.17
+Создано системой&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>
