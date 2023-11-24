@@ -108,7 +108,9 @@ bool wrocksdb_factory::initialize(const db_config& db_conf)
 
   if ( !conf.ini.empty() )
   {
-    auto status = ::rocksdb::LoadOptionsFromFile( conf.ini, _context->env, &(_context->options), &(_context->cdf) );
+    ::rocksdb::ConfigOptions co;
+    co.env = _context->env;
+    auto status = ::rocksdb::LoadOptionsFromFile( co, conf.ini, &(_context->options), &(_context->cdf) );
     if ( !status.ok() )
     {
       PREFIXDB_LOG_FATAL("rocksdb_factory::initialize: " << status.ToString());
