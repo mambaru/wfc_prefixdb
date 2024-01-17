@@ -69,9 +69,11 @@ if(ROCKSDB_FIND_VERSION AND ROCKSDB_VERSION)
 endif()
 
 find_library(ROCKSDB_LIBRARY rocksdb
-  HINTS ${CMAKE_SOURCE_DIR}/../../.. $ENV{ROCKSDB_ROOT} ${ROCKSDB_ROOT}
+  HINTS ${CMAKE_SOURCE_DIR}/../../..
   PATH_SUFFIXES lib lib64
-  PATHS /usr /usr/local /opt /opt/local)
+  PATHS /usr /usr/local /opt /opt/local $ENV{ROCKSDB_ROOT} ${ROCKSDB_ROOT})
+
+message(STATUS "find_library ROCKSDB_LIBRARY=${ROCKSDB_LIBRARIE}")
 
 # Inform the users with an error message based on what version they
 # have vs. what version was required.

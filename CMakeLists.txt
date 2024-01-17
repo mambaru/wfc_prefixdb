@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(wfc_prefixdb)
+project(wfc_prefixdb VERSION "0.9.8")
 
 include(cmake/ci.cmake)
 include(cmake/rocksdb.cmake)
@@ -18,3 +18,5 @@ if ( BUILD_TESTING )
   include_directories(package)
   add_subdirectory(tests)
 endif()
+
+include(cmake/install.cmake)

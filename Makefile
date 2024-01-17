@@ -15,12 +15,18 @@ help:
 	@echo "	make clean"
 	@echo "	make update"
 	@echo "	make upgrade"
+	@echo "	make install"
+	@echo "	make docker-build"
+	@echo "	make docker-run"
+	@echo "	make docker-rm"
 	@echo "Example:"
 	@echo "	make static "
 	@echo "	make shared VERBOSE=1 ARGS=-j5"
 	@echo "	BUILD_SHARED_LIBS=ON make tests"
+	@echo "	make install ARGS=\"--prefix ./build/test-install\""
 
 CMAKE ?= cmake
+PRJ = `basename ${PWD}`
 
 doc:
 	rm -rf docs
@@ -82,3 +88,11 @@ update: runup
 	./external/cmake-ci/scripts/update.sh
 upgrade: update
 	./external/cmake-ci/scripts/upgrade.sh
+install: runup
+	${CMAKE} --install ./build ${ARGS}
+docker-build:
+	docker build -t ${PRJ} -f Dockerfile.build .
+docker-run:
+	docker run --rm -it ${PRJ}
+docker-rm:
+	docker rmi ${PRJ}

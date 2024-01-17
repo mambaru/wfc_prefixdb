@@ -56,8 +56,8 @@ set_source_files_properties(
   COMPILE_FLAGS "-Wno-strict-overflow"
 )
 
-target_include_directories(wfc_prefixdb PUBLIC  ${wfc_prefixdb_SOURCE_DIR})
-target_include_directories(wfc_prefixdb PRIVATE ${wfc_prefixdb_SOURCE_DIR}/package)
+target_include_directories(wfc_prefixdb PUBLIC  "$<BUILD_INTERFACE:${wfc_prefixdb_SOURCE_DIR}>")
+target_include_directories(wfc_prefixdb PRIVATE "$<BUILD_INTERFACE:${wfc_prefixdb_SOURCE_DIR}/package>")
 
 find_library(LIBRT rt)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
