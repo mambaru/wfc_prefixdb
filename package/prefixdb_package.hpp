@@ -8,7 +8,7 @@
 
 #include <wfc/module/package.hpp>
 
-namespace wamba{ namespace prefixdb{
+namespace wamba{
 
 class prefixdb_package
   : public ::wfc::package
@@ -17,4 +17,4 @@ public:
   prefixdb_package();
 };
 
-}}
+}

@@ -5,7 +5,7 @@
 //
 
 #include "prefixdb_module.hpp"
-#include "prefixdb/prefixdb_multiton.hpp"
+#include "domain/prefixdb_multiton.hpp"
 #include "service/prefixdb_service_multiton.hpp"
 #include "gateway/prefixdb_gateway_multiton.hpp"
 

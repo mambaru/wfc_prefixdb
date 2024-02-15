@@ -1,22 +1,22 @@
 #include <fas/testing.hpp>
 #include <wfc/testing/testing_domain.hpp>
-#include <prefixdb/prefixdb/prefixdb.hpp>
+#include <prefixdb/domain/prefixdb_domain.hpp>
 #include <wlog/init.hpp>
 
 namespace {
 
 struct _prefixdb_;
-typedef std::shared_ptr<wamba::prefixdb::prefixdb> prefixdb_ptr;
+typedef std::shared_ptr<wamba::prefixdb::prefixdb_domain> prefixdb_ptr;
 
 UNIT(init, "")
 {
   wlog::disable();
   using namespace fas::testing;
   auto ptest = std::make_shared<wfc::testing_domain>();
-  wamba::prefixdb::prefixdb::domain_config conf;
+  wamba::prefixdb::prefixdb_domain::domain_config conf;
   conf.path="./db";
-  auto p = ptest->create<wamba::prefixdb::prefixdb>(conf);
-  GET_REF(_prefixdb_) = ptest->create<wamba::prefixdb::prefixdb>(conf);
+  auto p = ptest->create<wamba::prefixdb::prefixdb_domain>(conf);
+  GET_REF(_prefixdb_) = ptest->create<wamba::prefixdb::prefixdb_domain>(conf);
   GET_REF(_prefixdb_) -> start();
   t << nothing;
 }

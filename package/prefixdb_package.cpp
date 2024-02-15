@@ -10,13 +10,13 @@
 #include <wfc/module/module_list.hpp>
 #include <wfc/name.hpp>
 
-namespace wamba{ namespace prefixdb{
+namespace wamba{
 
 namespace
 {
   class impl: public ::wfc::module_list<
     prefixdb_build_info,
-    prefixdb_module
+    prefixdb::prefixdb_module
   >
   {
   public:
@@ -32,4 +32,4 @@ prefixdb_package::prefixdb_package()
 {
 }
 
-}}
+}
